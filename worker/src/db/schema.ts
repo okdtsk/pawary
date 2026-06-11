@@ -20,17 +20,21 @@ export const users = sqliteTable("users", {
   createdAt: integer("created_at").notNull(),
 });
 
-export const sessions = sqliteTable("sessions", {
-  id: text("id").primaryKey(),
-  tokenHash: text("token_hash").notNull().unique(),
-  csrfToken: text("csrf_token").notNull(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  createdAt: integer("created_at").notNull(),
-  expiresAt: integer("expires_at").notNull(),
-  lastSeenAt: integer("last_seen_at").notNull(),
-});
+export const sessions = sqliteTable(
+  "sessions",
+  {
+    id: text("id").primaryKey(),
+    tokenHash: text("token_hash").notNull().unique(),
+    csrfToken: text("csrf_token").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    lastSeenAt: integer("last_seen_at").notNull(),
+  },
+  (t) => [index("idx_sessions_user").on(t.userId)],
+);
 
 export const pets = sqliteTable("pets", {
   id: text("id").primaryKey(),
@@ -56,7 +60,10 @@ export const petMembers = sqliteTable(
     role: text("role", { enum: ["owner", "editor", "viewer"] }).notNull(),
     createdAt: integer("created_at").notNull(),
   },
-  (t) => [primaryKey({ columns: [t.petId, t.userId] })],
+  (t) => [
+    primaryKey({ columns: [t.petId, t.userId] }),
+    index("idx_pet_members_user").on(t.userId),
+  ],
 );
 
 export const activities = sqliteTable(
@@ -83,29 +90,37 @@ export const activities = sqliteTable(
   ],
 );
 
-export const activityPhotos = sqliteTable("activity_photos", {
-  id: text("id").primaryKey(),
-  activityId: text("activity_id")
-    .notNull()
-    .references(() => activities.id, { onDelete: "cascade" }),
-  r2Key: text("r2_key").notNull(),
-  width: integer("width"),
-  height: integer("height"),
-  contentType: text("content_type").notNull(),
-  createdAt: integer("created_at").notNull(),
-});
+export const activityPhotos = sqliteTable(
+  "activity_photos",
+  {
+    id: text("id").primaryKey(),
+    activityId: text("activity_id")
+      .notNull()
+      .references(() => activities.id, { onDelete: "cascade" }),
+    r2Key: text("r2_key").notNull(),
+    width: integer("width"),
+    height: integer("height"),
+    contentType: text("content_type").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [index("idx_activity_photos_activity").on(t.activityId)],
+);
 
-export const quickPresets = sqliteTable("quick_presets", {
-  id: text("id").primaryKey(),
-  petId: text("pet_id")
-    .notNull()
-    .references(() => pets.id, { onDelete: "cascade" }),
-  category: text("category", { enum: CATEGORIES }).notNull(),
-  label: text("label").notNull(),
-  details: text("details", { mode: "json" }).notNull(),
-  sortOrder: integer("sort_order").notNull().default(0),
-  createdAt: integer("created_at").notNull(),
-});
+export const quickPresets = sqliteTable(
+  "quick_presets",
+  {
+    id: text("id").primaryKey(),
+    petId: text("pet_id")
+      .notNull()
+      .references(() => pets.id, { onDelete: "cascade" }),
+    category: text("category", { enum: CATEGORIES }).notNull(),
+    label: text("label").notNull(),
+    details: text("details", { mode: "json" }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [index("idx_quick_presets_pet").on(t.petId)],
+);
 
 export const careSchedules = sqliteTable(
   "care_schedules",
@@ -140,18 +155,22 @@ export const petTargets = sqliteTable("pet_targets", {
   waterMlPerDay: real("water_ml_per_day"),
 });
 
-export const auditLog = sqliteTable("audit_log", {
-  id: text("id").primaryKey(),
-  petId: text("pet_id").notNull(),
-  userId: text("user_id").notNull(),
-  action: text("action", { enum: ["create", "update", "delete"] }).notNull(),
-  entity: text("entity", {
-    enum: ["activity", "pet", "schedule", "preset", "member"],
-  }).notNull(),
-  entityId: text("entity_id").notNull(),
-  diff: text("diff", { mode: "json" }),
-  createdAt: integer("created_at").notNull(),
-});
+export const auditLog = sqliteTable(
+  "audit_log",
+  {
+    id: text("id").primaryKey(),
+    petId: text("pet_id").notNull(),
+    userId: text("user_id").notNull(),
+    action: text("action", { enum: ["create", "update", "delete"] }).notNull(),
+    entity: text("entity", {
+      enum: ["activity", "pet", "schedule", "preset", "member"],
+    }).notNull(),
+    entityId: text("entity_id").notNull(),
+    diff: text("diff", { mode: "json" }),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [index("idx_audit_pet").on(t.petId)],
+);
 
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
