@@ -15,7 +15,7 @@ import { requireSession } from "../middleware/session";
 
 export const activityRoutes = new Hono<AppEnv>();
 
-function activityToResponse(
+export function activityToResponse(
   a: Activity,
   photos: ActivityPhotoMeta[],
 ): ActivityResponse {

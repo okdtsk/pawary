@@ -1,16 +1,23 @@
-import type { ScheduleResponse } from "@pawlog/shared";
-import { activityDetailsSchemas, createScheduleSchema, updateScheduleSchema } from "@pawlog/shared";
+import type { CompleteScheduleResponse, ScheduleResponse } from "@pawlog/shared";
+import {
+  activityDetailsSchemas,
+  completeScheduleSchema,
+  createScheduleSchema,
+  updateScheduleSchema,
+} from "@pawlog/shared";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";
-import { careSchedules, type CareSchedule } from "../db/schema";
+import { activities, careSchedules, type Activity, type CareSchedule } from "../db/schema";
 import { writeAudit } from "../domain/audit";
+import { advanceSchedule } from "../domain/recurrence";
 import type { AppEnv } from "../env";
 import { newId } from "../lib/id";
 import { err } from "../lib/respond";
 import { requireCsrf } from "../middleware/csrf";
 import { requirePetRole } from "../middleware/pet-access";
 import { requireSession } from "../middleware/session";
+import { activityToResponse } from "./activities";
 
 export const scheduleRoutes = new Hono<AppEnv>();
 
@@ -190,5 +197,98 @@ scheduleRoutes.delete(
       entityId: schedule.id,
     });
     return c.json({ data: { ok: true } });
+  },
+);
+
+const COMPLETE_PAST_MS = 7 * 24 * 3_600_000;
+const COMPLETE_FUTURE_MS = 3_600_000;
+
+scheduleRoutes.post(
+  "/api/pets/:petId/schedules/:id/complete",
+  requireSession,
+  requireCsrf,
+  requirePetRole("editor"),
+  async (c) => {
+    const body = await c.req.json().catch(() => ({})); // empty body allowed
+    const parsed = completeScheduleSchema.safeParse(body ?? {});
+    if (!parsed.success) {
+      return err(c, 400, "validation", parsed.error.issues[0]?.message ?? "Invalid input");
+    }
+    const now = Date.now();
+    const occurredAt = parsed.data.occurredAt ?? now;
+    if (occurredAt < now - COMPLETE_PAST_MS || occurredAt > now + COMPLETE_FUTURE_MS) {
+      return err(c, 400, "validation", "occurredAt must be within the last 7 days");
+    }
+    const db = drizzle(c.env.DB);
+    const schedule = await getSchedule(db, c.get("petId"), c.req.param("id"));
+    if (!schedule) return err(c, 404, "not_found", "Not found");
+    if (!schedule.active) {
+      return err(c, 409, "schedule_inactive", "Schedule is no longer active");
+    }
+
+    // Build the activity from the template; medication gets the scheduleId
+    // back-reference (the shared medication schema has the optional field).
+    const template = (schedule.detailsTemplate ?? {}) as Record<string, unknown>;
+    const details =
+      schedule.categoryLink === "medication"
+        ? { ...template, scheduleId: schedule.id }
+        : template;
+    const check = activityDetailsSchemas[schedule.categoryLink].safeParse(details);
+    if (!check.success) {
+      // can only happen if a stored template predates a schema change
+      return err(c, 500, "internal", "Stored details template is invalid");
+    }
+
+    const user = c.get("user");
+    const adv = advanceSchedule(schedule);
+    const activity: Activity = {
+      id: newId(),
+      petId: schedule.petId,
+      category: schedule.categoryLink,
+      occurredAt,
+      tzOffsetMin: parsed.data.tzOffsetMin ?? 0,
+      memo: parsed.data.memo ?? null,
+      details: check.data,
+      createdBy: user.id,
+      updatedBy: null,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+    };
+
+    // both-or-neither: D1 batches are transactional (spec §4 "atomically")
+    await db.batch([
+      db.insert(activities).values(activity),
+      db
+        .update(careSchedules)
+        .set({ nextDueAt: adv.nextDueAt, active: adv.active })
+        .where(eq(careSchedules.id, schedule.id)),
+    ]);
+    await writeAudit(db, {
+      petId: schedule.petId,
+      userId: user.id,
+      action: "create",
+      entity: "activity",
+      entityId: activity.id,
+      diff: { category: activity.category, scheduleId: schedule.id },
+    });
+    await writeAudit(db, {
+      petId: schedule.petId,
+      userId: user.id,
+      action: "update",
+      entity: "schedule",
+      entityId: schedule.id,
+      diff: {
+        before: { nextDueAt: schedule.nextDueAt, active: schedule.active },
+        after: { nextDueAt: adv.nextDueAt, active: adv.active },
+      },
+    });
+
+    const updated: CareSchedule = { ...schedule, nextDueAt: adv.nextDueAt, active: adv.active };
+    const data: CompleteScheduleResponse = {
+      activity: activityToResponse(activity, []),
+      schedule: scheduleToResponse(updated),
+    };
+    return c.json({ data }, 201);
   },
 );
