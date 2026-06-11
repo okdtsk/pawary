@@ -208,7 +208,10 @@ export function Shell() {
             >
               <span className="relative">
                 <PawIcon className="h-7 w-7" />
-                <PlusIcon className="absolute -right-1.5 -top-1.5 h-3.5 w-3.5 rounded-full bg-clay-500" />
+                <PlusIcon
+                  strokeWidth={3}
+                  className="absolute -right-1.5 -top-1.5 h-3.5 w-3.5"
+                />
               </span>
             </button>
           </div>
