@@ -92,3 +92,29 @@ authRoutes.post("/logout", requireSession, requireCsrf, async (c) => {
   clearSessionCookie(c);
   return c.json({ data: { ok: true } });
 });
+
+authRoutes.post("/dev-login", async (c) => {
+  const host = new URL(c.req.url).hostname;
+  const isLocalhost = host === "localhost" || host === "127.0.0.1";
+  if (c.env.ENVIRONMENT !== "development" || !isLocalhost) {
+    return err(c, 404, "not_found", "Not found");
+  }
+
+  const body = (await c.req.json().catch(() => ({}))) as {
+    email?: string;
+    name?: string;
+  };
+  const email = body.email ?? "dev@example.com";
+  const name = body.name ?? "Dev User";
+
+  const db = drizzle(c.env.DB);
+  const user = await upsertUserFromGoogle(db, {
+    sub: `dev:${email}`,
+    email,
+    name,
+    picture: null,
+  });
+  const { token } = await createSession(db, user.id);
+  setSessionCookie(c, token);
+  return c.json({ data: { ok: true } });
+});
