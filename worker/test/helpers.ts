@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { drizzle } from "drizzle-orm/d1";
-import type { Role } from "@pawlog/shared";
-import { petMembers, pets, users } from "../src/db/schema";
+import type { Category, Role } from "@pawlog/shared";
+import { activities, petMembers, pets, users } from "../src/db/schema";
 import { createSession } from "../src/domain/sessions";
 import { newId } from "../src/lib/id";
 
@@ -64,4 +64,35 @@ export function authHeaders(
   };
   if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
   return headers;
+}
+
+export async function seedActivity(
+  petId: string,
+  userId: string,
+  overrides: Partial<{
+    category: Category;
+    occurredAt: number;
+    tzOffsetMin: number;
+    memo: string | null;
+    details: unknown;
+    deletedAt: number | null;
+  }> = {},
+): Promise<{ activityId: string }> {
+  const db = drizzle(env.DB);
+  const now = Date.now();
+  const activityId = newId();
+  await db.insert(activities).values({
+    id: activityId,
+    petId,
+    category: overrides.category ?? "note",
+    occurredAt: overrides.occurredAt ?? now,
+    tzOffsetMin: overrides.tzOffsetMin ?? 0,
+    memo: overrides.memo ?? null,
+    details: overrides.details ?? {},
+    createdBy: userId,
+    createdAt: now,
+    updatedAt: now,
+    deletedAt: overrides.deletedAt ?? null,
+  });
+  return { activityId };
 }

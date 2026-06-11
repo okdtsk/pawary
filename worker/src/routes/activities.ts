@@ -1,12 +1,13 @@
-import type { ActivityPhotoMeta, ActivityResponse } from "@pawlog/shared";
-import { activityDetailsSchemas, createActivitySchema, updateActivitySchema } from "@pawlog/shared";
-import { and, eq, isNull } from "drizzle-orm";
+import type { ActivityListResponse, ActivityPhotoMeta, ActivityResponse, Category } from "@pawlog/shared";
+import { CATEGORIES, activityDetailsSchemas, createActivitySchema, updateActivitySchema } from "@pawlog/shared";
+import { and, desc, eq, gte, inArray, isNull, lt, lte, or, sql } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { activities, activityPhotos, type Activity } from "../db/schema";
 import { writeAudit } from "../domain/audit";
 import type { AppEnv } from "../env";
 import { newId } from "../lib/id";
+import { decodeCursor, encodeCursor } from "../lib/cursor";
 import { err } from "../lib/respond";
 import { requireCsrf } from "../middleware/csrf";
 import { requirePetRole } from "../middleware/pet-access";
@@ -216,5 +217,122 @@ activityRoutes.delete(
       entityId: activity.id,
     });
     return c.json({ data: { ok: true } });
+  },
+);
+
+function parseEpoch(raw: string | undefined): number | undefined | "invalid" {
+  if (raw === undefined) return undefined;
+  const n = Number(raw);
+  return Number.isInteger(n) && n >= 0 ? n : "invalid";
+}
+
+function escapeLike(input: string): string {
+  return input
+    .replaceAll("\\", "\\\\")
+    .replaceAll("%", "\\%")
+    .replaceAll("_", "\\_");
+}
+
+activityRoutes.get(
+  "/api/pets/:petId/activities",
+  requireSession,
+  requirePetRole("viewer"),
+  async (c) => {
+    const limitRaw = c.req.query("limit");
+    const limit = limitRaw === undefined ? 50 : Number(limitRaw);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 200) {
+      return err(c, 400, "validation", "limit must be an integer 1..200");
+    }
+    const from = parseEpoch(c.req.query("from"));
+    const to = parseEpoch(c.req.query("to"));
+    if (from === "invalid" || to === "invalid") {
+      return err(c, 400, "validation", "from/to must be epoch milliseconds");
+    }
+    const cats = c.req.queries("category") ?? [];
+    for (const cat of cats) {
+      if (!(CATEGORIES as readonly string[]).includes(cat)) {
+        return err(c, 400, "validation", `Unknown category: ${cat}`);
+      }
+    }
+    const cursorRaw = c.req.query("cursor");
+    let cursor: { o: number; i: string } | undefined;
+    if (cursorRaw !== undefined) {
+      const decoded = decodeCursor(cursorRaw);
+      if (!decoded) return err(c, 400, "validation", "Invalid cursor");
+      cursor = decoded;
+    }
+    const q = c.req.query("q");
+
+    const petId = c.get("petId");
+    const conds = [eq(activities.petId, petId), isNull(activities.deletedAt)];
+    if (from !== undefined) conds.push(gte(activities.occurredAt, from));
+    if (to !== undefined) conds.push(lte(activities.occurredAt, to));
+    if (cats.length > 0) {
+      conds.push(inArray(activities.category, cats as Category[]));
+    }
+    if (q) {
+      const pattern = `%${escapeLike(q)}%`;
+      conds.push(sql`${activities.memo} LIKE ${pattern} ESCAPE '\\'`);
+    }
+    if (cursor) {
+      conds.push(
+        or(
+          lt(activities.occurredAt, cursor.o),
+          and(
+            eq(activities.occurredAt, cursor.o),
+            lt(activities.id, cursor.i),
+          ),
+        )!,
+      );
+    }
+
+    const db = drizzle(c.env.DB);
+    const rows = await db
+      .select()
+      .from(activities)
+      .where(and(...conds))
+      .orderBy(desc(activities.occurredAt), desc(activities.id))
+      .limit(limit + 1) // sentinel row: page is full AND more exist
+      .all();
+    const page = rows.slice(0, limit);
+    const last = page[page.length - 1];
+    const nextCursor =
+      rows.length > limit && last ? encodeCursor(last.occurredAt, last.id) : null;
+
+    const ids = page.map((a) => a.id);
+    const photoRows =
+      ids.length > 0
+        ? await db
+            .select({
+              id: activityPhotos.id,
+              activityId: activityPhotos.activityId,
+              width: activityPhotos.width,
+              height: activityPhotos.height,
+              contentType: activityPhotos.contentType,
+            })
+            .from(activityPhotos)
+            .where(inArray(activityPhotos.activityId, ids))
+            .all()
+        : [];
+    const photosByActivity = new Map<string, ActivityPhotoMeta[]>();
+    for (const photo of photoRows) {
+      const meta: ActivityPhotoMeta = {
+        id: photo.id,
+        width: photo.width,
+        height: photo.height,
+        contentType: photo.contentType,
+      };
+      const bucket = photosByActivity.get(photo.activityId);
+      if (bucket) bucket.push(meta);
+      else photosByActivity.set(photo.activityId, [meta]);
+    }
+
+    const data: ActivityListResponse = {
+      items: page.map((a) =>
+        activityToResponse(a, photosByActivity.get(a.id) ?? []),
+      ),
+      nextCursor,
+    };
+    return c.json({ data });
   },
 );
