@@ -162,4 +162,12 @@ export const ja: Messages = {
       "クイック追加なら、朝ごはんや夕方の散歩などの日課をワンタップで記録できます。",
     manage: "ショートカットを設定",
   },
+  home: {
+    greeting: (petName) => `${petName}、こんにちは！`,
+    todaySoFar: "今日のようす",
+    quietTitle: "今日はまだ静かです",
+    quietHint: "家族の誰かが記録すると、ここに今日のようすが集まります。",
+    careSoonTitle: "ケアのリマインダーは準備中",
+    careSoonBody: "お薬のスケジュールや予定日のお知らせが、まもなくここに届きます。",
+  },
 };

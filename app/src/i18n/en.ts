@@ -162,4 +162,13 @@ export const en: Messages = {
       "Quick Add turns a routine into one tap — morning kibble, the evening walk…",
     manage: "Set up shortcuts",
   },
+  home: {
+    greeting: (petName) => `Hello, ${petName}!`,
+    todaySoFar: "Today so far",
+    quietTitle: "A quiet day so far",
+    quietHint: "Anything your family logs shows up here as the day unfolds.",
+    careSoonTitle: "Care reminders are coming",
+    careSoonBody:
+      "Medication schedules and due-date reminders will live right here soon.",
+  },
 };

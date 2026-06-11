@@ -1,14 +1,107 @@
+import { Link, useOutletContext } from "react-router";
+import { useActivitiesRange } from "../api/activities";
+import { ActivityRow } from "../components/ActivityRow";
 import { PetAvatar } from "../components/Avatar";
-import { useT } from "../i18n";
+import { Button } from "../components/Button";
+import { Card } from "../components/Card";
+import { EmptyState } from "../components/EmptyState";
+import { SproutIcon } from "../components/icons";
+import { Spinner } from "../components/Spinner";
+import { QuickAddGrid } from "../features/quickadd/QuickAddGrid";
+import { useLocaleTag, useT } from "../i18n";
+import { dayEndMs, dayStartMs, formatDayHeading, todayKey } from "../lib/dates";
 import { useRequiredPet } from "../state/pets";
+import type { ShellOutletContext } from "./Shell";
 
 export function Home() {
   const t = useT();
+  const tag = useLocaleTag();
   const pet = useRequiredPet();
+  const { openAdd } = useOutletContext<ShellOutletContext>();
+  const today = todayKey();
+  const activities = useActivitiesRange(
+    pet.id,
+    dayStartMs(today),
+    dayEndMs(today),
+  );
+  const items = [...(activities.data ?? [])].sort(
+    (a, b) => b.occurredAt - a.occurredAt,
+  );
+
   return (
-    <div className="animate-pop flex items-center gap-4">
-      <PetAvatar pet={pet} size="lg" />
-      <h1 className="text-2xl text-ink">{t.greeting(pet.name)}</h1>
+    <div className="flex flex-col gap-5">
+      {/* greeting hero */}
+      <section className="animate-pop flex items-center gap-4">
+        <PetAvatar pet={pet} size="lg" />
+        <div>
+          <h1 className="text-2xl text-ink">{t.home.greeting(pet.name)}</h1>
+          <p className="text-sm text-ink-faint">
+            {formatDayHeading(today, tag)}
+          </p>
+        </div>
+      </section>
+
+      {/* Plan-4 slot: anomaly banners render here (insights API) */}
+      <section data-slot="anomaly-banners" className="hidden" aria-hidden="true" />
+
+      {/* Plan-4 slot: care items (overdue / due today) */}
+      <Card
+        data-slot="care-items"
+        className="animate-pop flex items-center gap-3 bg-moss-100/60"
+        style={{ animationDelay: "60ms" }}
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-paper text-moss-600">
+          <SproutIcon className="h-6 w-6" />
+        </span>
+        <div>
+          <p className="font-display text-ink">{t.home.careSoonTitle}</p>
+          <p className="text-sm text-ink-soft">{t.home.careSoonBody}</p>
+        </div>
+      </Card>
+
+      {/* today so far */}
+      <section className="animate-pop" style={{ animationDelay: "120ms" }}>
+        <h2 className="mb-2 font-display text-lg text-ink">
+          {t.home.todaySoFar}
+        </h2>
+        <Card className="p-0">
+          {activities.isLoading ? (
+            <div className="flex justify-center py-8">
+              <Spinner />
+            </div>
+          ) : items.length === 0 ? (
+            <EmptyState
+              title={t.home.quietTitle}
+              hint={t.home.quietHint}
+              action={
+                <Button size="sm" onClick={openAdd}>
+                  {t.nav.addActivity}
+                </Button>
+              }
+            />
+          ) : (
+            <div className="divide-y divide-cream-200">
+              {items.map((activity) => (
+                <ActivityRow key={activity.id} activity={activity} />
+              ))}
+            </div>
+          )}
+        </Card>
+      </section>
+
+      {/* quick add */}
+      <section className="animate-pop" style={{ animationDelay: "180ms" }}>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-display text-lg text-ink">{t.quickAdd.title}</h2>
+          <Link
+            to="/settings/presets"
+            className="text-sm font-semibold text-clay-600 underline-offset-4 hover:underline"
+          >
+            {t.quickAdd.manage}
+          </Link>
+        </div>
+        <QuickAddGrid petId={pet.id} />
+      </section>
     </div>
   );
 }

@@ -135,4 +135,12 @@ export interface Messages {
     emptyHint: string;
     manage: string;
   };
+  home: {
+    greeting: (petName: string) => string;
+    todaySoFar: string;
+    quietTitle: string;
+    quietHint: string;
+    careSoonTitle: string;
+    careSoonBody: string;
+  };
 }
