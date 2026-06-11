@@ -49,6 +49,9 @@ meRoutes.patch("/", requireSession, requireCsrf, async (c) => {
   if (!parsed.success) {
     return err(c, 400, "validation", parsed.error.issues[0]?.message ?? "Invalid input");
   }
+  if (Object.keys(parsed.data).length === 0) {
+    return err(c, 400, "validation", "No fields to update");
+  }
   const user = c.get("user");
   const db = drizzle(c.env.DB);
   await db.update(users).set(parsed.data).where(eq(users.id, user.id));

@@ -57,6 +57,22 @@ it("PATCH /api/me updates locale and display name with csrf header", async () =>
   expect(body.data.user.displayName).toBe("Pat T");
 });
 
+it("PATCH /api/me rejects an empty body", async () => {
+  const { cookie, csrfToken } = await seedUserWithSession();
+  const res = await SELF.fetch("https://app.local/api/me", {
+    method: "PATCH",
+    headers: {
+      Cookie: cookie,
+      "Content-Type": "application/json",
+      "X-CSRF-Token": csrfToken,
+    },
+    body: JSON.stringify({}),
+  });
+  expect(res.status).toBe(400);
+  const body = (await res.json()) as { error: { code: string } };
+  expect(body.error.code).toBe("validation");
+});
+
 it("PATCH /api/me rejects unknown fields", async () => {
   const { cookie, csrfToken } = await seedUserWithSession();
   const res = await SELF.fetch("https://app.local/api/me", {
