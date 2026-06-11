@@ -1,5 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
+import { useOnline } from "../lib/useOnline";
 import { AddSheet } from "../features/add/AddSheet";
 import { Sheet } from "../components/Sheet";
 import { QuickAddGrid } from "../features/quickadd/QuickAddGrid";
@@ -81,6 +82,7 @@ export function Shell() {
   const t = useT();
   const navigate = useNavigate();
   const { pets, selectedPet, selectPet } = usePets();
+  const online = useOnline();
   const [addOpen, setAddOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
 
@@ -184,6 +186,14 @@ export function Shell() {
               <GearIcon className="h-5 w-5" />
             </IconButton>
           </div>
+          {!online && (
+            <div
+              role="status"
+              className="bg-ink px-4 py-1 text-center text-xs font-semibold text-cream-50"
+            >
+              {t.pwa.offline}
+            </div>
+          )}
         </header>
 
         <main className="mx-auto w-full max-w-3xl px-4 pb-28 pt-4 md:pb-12">

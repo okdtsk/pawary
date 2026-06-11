@@ -8,6 +8,7 @@ import { Card } from "../components/Card";
 import { EmptyState } from "../components/EmptyState";
 import { Spinner } from "../components/Spinner";
 import { AnomalyBanners } from "../features/health/AnomalyBanners";
+import { InstallHint } from "../features/pwa/InstallHint";
 import { CareCard } from "../features/health/CareCard";
 import { QuickAddGrid } from "../features/quickadd/QuickAddGrid";
 import { useLocaleTag, useT } from "../i18n";
@@ -43,6 +44,8 @@ export function Home() {
           </p>
         </div>
       </section>
+
+      <InstallHint />
 
       {/* anomaly banners (lightweight rules-only endpoint), deep-linked to Health */}
       <AnomalyBanners

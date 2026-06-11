@@ -15,10 +15,21 @@ export function setCsrfToken(token: string): void {
   csrfToken = token;
 }
 
+let offlineWriteMessage = "You're offline — this can't be saved until you reconnect";
+
+/** Localized by I18nProvider whenever the locale resolves/changes. */
+export function setOfflineWriteMessage(message: string): void {
+  offlineWriteMessage = message;
+}
+
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   const method = init.method ?? "GET";
   if (method !== "GET") {
+    // Writes require connectivity in v1 (spec §8) — fail fast and friendly.
+    if (!navigator.onLine) {
+      throw new ApiError(0, "offline", offlineWriteMessage);
+    }
     if (csrfToken) headers.set("X-CSRF-Token", csrfToken);
     if (init.body && !(init.body instanceof FormData)) {
       headers.set("Content-Type", "application/json");

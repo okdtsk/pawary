@@ -9,6 +9,7 @@ import { useToast } from "../../components/Toast";
 import { useT } from "../../i18n";
 import { cn } from "../../lib/cn";
 import { deviceTzOffsetMin } from "../../lib/dates";
+import { friendlyError } from "../../lib/errors";
 
 export function QuickAddGrid({
   petId,
@@ -70,7 +71,7 @@ export function QuickAddGrid({
             },
           });
         },
-        onError: () => toast.show(t.errors.title, { tone: "danger" }),
+        onError: (error) => toast.show(friendlyError(error, t), { tone: "danger" }),
       },
     );
   };

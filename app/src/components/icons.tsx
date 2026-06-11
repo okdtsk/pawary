@@ -217,3 +217,13 @@ export function CatIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function ShareIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M12 3.5v11" />
+      <path d="m8.5 6.5 3.5-3.5 3.5 3.5" />
+      <path d="M8 10.5H6.5A1.5 1.5 0 0 0 5 12v7a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-7a1.5 1.5 0 0 0-1.5-1.5H16" />
+    </Base>
+  );
+}

@@ -1,5 +1,6 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
 import type { Locale } from "@pawlog/shared";
+import { setOfflineWriteMessage } from "../api/client";
 import { en } from "./en";
 import { ja } from "./ja";
 import type { Messages } from "./messages";
@@ -27,6 +28,9 @@ export function I18nProvider({
 }) {
   const tag = resolveLocale(locale);
   const value = useMemo(() => ({ messages: catalogs[tag], tag }), [tag]);
+  useEffect(() => {
+    setOfflineWriteMessage(value.messages.pwa.offlineWrite);
+  }, [value]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
