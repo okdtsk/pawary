@@ -176,4 +176,10 @@ export const ja: Messages = {
     next: "次へ",
     dayEmpty: "この日の記録はありません",
   },
+  log: {
+    searchPlaceholder: "メモを検索…",
+    filterLabel: "カテゴリで絞り込み",
+    emptyTitle: "まだ記録がありません",
+    emptyHint: "フィルタを解除するか、肉球ボタンから記録してみましょう。",
+  },
 };

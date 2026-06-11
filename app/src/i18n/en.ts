@@ -177,4 +177,10 @@ export const en: Messages = {
     next: "Next",
     dayEmpty: "Nothing logged this day",
   },
+  log: {
+    searchPlaceholder: "Search memos…",
+    filterLabel: "Filter by category",
+    emptyTitle: "Nothing here yet",
+    emptyHint: "Try clearing filters, or log something with the paw button.",
+  },
 };

@@ -149,4 +149,10 @@ export interface Messages {
     next: string;
     dayEmpty: string;
   };
+  log: {
+    searchPlaceholder: string;
+    filterLabel: string;
+    emptyTitle: string;
+    emptyHint: string;
+  };
 }
