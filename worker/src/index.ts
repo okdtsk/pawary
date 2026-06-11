@@ -4,6 +4,7 @@ import { err } from "./lib/respond";
 import { securityHeaders } from "./middleware/headers";
 import { authRoutes } from "./routes/auth";
 import { meRoutes } from "./routes/me";
+import { petRoutes } from "./routes/pets";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -12,6 +13,7 @@ app.use("*", securityHeaders);
 app.get("/api/health", (c) => c.json({ data: { status: "ok" } }));
 app.route("/api/auth", authRoutes);
 app.route("/api/me", meRoutes);
+app.route("/", petRoutes);
 
 app.notFound((c) => err(c, 404, "not_found", "Not found"));
 app.onError((e, c) => {
