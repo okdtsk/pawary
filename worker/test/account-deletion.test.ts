@@ -56,6 +56,19 @@ it("deletes the user, sessions, sole-owned pets, and their R2 objects", async ()
   const listing = await env.PHOTOS.list({ prefix: `pets/${petId}/` });
   expect(listing.objects).toHaveLength(0);
 
+  // audit rows have no FKs, so the pet-delete audit survives the cascade
+  const audits = await db
+    .select()
+    .from(auditLog)
+    .where(eq(auditLog.petId, petId))
+    .all();
+  expect(
+    audits.some(
+      (a) =>
+        a.entity === "pet" && a.action === "delete" && a.userId === userId,
+    ),
+  ).toBe(true);
+
   // old cookie is dead
   const me = await SELF.fetch("https://app.local/api/me", {
     headers: { Cookie: cookie },

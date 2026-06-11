@@ -111,6 +111,15 @@ meRoutes.delete(
         soleOwner = owners.length === 1;
       }
       if (soleOwner) {
+        // pet-deletion contract: callers write the audit row BEFORE deleting
+        await writeAudit(db, {
+          petId: membership.petId,
+          userId: user.id,
+          action: "delete",
+          entity: "pet",
+          entityId: membership.petId,
+          diff: { reason: "account_deleted" },
+        });
         await deletePetWithStorage(db, c.env.PHOTOS, membership.petId);
       } else {
         // surviving shared pet: record the membership removal BEFORE the
