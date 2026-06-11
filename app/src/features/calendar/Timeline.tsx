@@ -80,6 +80,15 @@ export function Timeline({
   const today = todayKey();
   const daysKey = days.join(",");
 
+  // locale-aware hour-axis labels (UTC so the device TZ can't shift them)
+  const hourLabel = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(tag, {
+      hour: "numeric",
+      timeZone: "UTC",
+    });
+    return (hour: number) => formatter.format(new Date(Date.UTC(2026, 0, 1, hour)));
+  }, [tag]);
+
   // start the viewport at 07:00 when the range changes
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 7 * HOUR_PX });
@@ -140,7 +149,7 @@ export function Timeline({
                   className="absolute right-1.5 -translate-y-1/2 text-[10px] font-semibold tabular-nums text-ink-faint"
                   style={{ top: hour * HOUR_PX }}
                 >
-                  {hour === 0 ? "" : `${String(hour).padStart(2, "0")}:00`}
+                  {hour === 0 ? "" : hourLabel(hour)}
                 </span>
               ))}
             </div>
