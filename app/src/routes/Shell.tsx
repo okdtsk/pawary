@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import { PetAvatar } from "../components/Avatar";
-import { EmptyState } from "../components/EmptyState";
 import { Button } from "../components/Button";
 import { IconButton } from "../components/IconButton";
 import {
@@ -16,6 +15,7 @@ import {
 import { useT } from "../i18n";
 import { cn } from "../lib/cn";
 import { usePets } from "../state/pets";
+import { Onboarding } from "./Onboarding";
 
 export type ShellOutletContext = {
   openAdd: () => void;
@@ -91,12 +91,7 @@ export function Shell() {
   void quickOpen;
 
   if (!selectedPet) {
-    // Zero pets: Task 5 replaces this branch with the full Onboarding screen.
-    return (
-      <main className="flex min-h-dvh items-center justify-center bg-cream-100 p-6">
-        <EmptyState title={t.appName} hint={t.tagline} />
-      </main>
-    );
+    return <Onboarding />;
   }
 
   return (
