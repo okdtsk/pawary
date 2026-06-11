@@ -177,3 +177,4 @@ export type Session = typeof sessions.$inferSelect;
 export type Pet = typeof pets.$inferSelect;
 export type PetMember = typeof petMembers.$inferSelect;
 export type Activity = typeof activities.$inferSelect;
+export type CareSchedule = typeof careSchedules.$inferSelect;
