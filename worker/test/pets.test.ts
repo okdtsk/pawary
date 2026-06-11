@@ -174,3 +174,76 @@ it("PATCH /api/pets/:petId rejects an empty body", async () => {
   });
   expect(res.status).toBe(400);
 });
+
+it("PUT /api/pets/:petId/targets upserts and is returned by GET", async () => {
+  const { userId, cookie, csrfToken } = await seedUserWithSession();
+  const { petId } = await seedPet(userId);
+  const put = await SELF.fetch(`https://app.local/api/pets/${petId}/targets`, {
+    method: "PUT",
+    headers: authHeaders(cookie, csrfToken),
+    body: JSON.stringify({ foodGPerDay: 60, waterMlPerDay: 250 }),
+  });
+  expect(put.status).toBe(200);
+
+  const get = await SELF.fetch(`https://app.local/api/pets/${petId}`, {
+    headers: { Cookie: cookie },
+  });
+  const { data } = (await get.json()) as { data: PetResponse };
+  expect(data.targets).toEqual({ foodGPerDay: 60, waterMlPerDay: 250 });
+
+  // second PUT replaces; null clears one target
+  const put2 = await SELF.fetch(`https://app.local/api/pets/${petId}/targets`, {
+    method: "PUT",
+    headers: authHeaders(cookie, csrfToken),
+    body: JSON.stringify({ foodGPerDay: 70, waterMlPerDay: null }),
+  });
+  expect(put2.status).toBe(200);
+  const get2 = await SELF.fetch(`https://app.local/api/pets/${petId}`, {
+    headers: { Cookie: cookie },
+  });
+  const body2 = (await get2.json()) as { data: PetResponse };
+  expect(body2.data.targets).toEqual({ foodGPerDay: 70, waterMlPerDay: null });
+});
+
+it("PUT targets validates and enforces editor role", async () => {
+  const owner = await seedUserWithSession();
+  const { petId } = await seedPet(owner.userId);
+  const bad = await SELF.fetch(`https://app.local/api/pets/${petId}/targets`, {
+    method: "PUT",
+    headers: authHeaders(owner.cookie, owner.csrfToken),
+    body: JSON.stringify({ foodGPerDay: -5, waterMlPerDay: null }),
+  });
+  expect(bad.status).toBe(400);
+
+  const viewer = await seedUserWithSession({ email: "v@example.com" });
+  await withMember(petId, viewer.userId, "viewer");
+  const forbidden = await SELF.fetch(
+    `https://app.local/api/pets/${petId}/targets`,
+    {
+      method: "PUT",
+      headers: authHeaders(viewer.cookie, viewer.csrfToken),
+      body: JSON.stringify({ foodGPerDay: 60, waterMlPerDay: null }),
+    },
+  );
+  expect(forbidden.status).toBe(403);
+});
+
+it("archive and unarchive round-trip via PATCH archived", async () => {
+  const { userId, cookie, csrfToken } = await seedUserWithSession();
+  const { petId } = await seedPet(userId);
+  const archive = await SELF.fetch(`https://app.local/api/pets/${petId}`, {
+    method: "PATCH",
+    headers: authHeaders(cookie, csrfToken),
+    body: JSON.stringify({ archived: true }),
+  });
+  expect(archive.status).toBe(200);
+  expect(((await archive.json()) as { data: PetResponse }).data.archived).toBe(true);
+
+  const unarchive = await SELF.fetch(`https://app.local/api/pets/${petId}`, {
+    method: "PATCH",
+    headers: authHeaders(cookie, csrfToken),
+    body: JSON.stringify({ archived: false }),
+  });
+  expect(unarchive.status).toBe(200);
+  expect(((await unarchive.json()) as { data: PetResponse }).data.archived).toBe(false);
+});

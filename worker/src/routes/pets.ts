@@ -1,5 +1,5 @@
 import type { PetResponse, PetTargets, Role } from "@pawlog/shared";
-import { createPetSchema, updatePetSchema } from "@pawlog/shared";
+import { createPetSchema, petTargetsSchema, updatePetSchema } from "@pawlog/shared";
 import { eq } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -138,5 +138,34 @@ petRoutes.patch(
     const updated: Pet = { ...pet, ...changes };
     const targets = await getTargets(db, pet.id);
     return c.json({ data: petToResponse(updated, c.get("petRole"), targets) });
+  },
+);
+
+petRoutes.put(
+  "/api/pets/:petId/targets",
+  requireSession,
+  requireCsrf,
+  requirePetRole("editor"),
+  async (c) => {
+    const body = await c.req.json().catch(() => null);
+    const parsed = petTargetsSchema.safeParse(body);
+    if (!parsed.success) {
+      return err(c, 400, "validation", parsed.error.issues[0]?.message ?? "Invalid input");
+    }
+    const pet = c.get("pet");
+    const db = drizzle(c.env.DB);
+    await db
+      .insert(petTargets)
+      .values({ petId: pet.id, ...parsed.data })
+      .onConflictDoUpdate({ target: petTargets.petId, set: parsed.data });
+    await writeAudit(db, {
+      petId: pet.id,
+      userId: c.get("user").id,
+      action: "update",
+      entity: "pet",
+      entityId: pet.id,
+      diff: { targets: parsed.data },
+    });
+    return c.json({ data: parsed.data });
   },
 );
