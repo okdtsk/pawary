@@ -81,4 +81,49 @@ export interface Messages {
     saved: string;
     role: Record<Role, string>;
   };
+  add: {
+    pickCategory: string;
+    time: string;
+    memo: string;
+    photos: string;
+    addPhotos: string;
+    photoTooLarge: (name: string) => string;
+    photoLimit: string;
+    uploadingPhoto: (current: number, total: number) => string;
+    saved: string;
+    requiredField: (field: string) => string;
+    detailsInvalid: string;
+  };
+  fields: {
+    name: string;
+    foodType: string;
+    amount: string;
+    unit: string;
+    leftoverPct: string;
+    amountMl: string;
+    kind: string;
+    condition: string;
+    colorNote: string;
+    kg: string;
+    durationMin: string;
+    distanceKm: string;
+    severity: string;
+    dose: string;
+    doseUnit: string;
+    clinic: string;
+    reason: string;
+    diagnosis: string;
+    nextVisitDate: string;
+    vaccineName: string;
+    nextDueDate: string;
+  };
+  options: {
+    foodType: Record<"dry" | "wet" | "treat" | "supplement", string>;
+    unit: Record<"g" | "ml" | "pieces", string>;
+    toiletKind: Record<"pee" | "poop", string>;
+    condition: Record<"normal" | "soft" | "diarrhea" | "hard" | "bloody", string>;
+    exerciseKind: Record<"walk" | "play" | "other", string>;
+    severity: Record<"mild" | "moderate" | "severe", string>;
+    groomingKind: Record<"bath" | "brush" | "nails" | "trim" | "other", string>;
+  };
 }

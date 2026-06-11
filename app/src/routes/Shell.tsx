@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
+import { AddSheet } from "../features/add/AddSheet";
 import { PetAvatar } from "../components/Avatar";
 import { Button } from "../components/Button";
 import { IconButton } from "../components/IconButton";
@@ -85,9 +86,8 @@ export function Shell() {
     openAdd: () => setAddOpen(true),
     openQuickAdd: () => setQuickOpen(true),
   };
-  // Task 7 mounts <AddSheet open={addOpen} …/>, Task 8 mounts the Quick Add
-  // sheet for quickOpen — the state is wired now so screens can call into it.
-  void addOpen;
+  // Task 8 mounts the Quick Add sheet for quickOpen — the state is wired now
+  // so screens can call into it.
   void quickOpen;
 
   if (!selectedPet) {
@@ -218,6 +218,7 @@ export function Shell() {
           </TabLink>
         </div>
       </nav>
+      <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   );
 }
