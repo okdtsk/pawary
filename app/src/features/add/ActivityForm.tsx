@@ -44,7 +44,7 @@ export function ActivityForm({
   const toast = useToast();
   const qc = useQueryClient();
   const create = useCreateActivity(petId);
-  const update = useUpdateActivity(petId, existing?.id ?? "");
+  const update = useUpdateActivity(petId, existing?.id ?? "", existing);
   const deletePhoto = useDeletePhoto(petId);
 
   const [occurredAtMs, setOccurredAtMs] = useState(

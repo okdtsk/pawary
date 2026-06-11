@@ -38,15 +38,33 @@ function listPath(
   return `/api/pets/${petId}/activities${qs ? `?${qs}` : ""}`;
 }
 
-/** All activities in [from, to] (inclusive) — calendar ranges, "today so far". */
-export function useActivitiesRange(petId: string, from: number, to: number) {
+/**
+ * All activities in [from, to] (inclusive) — calendar ranges, "today so far".
+ * Follows nextCursor for up to 3 pages of 200 (cap 600): a 7-day week view
+ * can exceed one page; beyond 600 rows the tail is silently truncated.
+ * `enabled: false` keeps closed sheets from issuing throwaway 0..0 queries.
+ */
+export function useActivitiesRange(
+  petId: string,
+  from: number,
+  to: number,
+  opts?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: keys.activitiesRange(petId, from, to),
+    enabled: opts?.enabled ?? true,
     queryFn: async () => {
-      const res = await api<ActivityListResponse>(
-        listPath(petId, { from, to, limit: 200 }),
-      );
-      return res.items;
+      const items: ActivityListResponse["items"] = [];
+      let cursor: string | undefined;
+      for (let page = 0; page < 3; page++) {
+        const res = await api<ActivityListResponse>(
+          listPath(petId, { from, to, limit: 200, cursor }),
+        );
+        items.push(...res.items);
+        if (!res.nextCursor) break;
+        cursor = res.nextCursor;
+      }
+      return items;
     },
   });
 }
@@ -115,7 +133,12 @@ export function useCreateActivity(petId: string) {
   });
 }
 
-export function useUpdateActivity(petId: string, id: string) {
+export function useUpdateActivity(
+  petId: string,
+  id: string,
+  /** pre-edit values so the OLD month's summary refreshes when the date moves */
+  previous?: { occurredAt: number; tzOffsetMin: number },
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: UpdateActivityInput) =>
@@ -123,8 +146,16 @@ export function useUpdateActivity(petId: string, id: string) {
         method: "PATCH",
         body: JSON.stringify(input),
       }),
-    onSuccess: (updated) =>
-      invalidateActivityData(qc, petId, updated.occurredAt, updated.tzOffsetMin),
+    onSuccess: async (updated) => {
+      await invalidateActivityData(qc, petId, updated.occurredAt, updated.tzOffsetMin);
+      if (previous) {
+        const oldMonth = monthKeyOf(dayKeyOf(previous.occurredAt, previous.tzOffsetMin));
+        const newMonth = monthKeyOf(dayKeyOf(updated.occurredAt, updated.tzOffsetMin));
+        if (oldMonth !== newMonth) {
+          await qc.invalidateQueries({ queryKey: keys.summary(petId, oldMonth) });
+        }
+      }
+    },
   });
 }
 

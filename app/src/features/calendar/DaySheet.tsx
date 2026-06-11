@@ -27,6 +27,7 @@ export function DaySheet({
     petId,
     enabled ? dayStartMs(day) : 0,
     enabled ? dayEndMs(day) : 0,
+    { enabled },
   );
   const items = [...(activities.data ?? [])].sort(
     (a, b) => a.occurredAt - b.occurredAt,
