@@ -44,6 +44,17 @@ non-members get 404.
 - Presets: `GET|POST /api/pets/:petId/presets`,
   `PATCH|DELETE /api/pets/:petId/presets/:id`
 
+## Frontend
+
+Mobile-first React SPA (`app/`): bottom tab bar (Home / Calendar / Log / Health)
+with a center paw FAB; desktop gets a sidebar. All views are scoped to the pet
+selected in the header switcher. Warm design system in `app/src/index.css`
+(Tailwind 4 tokens) + `app/src/components/`; typed EN/JA catalogs in
+`app/src/i18n/` (missing keys fail `typecheck`). Date/grid math in
+`app/src/lib/dates.ts` and timeline lanes in `app/src/lib/timeline.ts` are
+unit-tested (`npm run test -w app`). Health charts and care schedules land in
+Plan 4; PWA polish in Plan 5.
+
 ## Docs
 
 - Spec: `docs/superpowers/specs/2026-06-11-pawlog-design.md`
