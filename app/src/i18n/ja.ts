@@ -170,4 +170,10 @@ export const ja: Messages = {
     careSoonTitle: "ケアのリマインダーは準備中",
     careSoonBody: "お薬のスケジュールや予定日のお知らせが、まもなくここに届きます。",
   },
+  calendar: {
+    views: { month: "月", week: "週", "3day": "3日", day: "日" },
+    previous: "前へ",
+    next: "次へ",
+    dayEmpty: "この日の記録はありません",
+  },
 };

@@ -143,4 +143,10 @@ export interface Messages {
     careSoonTitle: string;
     careSoonBody: string;
   };
+  calendar: {
+    views: Record<"month" | "week" | "3day" | "day", string>;
+    previous: string;
+    next: string;
+    dayEmpty: string;
+  };
 }

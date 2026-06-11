@@ -171,4 +171,10 @@ export const en: Messages = {
     careSoonBody:
       "Medication schedules and due-date reminders will live right here soon.",
   },
+  calendar: {
+    views: { month: "Month", week: "Week", "3day": "3 days", day: "Day" },
+    previous: "Previous",
+    next: "Next",
+    dayEmpty: "Nothing logged this day",
+  },
 };
