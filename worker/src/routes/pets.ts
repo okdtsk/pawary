@@ -5,6 +5,7 @@ import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { petMembers, pets, petTargets, type Pet } from "../db/schema";
 import { writeAudit } from "../domain/audit";
+import { deletePetWithStorage } from "../domain/pet-deletion";
 import type { AppEnv } from "../env";
 import { newId } from "../lib/id";
 import { err } from "../lib/respond";
@@ -167,5 +168,27 @@ petRoutes.put(
       diff: { targets: parsed.data },
     });
     return c.json({ data: parsed.data });
+  },
+);
+
+petRoutes.delete(
+  "/api/pets/:petId",
+  requireSession,
+  requireCsrf,
+  requirePetRole("owner"),
+  async (c) => {
+    const pet = c.get("pet");
+    const db = drizzle(c.env.DB);
+    // audit BEFORE deletion; audit_log has no FKs so the row survives
+    await writeAudit(db, {
+      petId: pet.id,
+      userId: c.get("user").id,
+      action: "delete",
+      entity: "pet",
+      entityId: pet.id,
+      diff: { name: pet.name },
+    });
+    await deletePetWithStorage(db, c.env.PHOTOS, pet.id);
+    return c.json({ data: { ok: true } });
   },
 );
