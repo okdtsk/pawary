@@ -1,11 +1,11 @@
-import type { CompleteScheduleResponse, ScheduleResponse } from "@pawlog/shared";
+import type { CareStatusResponse, CompleteScheduleResponse, ScheduleResponse } from "@pawlog/shared";
 import {
   activityDetailsSchemas,
   completeScheduleSchema,
   createScheduleSchema,
   updateScheduleSchema,
 } from "@pawlog/shared";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, lt } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { activities, careSchedules, type Activity, type CareSchedule } from "../db/schema";
@@ -17,6 +17,7 @@ import { err } from "../lib/respond";
 import { requireCsrf } from "../middleware/csrf";
 import { requirePetRole } from "../middleware/pet-access";
 import { requireSession } from "../middleware/session";
+import { parseTzQuery } from "../lib/tz";
 import { activityToResponse } from "./activities";
 
 export const scheduleRoutes = new Hono<AppEnv>();
@@ -200,6 +201,8 @@ scheduleRoutes.delete(
   },
 );
 
+const DAY_MS = 86_400_000;
+
 const COMPLETE_PAST_MS = 7 * 24 * 3_600_000;
 const COMPLETE_FUTURE_MS = 3_600_000;
 
@@ -290,5 +293,45 @@ scheduleRoutes.post(
       schedule: scheduleToResponse(updated),
     };
     return c.json({ data }, 201);
+  },
+);
+
+scheduleRoutes.get(
+  "/api/pets/:petId/care-status",
+  requireSession,
+  requirePetRole("viewer"),
+  async (c) => {
+    const tz = parseTzQuery(c.req.query("tz"));
+    if (tz === "invalid") {
+      return err(c, 400, "validation", "tz must be an integer -840..840");
+    }
+    const now = Date.now();
+    const tzMs = tz * 60_000;
+    // next household midnight, as a UTC instant
+    const todayEnd = Math.floor((now + tzMs) / DAY_MS) * DAY_MS + DAY_MS - tzMs;
+    const horizon = todayEnd + 7 * DAY_MS;
+
+    const db = drizzle(c.env.DB);
+    // single range scan on idx_schedules_pet_active_due
+    const rows = await db
+      .select()
+      .from(careSchedules)
+      .where(
+        and(
+          eq(careSchedules.petId, c.get("petId")),
+          eq(careSchedules.active, true),
+          lt(careSchedules.nextDueAt, horizon),
+        ),
+      )
+      .orderBy(asc(careSchedules.nextDueAt))
+      .all();
+
+    const data: CareStatusResponse = { overdue: [], today: [], upcoming: [] };
+    for (const row of rows) {
+      const bucket =
+        row.nextDueAt < now ? data.overdue : row.nextDueAt < todayEnd ? data.today : data.upcoming;
+      bucket.push(scheduleToResponse(row));
+    }
+    return c.json({ data });
   },
 );
