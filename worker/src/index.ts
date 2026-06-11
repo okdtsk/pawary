@@ -9,6 +9,7 @@ import { petRoutes } from "./routes/pets";
 import { exportRoutes } from "./routes/export";
 import { photoRoutes } from "./routes/photos";
 import { presetRoutes } from "./routes/presets";
+import { scheduleRoutes } from "./routes/schedules";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -22,6 +23,7 @@ app.route("/", activityRoutes);
 app.route("/", presetRoutes);
 app.route("/", photoRoutes);
 app.route("/", exportRoutes);
+app.route("/", scheduleRoutes);
 
 app.notFound((c) => err(c, 404, "not_found", "Not found"));
 app.onError((e, c) => {
