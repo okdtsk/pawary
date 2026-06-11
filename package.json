@@ -7,10 +7,12 @@
     "dev": "concurrently -k -n worker,app -c yellow,cyan \"npm run dev -w worker\" \"npm run dev -w app\"",
     "build": "npm run build -w app",
     "test": "npm run build -w app && npm run test -w worker && npm run test -w app",
-    "typecheck": "npm run typecheck -w shared && npm run typecheck -w worker && npm run typecheck -w app"
+    "typecheck": "npm run typecheck -w shared && npm run typecheck -w worker && npm run typecheck -w app",
+    "icons": "node scripts/make-icons.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",
+    "sharp": "^0.34.0",
     "typescript": "^5.8.0"
   }
 }
