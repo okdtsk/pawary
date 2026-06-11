@@ -71,7 +71,7 @@ function riff(body: number[]): Uint8Array {
 export function buildWebp(opts: { withExif?: boolean } = {}): Uint8Array {
   const body: number[] = [];
   // VP8X data: flags, 3 reserved, width-1 (24le), height-1 (24le)
-  body.push(...webpChunk("VP8X", [0x0c, 0, 0, 119, 0, 0, 79, 0, 0, 0]));
+  body.push(...webpChunk("VP8X", [0x0c, 0, 0, 0, 119, 0, 0, 79, 0, 0]));
   if (opts.withExif ?? true) {
     body.push(...webpChunk("EXIF", [1, 2, 3, 4, 5])); // odd size → padded
   }

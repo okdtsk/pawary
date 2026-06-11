@@ -214,12 +214,12 @@ function webpDimensions(
     const data = pos + 8;
     if (data + size > bytes.length) return null;
     if (cc === "VP8X" && size >= 10) {
-      // VP8X layout: flags(1) + reserved(2) + width-1(3 LE) + height-1(3 LE) + reserved(1)
+      // VP8X layout: flags(1) + reserved(3) + width-1(3 LE) + height-1(3 LE)
       return {
         width:
-          1 + (bytes[data + 3]! | (bytes[data + 4]! << 8) | (bytes[data + 5]! << 16)),
+          1 + (bytes[data + 4]! | (bytes[data + 5]! << 8) | (bytes[data + 6]! << 16)),
         height:
-          1 + (bytes[data + 6]! | (bytes[data + 7]! << 8) | (bytes[data + 8]! << 16)),
+          1 + (bytes[data + 7]! | (bytes[data + 8]! << 8) | (bytes[data + 9]! << 16)),
       };
     }
     if (cc === "VP8 " && size >= 10) {
