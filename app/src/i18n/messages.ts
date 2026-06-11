@@ -155,4 +155,11 @@ export interface Messages {
     emptyTitle: string;
     emptyHint: string;
   };
+  detail: {
+    updated: string;
+    deleted: string;
+    deleteTitle: string;
+    deleteBody: string;
+    viewPhoto: string;
+  };
 }

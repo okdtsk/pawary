@@ -4,6 +4,7 @@ import { useMe } from "./api/me";
 import { ErrorScreen } from "./components/ErrorScreen";
 import { PawIcon } from "./components/icons";
 import { I18nProvider } from "./i18n";
+import { ActivityDetail } from "./routes/ActivityDetail";
 import { CalendarTab } from "./routes/CalendarTab";
 import { HealthTab } from "./routes/HealthTab";
 import { Home } from "./routes/Home";
@@ -45,6 +46,10 @@ export function App() {
                 <Route path="/settings/pets" element={<PetsSettings />} />
                 <Route path="/settings/pets/new" element={<PetEditor />} />
                 <Route path="/settings/pets/:petId" element={<PetEditor />} />
+                <Route
+                  path="/pets/:petId/activities/:id"
+                  element={<ActivityDetail />}
+                />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
             </Routes>

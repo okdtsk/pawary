@@ -182,4 +182,11 @@ export const ja: Messages = {
     emptyTitle: "まだ記録がありません",
     emptyHint: "フィルタを解除するか、肉球ボタンから記録してみましょう。",
   },
+  detail: {
+    updated: "更新しました！",
+    deleted: "記録を削除しました",
+    deleteTitle: "この記録を削除しますか？",
+    deleteBody: "すべての画面から消えます。アプリ上では元に戻せません。",
+    viewPhoto: "写真を表示",
+  },
 };

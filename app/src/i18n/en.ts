@@ -183,4 +183,12 @@ export const en: Messages = {
     emptyTitle: "Nothing here yet",
     emptyHint: "Try clearing filters, or log something with the paw button.",
   },
+  detail: {
+    updated: "Updated!",
+    deleted: "Entry deleted",
+    deleteTitle: "Delete this entry?",
+    deleteBody:
+      "It will disappear from every view. You can't undo this from the app.",
+    viewPhoto: "View photo",
+  },
 };
