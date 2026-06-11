@@ -126,4 +126,13 @@ export interface Messages {
     severity: Record<"mild" | "moderate" | "severe", string>;
     groomingKind: Record<"bath" | "brush" | "nails" | "trim" | "other", string>;
   };
+  quickAdd: {
+    title: string;
+    logged: (label: string) => string;
+    undo: string;
+    undone: string;
+    emptyTitle: string;
+    emptyHint: string;
+    manage: string;
+  };
 }

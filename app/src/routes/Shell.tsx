@@ -1,6 +1,8 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import { AddSheet } from "../features/add/AddSheet";
+import { Sheet } from "../components/Sheet";
+import { QuickAddGrid } from "../features/quickadd/QuickAddGrid";
 import { PetAvatar } from "../components/Avatar";
 import { Button } from "../components/Button";
 import { IconButton } from "../components/IconButton";
@@ -82,13 +84,20 @@ export function Shell() {
   const [addOpen, setAddOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
 
+  const pressTimer = useRef<number | null>(null);
+  const longPressed = useRef(false);
+
+  const clearPress = () => {
+    if (pressTimer.current !== null) {
+      window.clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  };
+
   const outletContext: ShellOutletContext = {
     openAdd: () => setAddOpen(true),
     openQuickAdd: () => setQuickOpen(true),
   };
-  // Task 8 mounts the Quick Add sheet for quickOpen — the state is wired now
-  // so screens can call into it.
-  void quickOpen;
 
   if (!selectedPet) {
     return <Onboarding />;
@@ -198,7 +207,20 @@ export function Shell() {
             <button
               type="button"
               aria-label={t.nav.addActivity}
-              onClick={() => setAddOpen(true)}
+              onContextMenu={(e) => e.preventDefault()}
+              onPointerDown={() => {
+                longPressed.current = false;
+                pressTimer.current = window.setTimeout(() => {
+                  longPressed.current = true;
+                  setQuickOpen(true);
+                }, 500);
+              }}
+              onPointerUp={clearPress}
+              onPointerLeave={clearPress}
+              onPointerCancel={clearPress}
+              onClick={() => {
+                if (!longPressed.current) setAddOpen(true);
+              }}
               className="shadow-fab -mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-clay-500 text-white transition active:scale-95"
             >
               <span className="relative">
@@ -219,6 +241,16 @@ export function Shell() {
         </div>
       </nav>
       <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />
+      <Sheet
+        open={quickOpen}
+        onClose={() => setQuickOpen(false)}
+        title={t.quickAdd.title}
+      >
+        <QuickAddGrid
+          petId={selectedPet.id}
+          onLogged={() => setQuickOpen(false)}
+        />
+      </Sheet>
     </div>
   );
 }

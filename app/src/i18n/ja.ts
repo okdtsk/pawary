@@ -152,4 +152,14 @@ export const ja: Messages = {
       other: "その他",
     },
   },
+  quickAdd: {
+    title: "クイック追加",
+    logged: (label) => `「${label}」を記録しました`,
+    undo: "元に戻す",
+    undone: "取り消しました",
+    emptyTitle: "ショートカットがありません",
+    emptyHint:
+      "クイック追加なら、朝ごはんや夕方の散歩などの日課をワンタップで記録できます。",
+    manage: "ショートカットを設定",
+  },
 };

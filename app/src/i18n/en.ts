@@ -152,4 +152,14 @@ export const en: Messages = {
       other: "Other",
     },
   },
+  quickAdd: {
+    title: "Quick add",
+    logged: (label) => `Logged "${label}"`,
+    undo: "Undo",
+    undone: "Removed again",
+    emptyTitle: "No shortcuts yet",
+    emptyHint:
+      "Quick Add turns a routine into one tap — morning kibble, the evening walk…",
+    manage: "Set up shortcuts",
+  },
 };
