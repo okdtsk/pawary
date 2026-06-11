@@ -1,5 +1,6 @@
 import type {
   Anomaly,
+  AnomaliesResponse,
   CareSpan,
   InsightsPeriod,
   InsightsResponse,
@@ -7,6 +8,7 @@ import type {
   VetMarker,
 } from "@pawlog/shared";
 import { INSIGHTS_PERIODS } from "@pawlog/shared";
+import { evaluateAnomalies, loadAnomalyInputs } from "../domain/anomalies";
 import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -167,7 +169,12 @@ insightRoutes.get(
     }));
     const vetVisits: VetMarker[] = vetRows.map((r) => ({ at: r.at, clinic: r.clinic }));
 
-    const anomalies: Anomaly[] = []; // wired up in the anomalies task
+    const now = Date.now();
+    const anomalies: Anomaly[] = evaluateAnomalies(
+      await loadAnomalyInputs(db, petId, tz, now),
+      now,
+      tz,
+    );
 
     const data: InsightsResponse = {
       period: win.period,
@@ -187,6 +194,23 @@ insightRoutes.get(
       timeline: { medications, symptoms, vetVisits },
       anomalies,
     };
+    return c.json({ data });
+  },
+);
+
+insightRoutes.get(
+  "/api/pets/:petId/anomalies",
+  requireSession,
+  requirePetRole("viewer"),
+  async (c) => {
+    const tz = parseTzQuery(c.req.query("tz"));
+    if (tz === "invalid") {
+      return err(c, 400, "validation", "tz must be an integer -840..840");
+    }
+    const now = Date.now();
+    const db = drizzle(c.env.DB);
+    const inputs = await loadAnomalyInputs(db, c.get("petId"), tz, now);
+    const data: AnomaliesResponse = { anomalies: evaluateAnomalies(inputs, now, tz) };
     return c.json({ data });
   },
 );
