@@ -282,4 +282,13 @@ export const en: Messages = {
     dismiss: "Dismiss",
     view: "View charts",
   },
+  pwa: {
+    updateReady: "A new version of Pawlog is ready",
+    reload: "Reload",
+    offline: "You're offline — showing saved data",
+    offlineWrite: "You're offline — this can't be saved until you reconnect",
+    iosInstallTitle: "Add Pawlog to your Home Screen",
+    iosInstallBody:
+      'Tap the Share button in Safari, then choose "Add to Home Screen" to use Pawlog like an app.',
+  },
 };

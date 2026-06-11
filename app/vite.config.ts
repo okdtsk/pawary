@@ -32,6 +32,51 @@ export default defineConfig({
           },
         ],
       },
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/api\//],
+        runtimeCaching: [
+          {
+            // OAuth redirects, dev-login, logout: never cached
+            urlPattern: ({ url, sameOrigin }) =>
+              sameOrigin && url.pathname.startsWith("/api/auth/"),
+            handler: "NetworkOnly",
+          },
+          {
+            // photo bytes are immutable per id (spec §8: photos cache-first)
+            urlPattern: ({ url, sameOrigin }) =>
+              sameOrigin && url.pathname.startsWith("/api/photos/"),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "pawlog-photos",
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 30 * 24 * 3600,
+                purgeOnQuotaError: true,
+              },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+          {
+            // API reads: fresh when online (3 s budget), cached when offline.
+            // Deliberate deviation from spec §8's SWR — see plan header.
+            urlPattern: ({ url, sameOrigin }) =>
+              sameOrigin && url.pathname.startsWith("/api/"),
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "pawlog-api",
+              networkTimeoutSeconds: 3,
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 7 * 24 * 3600,
+                purgeOnQuotaError: true,
+              },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
+      },
     }),
   ],
   server: {

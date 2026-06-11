@@ -281,4 +281,13 @@ export const ja: Messages = {
     dismiss: "閉じる",
     view: "グラフを見る",
   },
+  pwa: {
+    updateReady: "新しいバージョンの準備ができました",
+    reload: "再読み込み",
+    offline: "オフラインです — 保存済みのデータを表示しています",
+    offlineWrite: "オフラインのため保存できません。接続が戻ってからもう一度お試しください",
+    iosInstallTitle: "ホーム画面にPawlogを追加",
+    iosInstallBody:
+      "Safariの共有ボタンから「ホーム画面に追加」を選ぶと、アプリのように使えます。",
+  },
 };

@@ -4,6 +4,7 @@ import { useMe } from "./api/me";
 import { ErrorScreen } from "./components/ErrorScreen";
 import { PawIcon } from "./components/icons";
 import { I18nProvider } from "./i18n";
+import { UpdatePrompt } from "./features/pwa/UpdatePrompt";
 import { ActivityDetail } from "./routes/ActivityDetail";
 import { CalendarTab } from "./routes/CalendarTab";
 import { HealthTab } from "./routes/HealthTab";
@@ -31,6 +32,7 @@ export function App() {
   const locale = me.data?.user.locale;
   return (
     <I18nProvider locale={locale}>
+      <UpdatePrompt />
       {me.isLoading ? (
         <Splash />
       ) : me.error instanceof ApiError && me.error.status === 401 ? (

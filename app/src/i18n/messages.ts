@@ -247,4 +247,12 @@ export interface Messages {
     dismiss: string;
     view: string;
   };
+  pwa: {
+    updateReady: string;
+    reload: string;
+    offline: string;
+    offlineWrite: string;
+    iosInstallTitle: string;
+    iosInstallBody: string;
+  };
 }
