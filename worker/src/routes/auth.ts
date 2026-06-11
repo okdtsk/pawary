@@ -16,6 +16,7 @@ import {
   generatePkce,
   verifyGoogleIdToken,
 } from "../lib/oauth";
+import { rateLimit } from "../lib/rate-limit";
 import { err } from "../lib/respond";
 import { requireCsrf } from "../middleware/csrf";
 import { requireSession } from "../middleware/session";
@@ -29,7 +30,7 @@ function redirectUri(requestUrl: string): string {
   return `${url.origin}/api/auth/google/callback`;
 }
 
-authRoutes.get("/google", async (c) => {
+authRoutes.get("/google", rateLimit("auth-google", 10, 60_000), async (c) => {
   const state = generateToken();
   const { verifier, challenge } = await generatePkce();
   setCookie(c, STATE_COOKIE, JSON.stringify({ state, verifier }), {
@@ -49,7 +50,7 @@ authRoutes.get("/google", async (c) => {
   );
 });
 
-authRoutes.get("/google/callback", async (c) => {
+authRoutes.get("/google/callback", rateLimit("auth-callback", 10, 60_000), async (c) => {
   const code = c.req.query("code");
   const state = c.req.query("state");
   const raw = getCookie(c, STATE_COOKIE);
@@ -93,7 +94,7 @@ authRoutes.post("/logout", requireSession, requireCsrf, async (c) => {
   return c.json({ data: { ok: true } });
 });
 
-authRoutes.post("/dev-login", async (c) => {
+authRoutes.post("/dev-login", rateLimit("auth-dev-login", 10, 60_000), async (c) => {
   const host = new URL(c.req.url).hostname;
   const isLocalhost = host === "localhost" || host === "127.0.0.1";
   if (c.env.ENVIRONMENT !== "development" || !isLocalhost) {
