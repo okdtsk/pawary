@@ -6,6 +6,7 @@ import { activityRoutes } from "./routes/activities";
 import { authRoutes } from "./routes/auth";
 import { meRoutes } from "./routes/me";
 import { petRoutes } from "./routes/pets";
+import { presetRoutes } from "./routes/presets";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -16,6 +17,7 @@ app.route("/api/auth", authRoutes);
 app.route("/api/me", meRoutes);
 app.route("/", petRoutes);
 app.route("/", activityRoutes);
+app.route("/", presetRoutes);
 
 app.notFound((c) => err(c, 404, "not_found", "Not found"));
 app.onError((e, c) => {
