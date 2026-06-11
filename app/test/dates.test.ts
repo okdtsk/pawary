@@ -1,7 +1,9 @@
+import { isoWeekKey, isoWeekStartDay } from "@pawlog/shared";
 import { describe, expect, it } from "vitest";
 import {
   addDays,
   dayKeyOf,
+  formatMonthDay,
   formatTime,
   minutesIntoDay,
   monthGrid,
@@ -91,5 +93,16 @@ describe("formatting", () => {
     expect(relativeDayKind("2026-06-11", "2026-06-11")).toBe("today");
     expect(relativeDayKind("2026-06-10", "2026-06-11")).toBe("yesterday");
     expect(relativeDayKind("2026-06-01", "2026-06-11")).toBeNull();
+  });
+});
+
+describe("chart axis helpers (plan 4)", () => {
+  it("formatMonthDay renders a short axis label", () => {
+    expect(formatMonthDay("2026-06-08", "en")).toBe("Jun 8");
+  });
+
+  it("shared ISO week math is importable from the app side", () => {
+    expect(isoWeekKey("2026-06-12")).toBe("2026-W24");
+    expect(isoWeekStartDay("2026-W24")).toBe("2026-06-08");
   });
 });

@@ -12,10 +12,12 @@ import type { Category } from "@pawlog/shared";
  *   ["presets", petId]                          quick-add presets
  *
  * Invalidation rules (enforced in the mutation hooks):
- *   activity create/update/delete  → ["activities", petId] + ["summary", petId, month-of-activity]
+ *   activity create/update/delete  → ["activities", petId] + ["summary", petId, month-of-activity] + ["insights", petId] + ["anomalies", petId]
  *   photo add/remove               → ["activities", petId]
  *   preset mutations               → ["presets", petId]
  *   pet create/update/avatar       → ["me"] + ["pets", petId]
+ *   schedule create/update/delete  → ["schedules", petId] + ["care-status", petId]
+ *   schedule complete              → schedules + care-status + activities + summary + insights + anomalies
  */
 export const keys = {
   me: ["me"] as const,
@@ -30,4 +32,9 @@ export const keys = {
   summaryRoot: (petId: string) => ["summary", petId] as const,
   summary: (petId: string, month: string) => ["summary", petId, month] as const,
   presets: (petId: string) => ["presets", petId] as const,
+  schedules: (petId: string) => ["schedules", petId] as const,
+  careStatus: (petId: string) => ["care-status", petId] as const,
+  insightsRoot: (petId: string) => ["insights", petId] as const,
+  insights: (petId: string, period: string) => ["insights", petId, period] as const,
+  anomalies: (petId: string) => ["anomalies", petId] as const,
 };

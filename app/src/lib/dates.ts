@@ -212,3 +212,13 @@ export function relativeDayKind(
   if (key === addDays(today, -1)) return "yesterday";
   return null;
 }
+
+/** Short month+day label for chart axes ("Jun 8" / 「6月8日」). */
+export function formatMonthDay(key: DayKey, locale: string): string {
+  const { year, month, day } = dayKeyToParts(key);
+  return new Intl.DateTimeFormat(locale, {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+}

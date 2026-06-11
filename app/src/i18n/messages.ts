@@ -1,4 +1,4 @@
-import type { Category, Role } from "@pawlog/shared";
+import type { Category, InsightsPeriod, Role, ScheduleType } from "@pawlog/shared";
 
 export interface Messages {
   appName: string;
@@ -43,8 +43,25 @@ export interface Messages {
     notFound: string;
   };
   health: {
-    soonTitle: string;
-    soonBody: string;
+    soonTitle: string; // removed in Task 12
+    soonBody: string; // removed in Task 12
+    periods: Record<InsightsPeriod, string>;
+    weightTitle: string;
+    weightEmpty: string;
+    movingAvg: string;
+    pctChange: (pct: string) => string;
+    intakeTitle: string;
+    intakeEmpty: string;
+    food: string;
+    water: string;
+    target: string;
+    notLogged: string;
+    gramsOnlyHint: string;
+    toiletTitle: string;
+    toiletEmpty: string;
+    timelineTitle: string;
+    timelineEmpty: string;
+    vetVisits: string;
   };
   login: {
     authError: string;
@@ -183,5 +200,55 @@ export interface Messages {
     dangerBody: string;
     confirmEmailLabel: (email: string) => string;
     deleteAccount: string;
+  };
+  care: {
+    title: string;
+    addSchedule: string;
+    editSchedule: string;
+    emptyTitle: string;
+    emptyHint: string;
+    types: Record<ScheduleType, string>;
+    typeLabel: string;
+    nameLabel: string;
+    categoryLabel: string;
+    repeatLabel: string;
+    everyLabel: string;
+    firstDueLabel: string;
+    endLabel: string;
+    endHint: string;
+    recurrence: {
+      once: string;
+      hours: (n: number) => string;
+      days: (n: number) => string;
+      weeks: (n: number) => string;
+      months: (n: number) => string;
+    };
+    overdue: string;
+    dueToday: (time: string) => string;
+    dueIn: (days: number) => string;
+    finishedBadge: string;
+    complete: string;
+    completed: (name: string) => string;
+    undo: string;
+    undone: string;
+    deleteSchedule: string;
+    deleteConfirm: string;
+    created: string;
+    saved: string;
+    homeTitle: string;
+    homeAllDone: string;
+    seeAll: string;
+    nameRequired: string;
+    invalidEnd: string;
+    invalidN: string;
+  };
+  anomalies: {
+    weightDrift: (pct: string) => string;
+    toiletTrouble: (count: number) => string;
+    quietDay: (petName: string) => string;
+    symptomStreak: (name: string, days: number) => string;
+    advice: string;
+    dismiss: string;
+    view: string;
   };
 }

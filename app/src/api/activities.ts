@@ -97,6 +97,8 @@ async function invalidateActivityData(
   await Promise.all([
     qc.invalidateQueries({ queryKey: keys.activitiesRoot(petId) }),
     qc.invalidateQueries({ queryKey: keys.summary(petId, month) }),
+    qc.invalidateQueries({ queryKey: keys.insightsRoot(petId) }),
+    qc.invalidateQueries({ queryKey: keys.anomalies(petId) }),
   ]);
 }
 
@@ -138,6 +140,8 @@ export function useDeleteActivity(petId: string) {
       await Promise.all([
         qc.invalidateQueries({ queryKey: keys.activitiesRoot(petId) }),
         qc.invalidateQueries({ queryKey: keys.summaryRoot(petId) }),
+        qc.invalidateQueries({ queryKey: keys.insightsRoot(petId) }),
+        qc.invalidateQueries({ queryKey: keys.anomalies(petId) }),
       ]);
     },
   });
