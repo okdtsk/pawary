@@ -1,4 +1,4 @@
-import type { ActivityListResponse, ActivityPhotoMeta, ActivityResponse, Category } from "@pawlog/shared";
+import type { ActivityListResponse, ActivityPhotoMeta, ActivityResponse, Category, DaySummaryResponse } from "@pawlog/shared";
 import { CATEGORIES, activityDetailsSchemas, createActivitySchema, updateActivitySchema } from "@pawlog/shared";
 import { and, desc, eq, gte, inArray, isNull, lt, lte, or, sql } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
@@ -333,6 +333,44 @@ activityRoutes.get(
       ),
       nextCursor,
     };
+    return c.json({ data });
+  },
+);
+
+const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+activityRoutes.get(
+  "/api/pets/:petId/summary",
+  requireSession,
+  requirePetRole("viewer"),
+  async (c) => {
+    const month = c.req.query("month");
+    if (!month || !MONTH_RE.test(month)) {
+      return err(c, 400, "validation", "month must be YYYY-MM");
+    }
+    const year = Number(month.slice(0, 4));
+    const mon = Number(month.slice(5, 7));
+    const startMs = Date.UTC(year, mon - 1, 1);
+    const endMs = Date.UTC(year, mon, 1);
+    const petId = c.get("petId");
+    const db = drizzle(c.env.DB);
+    const rows = await db.all<{ day: string; category: Category; count: number }>(sql`
+      SELECT date((occurred_at + tz_offset_min * 60000) / 1000, 'unixepoch') AS day,
+             category,
+             COUNT(*) AS count
+      FROM activities
+      WHERE pet_id = ${petId}
+        AND deleted_at IS NULL
+        AND occurred_at + tz_offset_min * 60000 >= ${startMs}
+        AND occurred_at + tz_offset_min * 60000 < ${endMs}
+      GROUP BY day, category
+    `);
+    const days: DaySummaryResponse["days"] = {};
+    for (const row of rows) {
+      const day = (days[row.day] ??= {});
+      day[row.category] = row.count;
+    }
+    const data: DaySummaryResponse = { month, days };
     return c.json({ data });
   },
 );
