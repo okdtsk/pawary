@@ -20,6 +20,7 @@ export function Home() {
   const t = useT();
   const tag = useLocaleTag();
   const pet = useRequiredPet();
+  const canEdit = pet.role !== "viewer";
   const { openAdd } = useOutletContext<ShellOutletContext>();
   const today = todayKey();
   const activities = useActivitiesRange(
@@ -73,9 +74,11 @@ export function Home() {
               title={t.home.quietTitle}
               hint={t.home.quietHint}
               action={
-                <Button size="sm" onClick={openAdd}>
-                  {t.nav.addActivity}
-                </Button>
+                canEdit ? (
+                  <Button size="sm" onClick={openAdd}>
+                    {t.nav.addActivity}
+                  </Button>
+                ) : undefined
               }
             />
           ) : (
@@ -88,19 +91,21 @@ export function Home() {
         </Card>
       </section>
 
-      {/* quick add */}
-      <section className="animate-pop" style={{ animationDelay: "180ms" }}>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="font-display text-lg text-ink">{t.quickAdd.title}</h2>
-          <Link
-            to="/settings/presets"
-            className="text-sm font-semibold text-clay-600 underline-offset-4 hover:underline"
-          >
-            {t.quickAdd.manage}
-          </Link>
-        </div>
-        <QuickAddGrid petId={pet.id} />
-      </section>
+      {/* quick add (editors only — viewers cannot log) */}
+      {canEdit && (
+        <section className="animate-pop" style={{ animationDelay: "180ms" }}>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="font-display text-lg text-ink">{t.quickAdd.title}</h2>
+            <Link
+              to="/settings/presets"
+              className="text-sm font-semibold text-clay-600 underline-offset-4 hover:underline"
+            >
+              {t.quickAdd.manage}
+            </Link>
+          </div>
+          <QuickAddGrid petId={pet.id} />
+        </section>
+      )}
     </div>
   );
 }

@@ -105,6 +105,8 @@ export function Shell() {
     return <Onboarding />;
   }
 
+  const canEdit = selectedPet.role !== "viewer";
+
   return (
     <div className="min-h-dvh bg-cream-100">
       {/* desktop sidebar */}
@@ -170,14 +172,16 @@ export function Shell() {
                 );
               })}
             </div>
-            <Button
-              size="sm"
-              className="hidden md:inline-flex"
-              onClick={() => setAddOpen(true)}
-            >
-              <PlusIcon className="h-4 w-4" />
-              {t.nav.addActivity}
-            </Button>
+            {canEdit && (
+              <Button
+                size="sm"
+                className="hidden md:inline-flex"
+                onClick={() => setAddOpen(true)}
+              >
+                <PlusIcon className="h-4 w-4" />
+                {t.nav.addActivity}
+              </Button>
+            )}
             <IconButton
               label={t.nav.settings}
               className="md:hidden"
@@ -214,33 +218,35 @@ export function Shell() {
             <CalendarIcon className="h-6 w-6" />
           </TabLink>
           <div className="relative flex justify-center">
-            <button
-              type="button"
-              aria-label={t.nav.addActivity}
-              onContextMenu={(e) => e.preventDefault()}
-              onPointerDown={() => {
-                longPressed.current = false;
-                pressTimer.current = window.setTimeout(() => {
-                  longPressed.current = true;
-                  setQuickOpen(true);
-                }, 500);
-              }}
-              onPointerUp={clearPress}
-              onPointerLeave={clearPress}
-              onPointerCancel={clearPress}
-              onClick={() => {
-                if (!longPressed.current) setAddOpen(true);
-              }}
-              className="shadow-fab -mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-clay-500 text-white transition active:scale-95"
-            >
-              <span className="relative">
-                <PawIcon className="h-7 w-7" />
-                <PlusIcon
-                  strokeWidth={3}
-                  className="absolute -right-1.5 -top-1.5 h-3.5 w-3.5"
-                />
-              </span>
-            </button>
+            {canEdit && (
+              <button
+                type="button"
+                aria-label={t.nav.addActivity}
+                onContextMenu={(e) => e.preventDefault()}
+                onPointerDown={() => {
+                  longPressed.current = false;
+                  pressTimer.current = window.setTimeout(() => {
+                    longPressed.current = true;
+                    setQuickOpen(true);
+                  }, 500);
+                }}
+                onPointerUp={clearPress}
+                onPointerLeave={clearPress}
+                onPointerCancel={clearPress}
+                onClick={() => {
+                  if (!longPressed.current) setAddOpen(true);
+                }}
+                className="shadow-fab -mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-clay-500 text-white transition active:scale-95"
+              >
+                <span className="relative">
+                  <PawIcon className="h-7 w-7" />
+                  <PlusIcon
+                    strokeWidth={3}
+                    className="absolute -right-1.5 -top-1.5 h-3.5 w-3.5"
+                  />
+                </span>
+              </button>
+            )}
           </div>
           <TabLink to="/log" label={t.nav.log}>
             <ListIcon className="h-6 w-6" />
@@ -250,17 +256,19 @@ export function Shell() {
           </TabLink>
         </div>
       </nav>
-      <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />
-      <Sheet
-        open={quickOpen}
-        onClose={() => setQuickOpen(false)}
-        title={t.quickAdd.title}
-      >
-        <QuickAddGrid
-          petId={selectedPet.id}
-          onLogged={() => setQuickOpen(false)}
-        />
-      </Sheet>
+      {canEdit && <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />}
+      {canEdit && (
+        <Sheet
+          open={quickOpen}
+          onClose={() => setQuickOpen(false)}
+          title={t.quickAdd.title}
+        >
+          <QuickAddGrid
+            petId={selectedPet.id}
+            onLogged={() => setQuickOpen(false)}
+          />
+        </Sheet>
+      )}
     </div>
   );
 }

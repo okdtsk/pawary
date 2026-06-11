@@ -31,6 +31,7 @@ import {
 import { DetailsFields } from "../../features/add/DetailsFields";
 import { useT } from "../../i18n";
 import { cn } from "../../lib/cn";
+import { friendlyError } from "../../lib/errors";
 import { useRequiredPet } from "../../state/pets";
 import { SettingsPage } from "./SettingsPage";
 
@@ -91,7 +92,7 @@ function PresetEditorSheet({
           toast.show(t.settings.presetCreated);
           onClose();
         },
-        onError: () => toast.show(t.errors.title, { tone: "danger" }),
+        onError: (error) => toast.show(friendlyError(error, t), { tone: "danger" }),
       },
     );
   };
@@ -143,6 +144,7 @@ function PresetEditorSheet({
 export function PresetsSettings() {
   const t = useT();
   const pet = useRequiredPet();
+  const canEdit = pet.role !== "viewer";
   const presets = usePresets(pet.id);
   const update = useUpdatePreset(pet.id);
   const remove = useDeletePreset(pet.id);
@@ -198,45 +200,58 @@ export function PresetsSettings() {
                     {t.categories[preset.category]}
                   </span>
                 </span>
-                <IconButton
-                  label={t.settings.moveUp}
-                  disabled={index === 0 || update.isPending}
-                  onClick={() => void move(index, -1)}
-                >
-                  <ArrowUpIcon className="h-4 w-4" />
-                </IconButton>
-                <IconButton
-                  label={t.settings.moveDown}
-                  disabled={index === items.length - 1 || update.isPending}
-                  onClick={() => void move(index, 1)}
-                >
-                  <ArrowDownIcon className="h-4 w-4" />
-                </IconButton>
-                <IconButton
-                  label={t.common.delete}
-                  className="text-berry-600 hover:bg-berry-100"
-                  disabled={remove.isPending}
-                  onClick={() => remove.mutate(preset.id)}
-                >
-                  <TrashIcon className="h-4 w-4" />
-                </IconButton>
+                {canEdit && (
+                  <>
+                    <IconButton
+                      label={t.settings.moveUp}
+                      disabled={index === 0 || update.isPending}
+                      onClick={() => void move(index, -1)}
+                    >
+                      <ArrowUpIcon className="h-4 w-4" />
+                    </IconButton>
+                    <IconButton
+                      label={t.settings.moveDown}
+                      disabled={index === items.length - 1 || update.isPending}
+                      onClick={() => void move(index, 1)}
+                    >
+                      <ArrowDownIcon className="h-4 w-4" />
+                    </IconButton>
+                    <IconButton
+                      label={t.common.delete}
+                      className="text-berry-600 hover:bg-berry-100"
+                      disabled={remove.isPending}
+                      onClick={() => remove.mutate(preset.id)}
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </IconButton>
+                  </>
+                )}
               </div>
             );
           })}
         </Card>
       )}
 
-      <Button variant="soft" size="sm" className="self-start" onClick={() => setEditorOpen(true)}>
-        <PlusIcon className="h-4 w-4" />
-        {t.settings.newPreset}
-      </Button>
+      {canEdit && (
+        <>
+          <Button
+            variant="soft"
+            size="sm"
+            className="self-start"
+            onClick={() => setEditorOpen(true)}
+          >
+            <PlusIcon className="h-4 w-4" />
+            {t.settings.newPreset}
+          </Button>
 
-      <PresetEditorSheet
-        petId={pet.id}
-        open={editorOpen}
-        nextSortOrder={items.length * 10}
-        onClose={() => setEditorOpen(false)}
-      />
+          <PresetEditorSheet
+            petId={pet.id}
+            open={editorOpen}
+            nextSortOrder={items.length * 10}
+            onClose={() => setEditorOpen(false)}
+          />
+        </>
+      )}
     </SettingsPage>
   );
 }
