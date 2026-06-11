@@ -2,6 +2,18 @@
 
 Pet activity log & health management. Mobile-first PWA on Cloudflare Workers.
 
+## Features (v1)
+
+- Google OAuth sign-in (+ localhost-only dev login)
+- Multi-pet households with editor/viewer roles (sharing UI is post-v1)
+- Activity logging: 11 categories, photos (R2), Quick Add presets, full CRUD
+- Views: Home dashboard, Month / Week / 3-Day / Day calendar, filterable log
+- Care schedules with recurrence, due badges, one-tap complete + undo
+- Health Analyzer: weight / intake / toilet / care-timeline charts + advisory anomaly flags
+- English + Japanese, device-locale default, per-user override
+- Data export (JSON/CSV), self-service account deletion, audit log
+- Installable PWA with offline read cache (writes require connectivity)
+
 ## Stack
 
 React 19 + Vite + Tailwind (PWA) · Hono on Cloudflare Workers · D1 + Drizzle · R2
@@ -73,6 +85,28 @@ drift, toilet trouble, quiet day, symptom streak; advisory, never
 diagnostic). A lightweight `GET /api/pets/:petId/anomalies?tz=` powers the
 Home banners. Charts are hand-rolled SVG in `app/src/features/health/`;
 anomaly copy is rendered client-side from the typed EN/JA catalogs.
+
+## PWA & Offline
+
+`vite-plugin-pwa` (Workbox `generateSW`) precaches the app shell and adds
+runtime caching: same-origin API GETs are network-first with a 3-second
+timeout falling back to cache, `/api/photos/**` is cache-first
+(30 days / 200 entries), and `/api/auth/**` is never cached. Writes require
+connectivity in v1 — the API client fails fast with a localized offline
+error, and an "offline — showing saved data" banner appears in the shell.
+Updates use `registerType: "prompt"`: a "new version — reload" toast applies
+the waiting service worker.
+
+App icons are generated from `app/public/icons/paw.svg` via `npm run icons`
+(one-off `sharp` script; the PNGs are committed). `app/public/_headers`
+serves `sw.js` and `manifest.webmanifest` with `Cache-Control: no-cache` so
+new versions are picked up promptly.
+
+Install: Chrome/Edge offer the install prompt automatically; on iOS use
+Safari → Share → **Add to Home Screen** (an in-app hint card on Home walks
+you through it). To exercise the service worker locally, serve the built
+app through the worker: `npm run build -w app && npm run dev -w worker`,
+then open http://localhost:8787 (the Vite dev server does not register it).
 
 ## Docs
 
