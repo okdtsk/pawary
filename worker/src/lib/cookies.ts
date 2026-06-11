@@ -24,5 +24,8 @@ export function getSessionToken(c: AnyAppCtx): string | undefined {
 }
 
 export function clearSessionCookie(c: AnyAppCtx): void {
-  deleteCookie(c, sessionCookieName(c.env), { path: "/" });
+  deleteCookie(c, sessionCookieName(c.env), {
+    path: "/",
+    secure: c.env.ENVIRONMENT === "production",
+  });
 }
