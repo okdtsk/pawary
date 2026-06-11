@@ -1,5 +1,5 @@
 import type { ActivityResponse } from "@pawlog/shared";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useParams } from "react-router";
 import { useActivity, useDeleteActivity } from "../api/activities";
@@ -18,6 +18,7 @@ import { CATEGORY_FIELDS } from "../features/add/categoryFields";
 import { useLocaleTag, useT } from "../i18n";
 import type { Messages } from "../i18n/messages";
 import { cn } from "../lib/cn";
+import { friendlyError } from "../lib/errors";
 import { formatDateTime } from "../lib/dates";
 import { usePets } from "../state/pets";
 
@@ -50,6 +51,16 @@ function Lightbox({
   onClose: () => void;
   closeLabel: string;
 }) {
+  // The lightbox never holds focus, so a React onKeyDown would not fire —
+  // listen at the document level for Escape instead.
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return createPortal(
     <div
       className="animate-fade fixed inset-0 z-[70] flex items-center justify-center bg-ink/90 p-4"
@@ -57,9 +68,6 @@ function Lightbox({
       aria-modal="true"
       aria-label={closeLabel}
       onClick={onClose}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose();
-      }}
     >
       <IconButton
         label={closeLabel}
@@ -126,7 +134,7 @@ export function ActivityDetail() {
         toast.show(t.detail.deleted);
         navigate(-1);
       },
-      onError: () => toast.show(t.errors.title, { tone: "danger" }),
+      onError: (error) => toast.show(friendlyError(error, t), { tone: "danger" }),
     });
 
   return (

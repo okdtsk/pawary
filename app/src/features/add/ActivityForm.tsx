@@ -44,7 +44,14 @@ export function ActivityForm({
   const toast = useToast();
   const qc = useQueryClient();
   const create = useCreateActivity(petId);
-  const update = useUpdateActivity(petId, existing?.id ?? "", existing);
+  // Survives a photo-upload failure: a re-submit must NOT create a second
+  // activity. Holds the created id until the whole submit completes.
+  const createdIdRef = useRef<string | null>(null);
+  const update = useUpdateActivity(
+    petId,
+    existing?.id ?? createdIdRef.current ?? "",
+    existing,
+  );
   const deletePhoto = useDeletePhoto(petId);
 
   const [occurredAtMs, setOccurredAtMs] = useState(
@@ -104,7 +111,8 @@ export function ActivityForm({
     try {
       const trimmedMemo = memo.trim();
       let saved: ActivityResponse;
-      if (existing) {
+      if (existing || createdIdRef.current) {
+        // edit mode — or resuming after create succeeded but a photo failed
         saved = await update.mutateAsync({
           occurredAt: occurredAtMs,
           tzOffsetMin: deviceTzOffsetMin(),
@@ -119,15 +127,21 @@ export function ActivityForm({
           ...(trimmedMemo !== "" ? { memo: trimmedMemo } : {}),
           details: built.details,
         });
+        createdIdRef.current = saved.id;
       }
       if (files.length > 0) {
-        setProgress({ done: 0, total: files.length });
-        for (let i = 0; i < files.length; i++) {
-          await uploadActivityPhoto(petId, saved.id, files[i]!);
-          setProgress({ done: i + 1, total: files.length });
+        const pending = [...files];
+        setProgress({ done: 0, total: pending.length });
+        for (let i = 0; i < pending.length; i++) {
+          const file = pending[i]!;
+          await uploadActivityPhoto(petId, saved.id, file);
+          // uploaded — remove from state so a retry never re-sends it
+          setFiles((prev) => prev.filter((f) => f !== file));
+          setProgress({ done: i + 1, total: pending.length });
         }
         await qc.invalidateQueries({ queryKey: keys.activitiesRoot(petId) });
       }
+      createdIdRef.current = null; // fully saved
       onSaved(saved);
     } catch (error) {
       toast.show(
