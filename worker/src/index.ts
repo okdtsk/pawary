@@ -2,12 +2,14 @@ import { Hono } from "hono";
 import type { Env } from "./env";
 import { err } from "./lib/respond";
 import { securityHeaders } from "./middleware/headers";
+import { meRoutes } from "./routes/me";
 
 const app = new Hono<{ Bindings: Env }>();
 
 app.use("*", securityHeaders);
 
 app.get("/api/health", (c) => c.json({ data: { status: "ok" } }));
+app.route("/api/me", meRoutes);
 
 app.notFound((c) => err(c, 404, "not_found", "Not found"));
 app.onError((e, c) => {
