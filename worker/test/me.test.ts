@@ -1,5 +1,10 @@
-import { SELF } from "cloudflare:test";
+import { env, SELF } from "cloudflare:test";
+import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
 import { expect, it } from "vitest";
+import { sessions } from "../src/db/schema";
+import { sha256Hex } from "../src/lib/crypto";
+import { SESSION_REFRESH_INTERVAL_MS } from "../src/domain/sessions";
 import { seedUserWithSession } from "./helpers";
 
 it("returns 401 without a session cookie", async () => {
@@ -85,4 +90,44 @@ it("PATCH /api/me rejects unknown fields", async () => {
     body: JSON.stringify({ isAdmin: true }),
   });
   expect(res.status).toBe(400);
+});
+
+it("GET /api/me re-issues session cookie when sliding refresh triggers", async () => {
+  const { cookie } = await seedUserWithSession();
+  // Extract the raw token from "session=<token>"
+  const token = cookie.split("=")[1]!;
+
+  // Set lastSeenAt to 2h ago so the refresh interval (1h) is exceeded
+  const db = drizzle(env.DB);
+  const tokenHash = await sha256Hex(token);
+  await db
+    .update(sessions)
+    .set({ lastSeenAt: Date.now() - 2 * 60 * 60 * 1000 })
+    .where(eq(sessions.tokenHash, tokenHash));
+
+  const res = await SELF.fetch("https://app.local/api/me", {
+    headers: { Cookie: cookie },
+  });
+  expect(res.status).toBe(200);
+
+  // A Set-Cookie with a Max-Age must be present on the response
+  const setCookies = res.headers.getSetCookie();
+  const sessionSet = setCookies.find((v) => v.startsWith("session="));
+  expect(sessionSet).toBeTruthy();
+  expect(sessionSet).toMatch(/Max-Age=\d+/);
+});
+
+it("GET /api/me does NOT re-issue session cookie when no refresh is due", async () => {
+  const { cookie } = await seedUserWithSession();
+  // lastSeenAt is just now (set by seedUserWithSession), within the 1h refresh interval
+
+  const res = await SELF.fetch("https://app.local/api/me", {
+    headers: { Cookie: cookie },
+  });
+  expect(res.status).toBe(200);
+
+  // No session Set-Cookie should be on this response
+  const setCookies = res.headers.getSetCookie();
+  const sessionSet = setCookies.find((v) => v.startsWith("session="));
+  expect(sessionSet).toBeUndefined();
 });

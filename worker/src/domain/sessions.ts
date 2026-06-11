@@ -31,7 +31,7 @@ export async function getValidSession(
   db: DrizzleD1Database,
   token: string,
   now: number,
-): Promise<Session | null> {
+): Promise<{ session: Session; refreshed: boolean } | null> {
   const tokenHash = await sha256Hex(token);
   const session = await db
     .select()
@@ -58,8 +58,9 @@ export async function getValidSession(
       .where(eq(sessions.id, session.id));
     session.lastSeenAt = now;
     session.expiresAt = expiresAt;
+    return { session, refreshed: true };
   }
-  return session;
+  return { session, refreshed: false };
 }
 
 export async function deleteSessionByToken(

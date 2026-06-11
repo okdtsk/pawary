@@ -9,13 +9,17 @@ export function sessionCookieName(env: Env): string {
   return env.ENVIRONMENT === "production" ? "__Host-session" : "session";
 }
 
-export function setSessionCookie(c: AnyAppCtx, token: string): void {
+export function setSessionCookie(
+  c: AnyAppCtx,
+  token: string,
+  maxAgeSeconds: number = Math.floor(SESSION_TTL_MS / 1000),
+): void {
   setCookie(c, sessionCookieName(c.env), token, {
     httpOnly: true,
     secure: c.env.ENVIRONMENT === "production",
     sameSite: "Lax",
     path: "/",
-    maxAge: Math.floor(SESSION_TTL_MS / 1000),
+    maxAge: maxAgeSeconds,
   });
 }
 

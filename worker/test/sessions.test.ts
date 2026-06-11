@@ -25,15 +25,18 @@ it("createSession + getValidSession round-trips", async () => {
   const db = drizzle(env.DB);
   await seedUser(db);
   const { token, csrfToken } = await createSession(db, "u1");
-  const session = await getValidSession(db, token, Date.now());
-  expect(session?.userId).toBe("u1");
-  expect(session?.csrfToken).toBe(csrfToken);
+  const result = await getValidSession(db, token, Date.now());
+  expect(result).not.toBeNull();
+  expect(result?.session.userId).toBe("u1");
+  expect(result?.session.csrfToken).toBe(csrfToken);
+  expect(result?.refreshed).toBe(false);
 });
 
 it("rejects an unknown token", async () => {
   const db = drizzle(env.DB);
   expect(await getValidSession(db, "bogus", Date.now())).toBeNull();
 });
+
 
 it("rejects and deletes an expired session", async () => {
   const db = drizzle(env.DB);
@@ -54,16 +57,19 @@ it("enforces the 90-day absolute cap even with refreshes", async () => {
   expect(await getValidSession(db, token, pastCap)).toBeNull();
 });
 
+
 it("slides expiry forward when used after the refresh interval", async () => {
   const db = drizzle(env.DB);
   await seedUser(db);
   const { token } = await createSession(db, "u1");
   const t1 = Date.now() + SESSION_REFRESH_INTERVAL_MS + 1000;
-  const refreshed = await getValidSession(db, token, t1);
-  expect(refreshed).not.toBeNull();
+  const result1 = await getValidSession(db, token, t1);
+  expect(result1).not.toBeNull();
+  expect(result1?.refreshed).toBe(true);
   // still valid at a time that would have been past the original expiry
   const t2 = t1 + SESSION_TTL_MS - 1000;
-  expect(await getValidSession(db, token, t2)).not.toBeNull();
+  const result2 = await getValidSession(db, token, t2);
+  expect(result2).not.toBeNull();
 });
 
 it("deleteSessionByToken revokes", async () => {
@@ -72,4 +78,14 @@ it("deleteSessionByToken revokes", async () => {
   const { token } = await createSession(db, "u1");
   await deleteSessionByToken(db, token);
   expect(await getValidSession(db, token, Date.now())).toBeNull();
+});
+
+it("returns refreshed=false on a recent session lookup", async () => {
+  const db = drizzle(env.DB);
+  await seedUser(db);
+  const { token } = await createSession(db, "u1");
+  // freshly created — lastSeenAt is now, well within refresh interval
+  const result = await getValidSession(db, token, Date.now() + 1000);
+  expect(result).not.toBeNull();
+  expect(result?.refreshed).toBe(false);
 });
