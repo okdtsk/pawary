@@ -14,5 +14,10 @@
   ],
   "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "pawlog-photos" }],
   "vars": { "ENVIRONMENT": "development" },
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "../app/dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  }
 }

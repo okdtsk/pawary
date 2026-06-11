@@ -1,0 +1,10 @@
+# Copy to worker/.dev.vars (git-ignored) and fill in to use real Google sign-in.
+# Without these, use the "Dev sign-in (local)" button instead.
+#
+# Create an OAuth client at https://console.cloud.google.com/apis/credentials
+# Application type: Web application
+# Authorized redirect URIs:
+#   http://localhost:5173/api/auth/google/callback   (vite dev server)
+#   http://localhost:8787/api/auth/google/callback   (wrangler dev direct)
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
