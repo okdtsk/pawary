@@ -6,3 +6,10 @@ declare module "cloudflare:test" {
     TEST_MIGRATIONS: D1Migration[];
   }
 }
+
+// workerd extends Headers with getSetCookie() per the Fetch spec
+declare global {
+  interface Headers {
+    getSetCookie(): string[];
+  }
+}
