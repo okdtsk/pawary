@@ -162,4 +162,26 @@ export interface Messages {
     deleteBody: string;
     viewPhoto: string;
   };
+  settings: {
+    displayName: string;
+    language: string;
+    languageSystem: string;
+    saved: string;
+    presets: string;
+    account: string;
+    exportTitle: string;
+    exportAll: string;
+    exportPetJson: (petName: string) => string;
+    exportPetCsv: (petName: string) => string;
+    newPreset: string;
+    presetLabel: string;
+    presetCreated: string;
+    moveUp: string;
+    moveDown: string;
+    signedInAs: string;
+    dangerTitle: string;
+    dangerBody: string;
+    confirmEmailLabel: (email: string) => string;
+    deleteAccount: string;
+  };
 }

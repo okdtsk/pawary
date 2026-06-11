@@ -11,8 +11,11 @@ import { Home } from "./routes/Home";
 import { Login } from "./routes/Login";
 import { LogTab } from "./routes/LogTab";
 import { Shell } from "./routes/Shell";
+import { AccountSettings } from "./routes/settings/AccountSettings";
 import { PetEditor } from "./routes/settings/PetEditor";
 import { PetsSettings } from "./routes/settings/PetsSettings";
+import { PresetsSettings } from "./routes/settings/PresetsSettings";
+import { SettingsHome } from "./routes/settings/SettingsHome";
 import { PetProvider } from "./state/pets";
 
 function Splash() {
@@ -43,6 +46,9 @@ export function App() {
                 <Route path="/calendar" element={<CalendarTab />} />
                 <Route path="/log" element={<LogTab />} />
                 <Route path="/health" element={<HealthTab />} />
+                <Route path="/settings" element={<SettingsHome />} />
+                <Route path="/settings/presets" element={<PresetsSettings />} />
+                <Route path="/settings/account" element={<AccountSettings />} />
                 <Route path="/settings/pets" element={<PetsSettings />} />
                 <Route path="/settings/pets/new" element={<PetEditor />} />
                 <Route path="/settings/pets/:petId" element={<PetEditor />} />
