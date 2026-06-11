@@ -193,3 +193,150 @@ it("GET /:id returns the activity for a viewer; cross-pet id is 404", async () =
   );
   expect(cross.status).toBe(404);
 });
+
+it("PATCH updates memo/details and audits a before/after diff", async () => {
+  const owner = await seedUserWithSession();
+  const { petId } = await seedPet(owner.userId);
+  const created = await postActivity(petId, owner.cookie, owner.csrfToken, {
+    category: "weight",
+    occurredAt: Date.now(),
+    tzOffsetMin: 540,
+    memo: "old memo",
+    details: { kg: 4.2 },
+  });
+  const { data } = (await created.json()) as { data: ActivityResponse };
+
+  const res = await SELF.fetch(
+    `https://app.local/api/pets/${petId}/activities/${data.id}`,
+    {
+      method: "PATCH",
+      headers: authHeaders(owner.cookie, owner.csrfToken),
+      body: JSON.stringify({ memo: "new memo", details: { kg: 4.4 } }),
+    },
+  );
+  expect(res.status).toBe(200);
+  const body = (await res.json()) as { data: ActivityResponse };
+  expect(body.data.memo).toBe("new memo");
+  expect(body.data.details).toEqual({ kg: 4.4 });
+  expect(body.data.updatedBy).toBe(owner.userId);
+
+  const db = drizzle(env.DB);
+  const audits = await db
+    .select()
+    .from(auditLog)
+    .where(eq(auditLog.entityId, data.id))
+    .all();
+  const update = audits.find((a) => a.action === "update");
+  expect(update?.diff).toEqual({
+    before: { memo: "old memo", details: { kg: 4.2 } },
+    after: { memo: "new memo", details: { kg: 4.4 } },
+  });
+});
+
+it("PATCH rejects details invalid for the EXISTING category and any category change", async () => {
+  const owner = await seedUserWithSession();
+  const { petId } = await seedPet(owner.userId);
+  const created = await postActivity(petId, owner.cookie, owner.csrfToken, {
+    category: "weight",
+    occurredAt: Date.now(),
+    tzOffsetMin: 0,
+    details: { kg: 4.2 },
+  });
+  const { data } = (await created.json()) as { data: ActivityResponse };
+
+  for (const body of [
+    { details: { amountMl: 100 } }, // water details on a weight activity
+    { category: "water" }, // category is immutable (strict schema rejects)
+    {}, // nothing to update
+  ]) {
+    const res = await SELF.fetch(
+      `https://app.local/api/pets/${petId}/activities/${data.id}`,
+      {
+        method: "PATCH",
+        headers: authHeaders(owner.cookie, owner.csrfToken),
+        body: JSON.stringify(body),
+      },
+    );
+    expect(res.status).toBe(400);
+  }
+});
+
+it("DELETE soft-deletes: GET 404s, second DELETE 404s, audit row written", async () => {
+  const owner = await seedUserWithSession();
+  const { petId } = await seedPet(owner.userId);
+  const created = await postActivity(petId, owner.cookie, owner.csrfToken, {
+    category: "note",
+    occurredAt: Date.now(),
+    tzOffsetMin: 0,
+    details: {},
+  });
+  const { data } = (await created.json()) as { data: ActivityResponse };
+
+  const del = await SELF.fetch(
+    `https://app.local/api/pets/${petId}/activities/${data.id}`,
+    { method: "DELETE", headers: authHeaders(owner.cookie, owner.csrfToken) },
+  );
+  expect(del.status).toBe(200);
+
+  const get = await SELF.fetch(
+    `https://app.local/api/pets/${petId}/activities/${data.id}`,
+    { headers: { Cookie: owner.cookie } },
+  );
+  expect(get.status).toBe(404);
+
+  const again = await SELF.fetch(
+    `https://app.local/api/pets/${petId}/activities/${data.id}`,
+    { method: "DELETE", headers: authHeaders(owner.cookie, owner.csrfToken) },
+  );
+  expect(again.status).toBe(404);
+
+  const db = drizzle(env.DB);
+  const audits = await db
+    .select()
+    .from(auditLog)
+    .where(eq(auditLog.entityId, data.id))
+    .all();
+  expect(audits.some((a) => a.action === "delete")).toBe(true);
+
+  // the row still exists in D1 (soft delete)
+  const { activities } = await import("../src/db/schema");
+  const row = await db
+    .select()
+    .from(activities)
+    .where(eq(activities.id, data.id))
+    .get();
+  expect(row?.deletedAt).not.toBeNull();
+});
+
+it("PATCH/DELETE authz: viewer 403, non-member 404", async () => {
+  const owner = await seedUserWithSession();
+  const { petId } = await seedPet(owner.userId);
+  const created = await postActivity(petId, owner.cookie, owner.csrfToken, {
+    category: "note",
+    occurredAt: Date.now(),
+    tzOffsetMin: 0,
+    details: {},
+  });
+  const { data } = (await created.json()) as { data: ActivityResponse };
+  const url = `https://app.local/api/pets/${petId}/activities/${data.id}`;
+
+  const viewer = await seedUserWithSession({ email: "v@example.com" });
+  await withMember(petId, viewer.userId, "viewer");
+  const outsider = await seedUserWithSession({ email: "eve@example.com" });
+
+  for (const method of ["PATCH", "DELETE"]) {
+    const asViewer = await SELF.fetch(url, {
+      method,
+      headers: authHeaders(viewer.cookie, viewer.csrfToken),
+      body: method === "PATCH" ? JSON.stringify({ memo: "x" }) : undefined,
+    });
+    expect(asViewer.status).toBe(403);
+
+    const asOutsider = await SELF.fetch(url, {
+      method,
+      headers: authHeaders(outsider.cookie, outsider.csrfToken),
+      body: method === "PATCH" ? JSON.stringify({ memo: "x" }) : undefined,
+    });
+    expect(asOutsider.status).toBe(404);
+  }
+});
