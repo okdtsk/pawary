@@ -1,5 +1,5 @@
 import type { ActivityResponse, Category } from "@pawlog/shared";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useCreateActivity,
@@ -55,11 +55,23 @@ export function ActivityForm({
   );
   const [memo, setMemo] = useState(existing?.memo ?? "");
   const [files, setFiles] = useState<File[]>([]);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const existingPhotos = existing?.photos ?? [];
+  const previews = useMemo(
+    () => files.map((f) => URL.createObjectURL(f)),
+    [files],
+  );
+  useEffect(
+    () => () => previews.forEach(URL.revokeObjectURL),
+    [previews],
+  );
+
+  const existingPhotos = (existing?.photos ?? []).filter(
+    (p) => !deletedIds.has(p.id),
+  );
   const photoCount = existingPhotos.length + files.length;
   const busy = create.isPending || update.isPending || progress !== null;
 
@@ -164,7 +176,12 @@ export function ActivityForm({
                 label={t.common.delete}
                 className="absolute -right-2 -top-2 h-7 w-7 bg-paper shadow-card"
                 disabled={deletePhoto.isPending}
-                onClick={() => deletePhoto.mutate(photo.id)}
+                onClick={() =>
+                  deletePhoto.mutate(photo.id, {
+                    onSuccess: () =>
+                      setDeletedIds((prev) => new Set(prev).add(photo.id)),
+                  })
+                }
               >
                 <XIcon className="h-3.5 w-3.5" />
               </IconButton>
@@ -173,7 +190,7 @@ export function ActivityForm({
           {files.map((file, i) => (
             <span key={`${file.name}-${i}`} className="relative">
               <img
-                src={URL.createObjectURL(file)}
+                src={previews[i]}
                 alt=""
                 className="h-16 w-16 rounded-2xl object-cover"
               />
