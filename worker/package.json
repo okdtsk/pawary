@@ -1,0 +1,27 @@
+{
+  "name": "@pawlog/worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply pawlog --local"
+  },
+  "dependencies": {
+    "@pawlog/shared": "*",
+    "drizzle-orm": "^0.44.0",
+    "hono": "^4.7.0",
+    "jose": "^6.0.0",
+    "ulidx": "^2.4.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.0",
+    "@cloudflare/workers-types": "^4.20250601.0",
+    "drizzle-kit": "^0.31.0",
+    "vitest": "~3.2.0",
+    "wrangler": "^4.20.0"
+  }
+}
