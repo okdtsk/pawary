@@ -55,6 +55,25 @@ selected in the header switcher. Warm design system in `app/src/index.css`
 unit-tested (`npm run test -w app`). Health charts and care schedules land in
 Plan 4; PWA polish in Plan 5.
 
+## Care & Analyzer
+
+Care schedules (`care_schedules`) drive proactive reminders: each schedule
+links an activity category to a details template; completing one atomically
+logs the activity and advances `next_due_at` by its interval (anchored to the
+previous due time; `once` and past-`end_at` schedules deactivate).
+`GET /api/pets/:petId/care-status?tz=` buckets active schedules into
+overdue / today / upcoming-7d for the Home card and the Health tab.
+
+The Health Analyzer (`GET /api/pets/:petId/insights?period=4w|3m|1y&tz=`)
+returns four chart datasets in one call — weight trend (7-point average,
+min/max band, % change), food/water vs daily targets, a toilet-pattern
+matrix, and a symptom/medication timeline with vet-visit markers — bucketed
+by household day (ISO week for 1y), plus structured anomaly flags (weight
+drift, toilet trouble, quiet day, symptom streak; advisory, never
+diagnostic). A lightweight `GET /api/pets/:petId/anomalies?tz=` powers the
+Home banners. Charts are hand-rolled SVG in `app/src/features/health/`;
+anomaly copy is rendered client-side from the typed EN/JA catalogs.
+
 ## Docs
 
 - Spec: `docs/superpowers/specs/2026-06-11-pawlog-design.md`

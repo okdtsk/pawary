@@ -1,12 +1,14 @@
 import { Link, useOutletContext } from "react-router";
 import { useActivitiesRange } from "../api/activities";
+import { useAnomalies } from "../api/insights";
 import { ActivityRow } from "../components/ActivityRow";
 import { PetAvatar } from "../components/Avatar";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { EmptyState } from "../components/EmptyState";
-import { SproutIcon } from "../components/icons";
 import { Spinner } from "../components/Spinner";
+import { AnomalyBanners } from "../features/health/AnomalyBanners";
+import { CareCard } from "../features/health/CareCard";
 import { QuickAddGrid } from "../features/quickadd/QuickAddGrid";
 import { useLocaleTag, useT } from "../i18n";
 import { dayEndMs, dayStartMs, formatDayHeading, todayKey } from "../lib/dates";
@@ -24,6 +26,7 @@ export function Home() {
     dayStartMs(today),
     dayEndMs(today),
   );
+  const anomalies = useAnomalies(pet.id);
   const items = [...(activities.data ?? [])].sort(
     (a, b) => b.occurredAt - a.occurredAt,
   );
@@ -41,23 +44,16 @@ export function Home() {
         </div>
       </section>
 
-      {/* Plan-4 slot: anomaly banners render here (insights API) */}
-      <section data-slot="anomaly-banners" className="hidden" aria-hidden="true" />
+      {/* anomaly banners (lightweight rules-only endpoint), deep-linked to Health */}
+      <AnomalyBanners
+        petId={pet.id}
+        petName={pet.name}
+        anomalies={anomalies.data?.anomalies ?? []}
+        linkToHealth
+      />
 
-      {/* Plan-4 slot: care items (overdue / due today) */}
-      <Card
-        data-slot="care-items"
-        className="animate-pop flex items-center gap-3 bg-moss-100/60"
-        style={{ animationDelay: "60ms" }}
-      >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-paper text-moss-600">
-          <SproutIcon className="h-6 w-6" />
-        </span>
-        <div>
-          <p className="font-display text-ink">{t.home.careSoonTitle}</p>
-          <p className="text-sm text-ink-soft">{t.home.careSoonBody}</p>
-        </div>
-      </Card>
+      {/* care items: overdue / due today, complete with undo */}
+      <CareCard petId={pet.id} role={pet.role} />
 
       {/* today so far */}
       <section className="animate-pop" style={{ animationDelay: "120ms" }}>

@@ -155,8 +155,6 @@ export interface Messages {
     todaySoFar: string;
     quietTitle: string;
     quietHint: string;
-    careSoonTitle: string;
-    careSoonBody: string;
   };
   calendar: {
     views: Record<"month" | "week" | "3day" | "day", string>;

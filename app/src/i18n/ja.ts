@@ -181,8 +181,6 @@ export const ja: Messages = {
     todaySoFar: "今日のようす",
     quietTitle: "今日はまだ静かです",
     quietHint: "家族の誰かが記録すると、ここに今日のようすが集まります。",
-    careSoonTitle: "ケアのリマインダーは準備中",
-    careSoonBody: "お薬のスケジュールや予定日のお知らせが、まもなくここに届きます。",
   },
   calendar: {
     views: { month: "月", week: "週", "3day": "3日", day: "日" },

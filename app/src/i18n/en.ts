@@ -181,9 +181,6 @@ export const en: Messages = {
     todaySoFar: "Today so far",
     quietTitle: "A quiet day so far",
     quietHint: "Anything your family logs shows up here as the day unfolds.",
-    careSoonTitle: "Care reminders are coming",
-    careSoonBody:
-      "Medication schedules and due-date reminders will live right here soon.",
   },
   calendar: {
     views: { month: "Month", week: "Week", "3day": "3 days", day: "Day" },
