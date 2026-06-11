@@ -4,12 +4,14 @@ import { useCompleteSchedule, useUpdateSchedule } from "../../api/schedules";
 import { useToast } from "../../components/Toast";
 import { useT } from "../../i18n";
 import { deviceTzOffsetMin } from "../../lib/dates";
+import { friendlyError } from "../../lib/errors";
 
 /**
  * Complete + undo, used by both the Health tab and the Home care card.
- * Undo is exactly (locked decision): soft-DELETE the activity the completion
- * created, then PATCH the schedule's nextDueAt/active back to the values it
- * had BEFORE completing — both captured from the schedule row we already had.
+ * Undo is exactly (locked decision, Plan 4): soft-DELETE the activity the
+ * completion created, THEN PATCH the schedule's nextDueAt/active back to the
+ * values it had before completing — sequenced, so a failed delete never
+ * resets the schedule while the logged activity survives.
  */
 export function useCompleteWithUndo(petId: string): {
   complete: (schedule: ScheduleResponse) => void;
@@ -30,19 +32,27 @@ export function useCompleteWithUndo(petId: string): {
             action: {
               label: t.care.undo,
               onClick: () => {
-                removeActivity.mutate(res.activity.id);
-                updateSchedule.mutate(
-                  {
-                    id: schedule.id,
-                    input: { nextDueAt: schedule.nextDueAt, active: schedule.active },
-                  },
-                  { onSuccess: () => toast.show(t.care.undone) },
-                );
+                void (async () => {
+                  try {
+                    await removeActivity.mutateAsync(res.activity.id);
+                    await updateSchedule.mutateAsync({
+                      id: schedule.id,
+                      input: {
+                        nextDueAt: schedule.nextDueAt,
+                        active: schedule.active,
+                      },
+                    });
+                    toast.show(t.care.undone);
+                  } catch (error) {
+                    toast.show(friendlyError(error, t), { tone: "danger" });
+                  }
+                })();
               },
             },
           });
         },
-        onError: () => toast.show(t.errors.title, { tone: "danger" }),
+        onError: (error) =>
+          toast.show(friendlyError(error, t), { tone: "danger" }),
       },
     );
   };

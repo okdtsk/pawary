@@ -1,6 +1,7 @@
 import type { InsightsPeriod } from "@pawlog/shared";
 import { INSIGHTS_PERIODS } from "@pawlog/shared";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router";
 import { useInsights } from "../api/insights";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
@@ -25,6 +26,19 @@ export function HealthTab() {
   const canEdit = pet.role !== "viewer";
   const charts = insights.data;
 
+  // Deep link from a Home anomaly banner: /health#<rule> scrolls to the
+  // matching chart once the charts have data. One scroll per hash value.
+  const location = useLocation();
+  const scrolledHash = useRef<string | null>(null);
+  useEffect(() => {
+    const hash = location.hash.slice(1);
+    if (!charts || !hash || scrolledHash.current === hash) return;
+    scrolledHash.current = hash;
+    document
+      .getElementById(hash)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [charts, location.hash]);
+
   return (
     <div className="flex flex-col gap-5">
       <h1 className="animate-pop text-2xl text-ink">{t.nav.health}</h1>
@@ -47,19 +61,19 @@ export function HealthTab() {
         </div>
       ) : (
         <div className="flex flex-col gap-4 md:grid md:grid-cols-2">
-          <Card className="animate-pop">
+          <Card id="weight_drift" className="animate-pop scroll-mt-24">
             <h2 className="mb-2 font-display text-lg text-ink">{t.health.weightTitle}</h2>
             <WeightChart series={charts.weight} buckets={charts.buckets} bucket={charts.bucket} />
           </Card>
-          <Card className="animate-pop" style={{ animationDelay: "60ms" }}>
+          <Card id="quiet_day" className="animate-pop scroll-mt-24" style={{ animationDelay: "60ms" }}>
             <h2 className="mb-2 font-display text-lg text-ink">{t.health.intakeTitle}</h2>
             <IntakeChart intake={charts.intake} buckets={charts.buckets} bucket={charts.bucket} />
           </Card>
-          <Card className="animate-pop" style={{ animationDelay: "120ms" }}>
+          <Card id="toilet_trouble" className="animate-pop scroll-mt-24" style={{ animationDelay: "120ms" }}>
             <h2 className="mb-2 font-display text-lg text-ink">{t.health.toiletTitle}</h2>
             <ToiletMatrix rows={charts.toilet} buckets={charts.buckets} bucket={charts.bucket} />
           </Card>
-          <Card className="animate-pop" style={{ animationDelay: "180ms" }}>
+          <Card id="symptom_streak" className="animate-pop scroll-mt-24" style={{ animationDelay: "180ms" }}>
             <h2 className="mb-2 font-display text-lg text-ink">{t.health.timelineTitle}</h2>
             <CareTimeline
               timeline={charts.timeline}

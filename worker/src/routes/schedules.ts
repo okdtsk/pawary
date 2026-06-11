@@ -220,7 +220,12 @@ scheduleRoutes.post(
     const now = Date.now();
     const occurredAt = parsed.data.occurredAt ?? now;
     if (occurredAt < now - COMPLETE_PAST_MS || occurredAt > now + COMPLETE_FUTURE_MS) {
-      return err(c, 400, "validation", "occurredAt must be within the last 7 days");
+      return err(
+        c,
+        400,
+        "validation",
+        "occurredAt must be within the last 7 days or up to 1 hour ahead",
+      );
     }
     const db = drizzle(c.env.DB);
     const schedule = await getSchedule(db, c.get("petId"), c.req.param("id"));

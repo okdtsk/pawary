@@ -68,7 +68,7 @@ export function AnomalyBanners({
             <p className="text-xs text-ink-soft">{t.anomalies.advice}</p>
             {linkToHealth && (
               <Link
-                to="/health"
+                to={`/health#${a.rule}`}
                 className="text-xs font-semibold text-clay-600 underline underline-offset-4"
               >
                 {t.anomalies.view}
