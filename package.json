@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently -k -n worker,app -c yellow,cyan \"npm run dev -w worker\" \"npm run dev -w app\"",
     "build": "npm run build -w app",
-    "test": "npm run build -w app && npm run test -w worker",
+    "test": "npm run build -w app && npm run test -w worker && npm run test -w app",
     "typecheck": "npm run typecheck -w shared && npm run typecheck -w worker && npm run typecheck -w app"
   },
   "devDependencies": {
