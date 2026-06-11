@@ -1,9 +1,134 @@
 @import "tailwindcss";
+@import "@fontsource-variable/fredoka";
+@import "@fontsource-variable/nunito";
 
 @theme {
-  --color-warm-50: #fdf8f3;
-  --color-warm-100: #faeee0;
-  --color-warm-500: #f59e0b;
-  --color-warm-600: #d97706;
-  --color-warm-900: #451a03;
+  --font-display:
+    "Fredoka Variable", "Hiragino Maru Gothic ProN", "BIZ UDPGothic",
+    "Yu Gothic", sans-serif;
+  --font-sans:
+    "Nunito Variable", "Hiragino Kaku Gothic ProN", "BIZ UDPGothic",
+    "Yu Gothic", sans-serif;
+
+  /* warm paper neutrals */
+  --color-cream-50: #fdfaf4;
+  --color-cream-100: #faf3e7;
+  --color-cream-200: #f3e7d2;
+  --color-cream-300: #e8d5b8;
+  --color-cream-400: #d9bd97;
+  --color-paper: #fffdf8;
+  --color-ink: #3d2c1e;
+  --color-ink-soft: #6f5a45;
+  --color-ink-faint: #a3907b;
+
+  /* clay — the terracotta primary */
+  --color-clay-50: #fdf1e8;
+  --color-clay-100: #fbe2cf;
+  --color-clay-200: #f6c5a2;
+  --color-clay-300: #efa471;
+  --color-clay-400: #e68a4e;
+  --color-clay-500: #db7434;
+  --color-clay-600: #c05f26;
+  --color-clay-700: #9c4b1f;
+  --color-clay-800: #7a3b1b;
+  --color-clay-900: #5c2d16;
+
+  /* support */
+  --color-moss-100: #e6efdc;
+  --color-moss-600: #5f8c3f;
+  --color-moss-700: #4a7030;
+  --color-berry-100: #fbe3e4;
+  --color-berry-600: #c8424f;
+  --color-berry-700: #a33340;
+
+  /* category accents + soft tints (the 11-category visual identity) */
+  --color-cat-food: #db7434;
+  --color-cat-food-soft: #fbe2cf;
+  --color-cat-water: #3f8fb8;
+  --color-cat-water-soft: #ddeef6;
+  --color-cat-toilet: #96714a;
+  --color-cat-toilet-soft: #efe3d4;
+  --color-cat-weight: #8e62a8;
+  --color-cat-weight-soft: #ece1f2;
+  --color-cat-exercise: #5f8c3f;
+  --color-cat-exercise-soft: #e6efdc;
+  --color-cat-symptom: #c8424f;
+  --color-cat-symptom-soft: #fbe3e4;
+  --color-cat-medication: #2f9180;
+  --color-cat-medication-soft: #dcefeb;
+  --color-cat-vet: #5c70bd;
+  --color-cat-vet-soft: #e2e6f7;
+  --color-cat-grooming: #c66b9a;
+  --color-cat-grooming-soft: #f6dfeb;
+  --color-cat-vaccine: #b08a1d;
+  --color-cat-vaccine-soft: #f3ead0;
+  --color-cat-note: #877a68;
+  --color-cat-note-soft: #ebe5da;
+
+  /* shape, depth, motion */
+  --radius-card: 1.25rem;
+  --radius-bubble: 1.75rem;
+  --shadow-card: 0 2px 10px rgb(92 45 22 / 0.07), 0 1px 2px rgb(92 45 22 / 0.05);
+  --shadow-float: 0 10px 30px rgb(92 45 22 / 0.18);
+  --shadow-fab: 0 8px 22px rgb(192 95 38 / 0.4);
+  --ease-springy: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* DEPRECATED Plan-1 aliases — removed in Task 4 */
+  --color-warm-50: #fdfaf4;
+  --color-warm-100: #faf3e7;
+  --color-warm-500: #db7434;
+  --color-warm-600: #c05f26;
+  --color-warm-900: #3d2c1e;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--color-cream-100);
+    color: var(--color-ink);
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
+}
+
+/* organic avatar / illustration shape */
+.blob {
+  border-radius: 53% 47% 52% 48% / 51% 49% 53% 47%;
+}
+
+/* iOS safe areas */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.pt-safe { padding-top: env(safe-area-inset-top); }
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes paw-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+.animate-pop { animation: pop-in 0.35s var(--ease-springy) both; }
+.animate-fade { animation: fade-in 0.2s ease-out both; }
+.animate-sheet { animation: sheet-up 0.32s var(--ease-springy) both; }
+.animate-paw { animation: paw-pulse 1.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop, .animate-fade, .animate-sheet, .animate-paw {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }
