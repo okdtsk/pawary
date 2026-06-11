@@ -43,8 +43,6 @@ export interface Messages {
     notFound: string;
   };
   health: {
-    soonTitle: string; // removed in Task 12
-    soonBody: string; // removed in Task 12
     periods: Record<InsightsPeriod, string>;
     weightTitle: string;
     weightEmpty: string;

@@ -1,27 +1,88 @@
-import { EmptyState } from "../components/EmptyState";
-import { HeartIcon, PawIcon } from "../components/icons";
+import type { InsightsPeriod } from "@pawlog/shared";
+import { INSIGHTS_PERIODS } from "@pawlog/shared";
+import { useState } from "react";
+import { useInsights } from "../api/insights";
+import { Button } from "../components/Button";
+import { Card } from "../components/Card";
+import { Chip } from "../components/Chip";
+import { Spinner } from "../components/Spinner";
+import { AnomalyBanners } from "../features/health/AnomalyBanners";
+import { CareScheduleList } from "../features/health/CareScheduleList";
+import { CareTimeline } from "../features/health/CareTimeline";
+import { IntakeChart } from "../features/health/IntakeChart";
+import { ScheduleSheet } from "../features/health/ScheduleSheet";
+import { ToiletMatrix } from "../features/health/ToiletMatrix";
+import { WeightChart } from "../features/health/WeightChart";
 import { useT } from "../i18n";
-
-function HealthArt() {
-  return (
-    <div className="relative h-28 w-32" aria-hidden="true">
-      <div className="blob absolute left-2 top-3 h-24 w-24 bg-cat-vet-soft" />
-      <HeartIcon className="absolute left-8 top-9 h-12 w-12 text-cat-vet" />
-      <PawIcon className="absolute right-0 top-0 h-8 w-8 rotate-12 text-clay-300" />
-    </div>
-  );
-}
+import { useRequiredPet } from "../state/pets";
 
 export function HealthTab() {
   const t = useT();
+  const pet = useRequiredPet();
+  const [period, setPeriod] = useState<InsightsPeriod>("4w");
+  const [adding, setAdding] = useState(false);
+  const insights = useInsights(pet.id, period);
+  const canEdit = pet.role !== "viewer";
+  const charts = insights.data;
+
   return (
-    <div className="animate-pop">
-      <h1 className="mb-2 text-2xl text-ink">{t.nav.health}</h1>
-      <EmptyState
-        art={<HealthArt />}
-        title={t.health.soonTitle}
-        hint={t.health.soonBody}
-      />
+    <div className="flex flex-col gap-5">
+      <h1 className="animate-pop text-2xl text-ink">{t.nav.health}</h1>
+
+      {charts && charts.anomalies.length > 0 && (
+        <AnomalyBanners petId={pet.id} petName={pet.name} anomalies={charts.anomalies} />
+      )}
+
+      <div className="animate-pop flex gap-2" role="group" aria-label={t.nav.health}>
+        {INSIGHTS_PERIODS.map((p) => (
+          <Chip key={p} selected={period === p} onClick={() => setPeriod(p)}>
+            {t.health.periods[p]}
+          </Chip>
+        ))}
+      </div>
+
+      {!charts ? (
+        <div className="flex justify-center py-12">
+          <Spinner />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4 md:grid md:grid-cols-2">
+          <Card className="animate-pop">
+            <h2 className="mb-2 font-display text-lg text-ink">{t.health.weightTitle}</h2>
+            <WeightChart series={charts.weight} buckets={charts.buckets} bucket={charts.bucket} />
+          </Card>
+          <Card className="animate-pop" style={{ animationDelay: "60ms" }}>
+            <h2 className="mb-2 font-display text-lg text-ink">{t.health.intakeTitle}</h2>
+            <IntakeChart intake={charts.intake} buckets={charts.buckets} bucket={charts.bucket} />
+          </Card>
+          <Card className="animate-pop" style={{ animationDelay: "120ms" }}>
+            <h2 className="mb-2 font-display text-lg text-ink">{t.health.toiletTitle}</h2>
+            <ToiletMatrix rows={charts.toilet} buckets={charts.buckets} bucket={charts.bucket} />
+          </Card>
+          <Card className="animate-pop" style={{ animationDelay: "180ms" }}>
+            <h2 className="mb-2 font-display text-lg text-ink">{t.health.timelineTitle}</h2>
+            <CareTimeline
+              timeline={charts.timeline}
+              windowStart={charts.windowStart}
+              windowEnd={charts.windowEnd}
+            />
+          </Card>
+        </div>
+      )}
+
+      <section className="animate-pop" style={{ animationDelay: "240ms" }}>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-display text-lg text-ink">{t.care.title}</h2>
+          {canEdit && (
+            <Button size="sm" onClick={() => setAdding(true)}>
+              {t.care.addSchedule}
+            </Button>
+          )}
+        </div>
+        <CareScheduleList petId={pet.id} role={pet.role} />
+      </section>
+
+      <ScheduleSheet petId={pet.id} open={adding} onClose={() => setAdding(false)} />
     </div>
   );
 }

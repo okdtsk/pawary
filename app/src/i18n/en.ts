@@ -55,9 +55,6 @@ export const en: Messages = {
     notFound: "We couldn't find that.",
   },
   health: {
-    soonTitle: "Health insights are on their way",
-    soonBody:
-      "Weight trends, intake vs targets, and gentle anomaly alerts arrive in the next update. Keep logging — every entry feeds the charts.",
     periods: { "4w": "4 weeks", "3m": "3 months", "1y": "1 year" },
     weightTitle: "Weight",
     weightEmpty: "No weighings in this period yet — log a Weight entry and the trend appears here.",
