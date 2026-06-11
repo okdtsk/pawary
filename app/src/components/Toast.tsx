@@ -45,6 +45,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const dismiss = useCallback((id: number) => {
+    const handle = timersRef.current.get(id);
+    if (handle !== undefined) window.clearTimeout(handle);
     timersRef.current.delete(id);
     setToasts((prev) => prev.filter((item) => item.id !== id));
   }, []);
