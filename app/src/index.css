@@ -73,12 +73,6 @@
   --shadow-fab: 0 8px 22px rgb(192 95 38 / 0.4);
   --ease-springy: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* DEPRECATED Plan-1 aliases — removed in Task 4 */
-  --color-warm-50: #fdfaf4;
-  --color-warm-100: #faf3e7;
-  --color-warm-500: #db7434;
-  --color-warm-600: #c05f26;
-  --color-warm-900: #3d2c1e;
 }
 
 @layer base {

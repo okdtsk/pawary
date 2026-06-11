@@ -25,4 +25,28 @@ export interface Messages {
     optional: string;
     showMore: string;
   };
+  nav: {
+    home: string;
+    calendar: string;
+    log: string;
+    health: string;
+    settings: string;
+    addActivity: string;
+  };
+  shell: {
+    petSwitcher: string;
+    mainNav: string;
+  };
+  errors: {
+    title: string;
+    body: string;
+    notFound: string;
+  };
+  health: {
+    soonTitle: string;
+    soonBody: string;
+  };
+  login: {
+    authError: string;
+  };
 }

@@ -37,4 +37,29 @@ export const ja: Messages = {
     optional: "任意",
     showMore: "もっと見る",
   },
+  nav: {
+    home: "ホーム",
+    calendar: "カレンダー",
+    log: "記録",
+    health: "健康",
+    settings: "設定",
+    addActivity: "記録を追加",
+  },
+  shell: {
+    petSwitcher: "ペットを切り替え",
+    mainNav: "メインナビゲーション",
+  },
+  errors: {
+    title: "問題が発生しました",
+    body: "Pawlog に接続できませんでした。通信環境を確認して再試行してください。",
+    notFound: "見つかりませんでした。",
+  },
+  health: {
+    soonTitle: "健康インサイトはもうすぐ",
+    soonBody:
+      "体重の推移、食事・水分の目標比較、やさしい異常アラートは次のアップデートで届きます。記録を続けるほどグラフが充実します。",
+  },
+  login: {
+    authError: "サインインが完了しませんでした。もう一度お試しください。",
+  },
 };

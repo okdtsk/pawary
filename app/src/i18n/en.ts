@@ -37,4 +37,29 @@ export const en: Messages = {
     optional: "optional",
     showMore: "Show more",
   },
+  nav: {
+    home: "Home",
+    calendar: "Calendar",
+    log: "Log",
+    health: "Health",
+    settings: "Settings",
+    addActivity: "Add activity",
+  },
+  shell: {
+    petSwitcher: "Switch pet",
+    mainNav: "Main navigation",
+  },
+  errors: {
+    title: "Something went wrong",
+    body: "We couldn't reach Pawlog. Check your connection and try again.",
+    notFound: "We couldn't find that.",
+  },
+  health: {
+    soonTitle: "Health insights are on their way",
+    soonBody:
+      "Weight trends, intake vs targets, and gentle anomaly alerts arrive in the next update. Keep logging — every entry feeds the charts.",
+  },
+  login: {
+    authError: "Sign-in didn't complete. Please try again.",
+  },
 };

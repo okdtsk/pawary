@@ -110,3 +110,12 @@ it("completes the full flow: callback sets a session; /api/me works; logout revo
   });
   expect(meAfter.status).toBe(401);
 });
+
+it("callback redirects into the spa with auth_error when google reports an error", async () => {
+  const res = await SELF.fetch(
+    "https://app.local/api/auth/google/callback?error=access_denied&state=whatever",
+    { redirect: "manual" },
+  );
+  expect(res.status).toBe(302);
+  expect(res.headers.get("Location")).toBe("/?auth_error=access_denied");
+});

@@ -56,7 +56,17 @@ authRoutes.get("/google/callback", rateLimit("auth-callback", 10, 60_000), async
   const raw = getCookie(c, STATE_COOKIE);
   deleteCookie(c, STATE_COOKIE, { path: "/api/auth" });
 
-  if (!code || !state || !raw) {
+  // User-facing OAuth failures (consent denied, expired prompt) arrive as a
+  // top-level browser navigation — redirect into the SPA with a marker query
+  // instead of stranding the user on raw JSON. State mismatches and malformed
+  // cookies below stay hard 400s (suspicious, not user-recoverable).
+  const oauthError = c.req.query("error");
+  if (oauthError !== undefined || !code) {
+    return c.redirect(
+      `/?auth_error=${encodeURIComponent(oauthError ?? "missing_code")}`,
+    );
+  }
+  if (!state || !raw) {
     return err(c, 400, "oauth_invalid", "Missing OAuth parameters");
   }
   let saved: { state: string; verifier: string };
