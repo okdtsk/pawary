@@ -282,3 +282,12 @@ export type PresetResponse = {
   details: unknown;
   sortOrder: number;
 };
+
+// ---------------------------------------------------------------------------
+// Plan 3: frontend
+// ---------------------------------------------------------------------------
+
+/** Response shape of PATCH /api/me (already produced by the worker). */
+export type UpdateMeResponse = {
+  user: MeResponse["user"];
+};

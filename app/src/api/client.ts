@@ -20,7 +20,9 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const method = init.method ?? "GET";
   if (method !== "GET") {
     if (csrfToken) headers.set("X-CSRF-Token", csrfToken);
-    if (init.body) headers.set("Content-Type", "application/json");
+    if (init.body && !(init.body instanceof FormData)) {
+      headers.set("Content-Type", "application/json");
+    }
   }
   const res = await fetch(path, { ...init, headers });
   const body = (await res.json().catch(() => null)) as
