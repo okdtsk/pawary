@@ -32,7 +32,7 @@ Google OAuth via `worker/.dev.vars` (see `worker/.dev.vars.example`).
 ## Testing
 
 ```bash
-npm test          # builds the app, then runs worker tests (vitest + miniflare)
+npm test          # builds the app, runs worker tests (vitest + miniflare), then app unit tests
 npm run typecheck
 ```
 
