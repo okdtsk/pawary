@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { useDaySummary } from "../api/activities";
-import { EmptyState } from "../components/EmptyState";
 import { IconButton } from "../components/IconButton";
+import { Timeline } from "../features/calendar/Timeline";
 import { ChevronLeftIcon, ChevronRightIcon } from "../components/icons";
 import { DaySheet } from "../features/calendar/DaySheet";
 import { MonthGrid } from "../features/calendar/MonthGrid";
@@ -120,7 +120,11 @@ export function CalendarTab() {
           />
         </div>
       ) : (
-        <EmptyState title={t.calendar.views[view]} />
+        <Timeline
+          petId={pet.id}
+          days={viewDays(view, date)}
+          onShift={(delta) => setParams(view, shiftAnchor(view, date, delta))}
+        />
       )}
 
       <DaySheet petId={pet.id} day={sheetDay} onClose={() => setSheetDay(null)} />
