@@ -3,10 +3,6 @@ import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import type { AppEnv, Env } from "../env";
 import { SESSION_TTL_MS } from "../domain/sessions";
 
-// Accepts both bare { Bindings: Env } contexts (e.g. routes without Variables)
-// and the full AppEnv context (middleware). Using AppEnv covers both cases since
-// Hono's Context<AppEnv> is assignable wherever Context<{ Bindings: Env }> is expected
-// when only env/cookie access is used.
 type AnyAppCtx = Context<AppEnv>;
 
 export function sessionCookieName(env: Env): string {
