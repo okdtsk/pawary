@@ -12,7 +12,7 @@ import {
 } from "../../api/members";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
-import { Select } from "../../components/form";
+import { Field, Select } from "../../components/form";
 import { Spinner } from "../../components/Spinner";
 import { useToast } from "../../components/Toast";
 import { useLocaleTag, useT } from "../../i18n";
@@ -24,7 +24,7 @@ function mutationErrorMessage(
   if (error instanceof ApiError && error.code === "last_owner") {
     return t.members.lastOwner;
   }
-  return error instanceof ApiError ? error.message : t.errors.title;
+  return t.errors.title;
 }
 
 export function MembersSection({ pet }: { pet: PetResponse }) {
@@ -40,6 +40,8 @@ export function MembersSection({ pet }: { pet: PetResponse }) {
   const [inviteRole, setInviteRole] = useState<InviteRole>("editor");
   // two-tap confirm state: userId armed for removal/leave
   const [armed, setArmed] = useState<string | null>(null);
+  // shown when clipboard write fails so the invite link is never lost
+  const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
 
   const isOwner = pet.role === "owner";
   const dateFmt = new Intl.DateTimeFormat(locale, {
@@ -66,6 +68,7 @@ export function MembersSection({ pet }: { pet: PetResponse }) {
     toast.show(mutationErrorMessage(error, t), { tone: "danger" });
 
   const share = async (url: string) => {
+    setFallbackUrl(null);
     if (navigator.share) {
       try {
         await navigator.share({ text: t.members.shareText(pet.name), url });
@@ -74,8 +77,14 @@ export function MembersSection({ pet }: { pet: PetResponse }) {
         // user dismissed the sheet — fall through to clipboard
       }
     }
-    await navigator.clipboard.writeText(url);
-    toast.show(t.members.linkCopied);
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.show(t.members.linkCopied);
+    } catch {
+      // clipboard can reject after the async create (no user activation) —
+      // surface the URL so it is never silently lost
+      setFallbackUrl(url);
+    }
   };
 
   return (
@@ -99,6 +108,7 @@ export function MembersSection({ pet }: { pet: PetResponse }) {
               <div className="w-28 shrink-0">
                 <Select
                   value={member.role}
+                  aria-label={member.displayName}
                   disabled={updateRole.isPending}
                   className="py-1.5 text-sm"
                   onChange={(e) =>
@@ -147,16 +157,15 @@ export function MembersSection({ pet }: { pet: PetResponse }) {
         <div className="mt-4 border-t border-cream-200 pt-4">
           <div className="flex items-end gap-2">
             <div className="flex-1">
-              <span className="mb-1.5 block text-sm font-semibold text-ink-soft">
-                {t.members.inviteRole}
-              </span>
-              <Select
-                value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value as InviteRole)}
-              >
-                <option value="editor">{t.pets.role.editor}</option>
-                <option value="viewer">{t.pets.role.viewer}</option>
-              </Select>
+              <Field label={t.members.inviteRole}>
+                <Select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value as InviteRole)}
+                >
+                  <option value="editor">{t.pets.role.editor}</option>
+                  <option value="viewer">{t.pets.role.viewer}</option>
+                </Select>
+              </Field>
             </div>
             <Button
               variant="soft"
@@ -172,6 +181,15 @@ export function MembersSection({ pet }: { pet: PetResponse }) {
               {t.members.inviteCreate}
             </Button>
           </div>
+
+          {fallbackUrl && (
+            <input
+              readOnly
+              value={fallbackUrl}
+              onFocus={(e) => e.currentTarget.select()}
+              className="mt-2 w-full rounded-2xl border border-cream-300 bg-paper px-3 py-2 text-xs text-ink-soft"
+            />
+          )}
 
           {members.data.invites && members.data.invites.length > 0 && (
             <div className="mt-4">
