@@ -15,6 +15,7 @@ import { Login } from "./routes/Login";
 import { LogTab } from "./routes/LogTab";
 import { Shell } from "./routes/Shell";
 import { AccountSettings } from "./routes/settings/AccountSettings";
+import { AdvisorSettings } from "./routes/settings/AdvisorSettings";
 import { PetEditor } from "./routes/settings/PetEditor";
 import { PetsSettings } from "./routes/settings/PetsSettings";
 import { PresetsSettings } from "./routes/settings/PresetsSettings";
@@ -76,6 +77,7 @@ export function App() {
                 <Route path="/health" element={<HealthTab />} />
                 <Route path="/settings" element={<SettingsHome />} />
                 <Route path="/settings/presets" element={<PresetsSettings />} />
+                <Route path="/settings/advisor" element={<AdvisorSettings />} />
                 <Route path="/settings/account" element={<AccountSettings />} />
                 <Route path="/settings/pets" element={<PetsSettings />} />
                 <Route path="/settings/pets/new" element={<PetEditor />} />

@@ -78,6 +78,7 @@ export function SettingsHome() {
           [
             { to: "/settings/pets", label: t.pets.yourPets },
             { to: "/settings/presets", label: t.settings.presets },
+            { to: "/settings/advisor", label: t.advisor.settings.title },
             { to: "/settings/account", label: t.settings.account },
           ] as const
         ).map((item) => (
