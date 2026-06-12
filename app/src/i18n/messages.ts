@@ -122,6 +122,44 @@ export interface Messages {
     invalidBody: string;
     goHome: string;
   };
+  advisor: {
+    title: string;
+    homeCard: string;
+    homeCardHint: string;
+    disclaimer: string;
+    newConversation: string;
+    emptyTitle: string;
+    emptyHint: string;
+    listEmptyTitle: string;
+    listEmptyHint: string;
+    setupCta: string;
+    inputPlaceholder: string;
+    send: string;
+    deleteConversation: string;
+    deleteConfirm: string;
+    viewerNote: string;
+    errors: {
+      provider_auth: string;
+      provider_overloaded: string;
+      provider_error: string;
+      advisor_not_configured: string;
+      rate_limited: string;
+      offline: string;
+      network: string;
+    };
+    settings: {
+      title: string;
+      intro: string;
+      provider: string;
+      model: string;
+      apiKey: string;
+      apiKeyHint: string;
+      apiKeyConfigured: string;
+      saved: string;
+      remove: string;
+      removeConfirm: string;
+    };
+  };
   add: {
     pickCategory: string;
     time: string;
