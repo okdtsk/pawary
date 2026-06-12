@@ -642,3 +642,26 @@ export type AdvisorConversationDetail = {
   updatedAt: number;
   messages: AdvisorMessageView[];
 };
+
+// ---------------------------------------------------------------------------
+// Plan 10: Web Push
+// ---------------------------------------------------------------------------
+
+export const pushSubscribeSchema = z
+  .object({
+    endpoint: z.string().url().max(1024),
+    p256dh: z.string().min(1).max(256),
+    auth: z.string().min(1).max(128),
+    tz: z.number().int().min(-840).max(840),
+  })
+  .strict();
+export type PushSubscribeInput = z.infer<typeof pushSubscribeSchema>;
+
+export const pushUnsubscribeSchema = z
+  .object({
+    endpoint: z.string().url().max(1024),
+  })
+  .strict();
+export type PushUnsubscribeInput = z.infer<typeof pushUnsubscribeSchema>;
+
+export type PushPublicKeyResponse = { publicKey: string };
