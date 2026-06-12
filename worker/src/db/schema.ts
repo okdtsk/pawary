@@ -162,6 +162,7 @@ export const careSchedules = sqliteTable(
     nextDueAt: integer("next_due_at").notNull(),
     endAt: integer("end_at"),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
+    notifiedDueAt: integer("notified_due_at"),
     createdAt: integer("created_at").notNull(),
   },
   (t) => [index("idx_schedules_pet_active_due").on(t.petId, t.active, t.nextDueAt)],
@@ -190,6 +191,23 @@ export const auditLog = sqliteTable(
     createdAt: integer("created_at").notNull(),
   },
   (t) => [index("idx_audit_pet").on(t.petId)],
+);
+
+export const pushSubscriptions = sqliteTable(
+  "push_subscriptions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull().unique(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    tzOffsetMin: integer("tz_offset_min").notNull(),
+    lastDigestDay: text("last_digest_day"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [index("idx_push_subscriptions_user").on(t.userId)],
 );
 
 export const userAiSettings = sqliteTable("user_ai_settings", {
@@ -242,6 +260,7 @@ export type PetMember = typeof petMembers.$inferSelect;
 export type PetInvite = typeof petInvites.$inferSelect;
 export type Activity = typeof activities.$inferSelect;
 export type CareSchedule = typeof careSchedules.$inferSelect;
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type UserAiSettings = typeof userAiSettings.$inferSelect;
 export type AdvisorConversation = typeof advisorConversations.$inferSelect;
 export type AdvisorMessage = typeof advisorMessages.$inferSelect;

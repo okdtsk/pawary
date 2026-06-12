@@ -96,6 +96,7 @@ scheduleRoutes.post(
       nextDueAt: parsed.data.nextDueAt,
       endAt: parsed.data.endAt ?? null,
       active: true,
+      notifiedDueAt: null,
       createdAt: Date.now(),
     };
     await db.insert(careSchedules).values(schedule);

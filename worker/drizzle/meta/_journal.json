@@ -29,6 +29,13 @@
       "when": 1781261984826,
       "tag": "0003_add-advisor",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1781273066600,
+      "tag": "0004_add-push",
+      "breakpoints": true
     }
   ]
 }
