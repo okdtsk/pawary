@@ -66,6 +66,26 @@ export const petMembers = sqliteTable(
   ],
 );
 
+export const petInvites = sqliteTable(
+  "pet_invites",
+  {
+    id: text("id").primaryKey(),
+    petId: text("pet_id")
+      .notNull()
+      .references(() => pets.id, { onDelete: "cascade" }),
+    role: text("role", { enum: ["editor", "viewer"] }).notNull(),
+    tokenHash: text("token_hash").notNull().unique(),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    usedAt: integer("used_at"),
+    usedBy: text("used_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (t) => [index("idx_pet_invites_pet").on(t.petId)],
+);
+
 export const activities = sqliteTable(
   "activities",
   {
@@ -163,7 +183,7 @@ export const auditLog = sqliteTable(
     userId: text("user_id").notNull(),
     action: text("action", { enum: ["create", "update", "delete"] }).notNull(),
     entity: text("entity", {
-      enum: ["activity", "pet", "schedule", "preset", "member"],
+      enum: ["activity", "pet", "schedule", "preset", "member", "invite"],
     }).notNull(),
     entityId: text("entity_id").notNull(),
     diff: text("diff", { mode: "json" }),
@@ -176,5 +196,6 @@ export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Pet = typeof pets.$inferSelect;
 export type PetMember = typeof petMembers.$inferSelect;
+export type PetInvite = typeof petInvites.$inferSelect;
 export type Activity = typeof activities.$inferSelect;
 export type CareSchedule = typeof careSchedules.$inferSelect;
