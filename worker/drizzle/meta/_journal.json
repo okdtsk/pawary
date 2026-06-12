@@ -15,6 +15,13 @@
       "when": 1781154965612,
       "tag": "0001_add-fk-indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1781240691593,
+      "tag": "0002_add-pet-invites",
+      "breakpoints": true
     }
   ]
 }
