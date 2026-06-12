@@ -4,9 +4,9 @@ import type {
   PetInviteResponse,
   PetMemberResponse,
 } from "@pawary/shared";
-import { createInviteSchema } from "@pawary/shared";
+import { createInviteSchema, updateMemberRoleSchema } from "@pawary/shared";
 import { and, asc, eq, gt, isNull } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/d1";
+import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { petInvites, petMembers, users } from "../db/schema";
 import { writeAudit } from "../domain/audit";
@@ -22,6 +22,18 @@ import { requireSession } from "../middleware/session";
 export const memberRoutes = new Hono<AppEnv>();
 
 export const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+async function countOwners(
+  db: DrizzleD1Database,
+  petId: string,
+): Promise<number> {
+  const rows = await db
+    .select({ userId: petMembers.userId })
+    .from(petMembers)
+    .where(and(eq(petMembers.petId, petId), eq(petMembers.role, "owner")))
+    .all();
+  return rows.length;
+}
 
 memberRoutes.get(
   "/api/pets/:petId/members",
@@ -142,6 +154,85 @@ memberRoutes.delete(
       action: "delete",
       entity: "invite",
       entityId: inviteId,
+    });
+    return c.json({ data: { ok: true } });
+  },
+);
+
+memberRoutes.patch(
+  "/api/pets/:petId/members/:userId",
+  requireSession,
+  requireCsrf,
+  requirePetRole("owner"),
+  async (c) => {
+    const body = await c.req.json().catch(() => null);
+    const parsed = updateMemberRoleSchema.safeParse(body);
+    if (!parsed.success) {
+      return err(c, 400, "validation", parsed.error.issues[0]?.message ?? "Invalid input");
+    }
+    const db = drizzle(c.env.DB);
+    const petId = c.get("petId");
+    const targetId = c.req.param("userId");
+    const target = await db
+      .select()
+      .from(petMembers)
+      .where(and(eq(petMembers.petId, petId), eq(petMembers.userId, targetId)))
+      .get();
+    if (!target) return err(c, 404, "not_found", "Not found");
+    if (target.role === parsed.data.role) return c.json({ data: { ok: true } });
+    if (target.role === "owner" && (await countOwners(db, petId)) === 1) {
+      return err(c, 409, "last_owner", "A pet must keep at least one owner");
+    }
+    await db
+      .update(petMembers)
+      .set({ role: parsed.data.role })
+      .where(and(eq(petMembers.petId, petId), eq(petMembers.userId, targetId)));
+    await writeAudit(db, {
+      petId,
+      userId: c.get("user").id,
+      action: "update",
+      entity: "member",
+      entityId: targetId,
+      diff: { before: target.role, after: parsed.data.role },
+    });
+    return c.json({ data: { ok: true } });
+  },
+);
+
+memberRoutes.delete(
+  "/api/pets/:petId/members/:userId",
+  requireSession,
+  requireCsrf,
+  requirePetRole("viewer"),
+  async (c) => {
+    const db = drizzle(c.env.DB);
+    const petId = c.get("petId");
+    const me = c.get("user");
+    const targetId = c.req.param("userId");
+    const isSelf = targetId === me.id;
+    // owners remove anyone; everyone may remove themself (= leave)
+    if (!isSelf && c.get("petRole") !== "owner") {
+      return err(c, 403, "forbidden", "Insufficient role");
+    }
+    const target = await db
+      .select()
+      .from(petMembers)
+      .where(and(eq(petMembers.petId, petId), eq(petMembers.userId, targetId)))
+      .get();
+    if (!target) return err(c, 404, "not_found", "Not found");
+    if (target.role === "owner" && (await countOwners(db, petId)) === 1) {
+      return err(c, 409, "last_owner", "A pet must keep at least one owner");
+    }
+    await db
+      .delete(petMembers)
+      .where(and(eq(petMembers.petId, petId), eq(petMembers.userId, targetId)));
+    await writeAudit(db, {
+      petId,
+      userId: me.id,
+      action: "delete",
+      entity: "member",
+      entityId: targetId,
+      diff: { role: target.role, reason: isSelf ? "left" : "removed" },
     });
     return c.json({ data: { ok: true } });
   },
