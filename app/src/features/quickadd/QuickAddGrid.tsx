@@ -1,4 +1,4 @@
-import type { PresetResponse } from "@pawlog/shared";
+import type { PresetResponse } from "@pawary/shared";
 import { Link } from "react-router";
 import { useCreateActivity, useDeleteActivity } from "../../api/activities";
 import { usePresets } from "../../api/presets";

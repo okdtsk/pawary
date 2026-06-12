@@ -6,8 +6,8 @@ import type {
   InsightsResponse,
   SymptomSpan,
   VetMarker,
-} from "@pawlog/shared";
-import { INSIGHTS_PERIODS } from "@pawlog/shared";
+} from "@pawary/shared";
+import { INSIGHTS_PERIODS } from "@pawary/shared";
 import { evaluateAnomalies, loadAnomalyInputs } from "../domain/anomalies";
 import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";

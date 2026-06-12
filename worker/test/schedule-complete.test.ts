@@ -1,5 +1,5 @@
 import { SELF, env } from "cloudflare:test";
-import type { CompleteScheduleResponse } from "@pawlog/shared";
+import type { CompleteScheduleResponse } from "@pawary/shared";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { describe, expect, it } from "vitest";

@@ -1,7 +1,7 @@
 import type { Messages } from "./messages";
 
 export const en: Messages = {
-  appName: "Pawlog",
+  appName: "Pawary",
   tagline: "Your pet's daily life and health, in one place",
   signInWithGoogle: "Sign in with Google",
   signInDev: "Dev sign-in (local)",
@@ -51,7 +51,7 @@ export const en: Messages = {
   },
   errors: {
     title: "Something went wrong",
-    body: "We couldn't reach Pawlog. Check your connection and try again.",
+    body: "We couldn't reach Pawary. Check your connection and try again.",
     notFound: "We couldn't find that.",
   },
   health: {
@@ -283,12 +283,12 @@ export const en: Messages = {
     view: "View charts",
   },
   pwa: {
-    updateReady: "A new version of Pawlog is ready",
+    updateReady: "A new version of Pawary is ready",
     reload: "Reload",
     offline: "You're offline — showing saved data",
     offlineWrite: "You're offline — this can't be saved until you reconnect",
-    iosInstallTitle: "Add Pawlog to your Home Screen",
+    iosInstallTitle: "Add Pawary to your Home Screen",
     iosInstallBody:
-      'Tap the Share button in Safari, then choose "Add to Home Screen" to use Pawlog like an app.',
+      'Tap the Share button in Safari, then choose "Add to Home Screen" to use Pawary like an app.',
   },
 };

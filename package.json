@@ -1,5 +1,5 @@
 {
-  "name": "pawlog",
+  "name": "pawary",
   "private": true,
   "type": "module",
   "workspaces": ["shared", "worker", "app"],

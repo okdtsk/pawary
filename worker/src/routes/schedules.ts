@@ -1,10 +1,10 @@
-import type { CareStatusResponse, CompleteScheduleResponse, ScheduleResponse } from "@pawlog/shared";
+import type { CareStatusResponse, CompleteScheduleResponse, ScheduleResponse } from "@pawary/shared";
 import {
   activityDetailsSchemas,
   completeScheduleSchema,
   createScheduleSchema,
   updateScheduleSchema,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import { and, asc, desc, eq, lt } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";

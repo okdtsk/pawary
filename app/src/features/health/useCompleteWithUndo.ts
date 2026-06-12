@@ -1,4 +1,4 @@
-import type { ScheduleResponse } from "@pawlog/shared";
+import type { ScheduleResponse } from "@pawary/shared";
 import { useDeleteActivity } from "../../api/activities";
 import { useCompleteSchedule, useUpdateSchedule } from "../../api/schedules";
 import { useToast } from "../../components/Toast";

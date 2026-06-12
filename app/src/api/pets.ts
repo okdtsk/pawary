@@ -3,7 +3,7 @@ import type {
   PetResponse,
   PetTargetsInput,
   UpdatePetInput,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
 import { keys } from "./keys";

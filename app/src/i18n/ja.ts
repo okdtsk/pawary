@@ -1,7 +1,7 @@
 import type { Messages } from "./messages";
 
 export const ja: Messages = {
-  appName: "Pawlog",
+  appName: "Pawary",
   tagline: "ペットの毎日と健康を、ひとつの場所に",
   signInWithGoogle: "Google でサインイン",
   signInDev: "開発用サインイン（ローカル）",
@@ -51,7 +51,7 @@ export const ja: Messages = {
   },
   errors: {
     title: "問題が発生しました",
-    body: "Pawlog に接続できませんでした。通信環境を確認して再試行してください。",
+    body: "Pawary に接続できませんでした。通信環境を確認して再試行してください。",
     notFound: "見つかりませんでした。",
   },
   health: {
@@ -286,7 +286,7 @@ export const ja: Messages = {
     reload: "再読み込み",
     offline: "オフラインです — 保存済みのデータを表示しています",
     offlineWrite: "オフラインのため保存できません。接続が戻ってからもう一度お試しください",
-    iosInstallTitle: "ホーム画面にPawlogを追加",
+    iosInstallTitle: "ホーム画面にPawaryを追加",
     iosInstallBody:
       "Safariの共有ボタンから「ホーム画面に追加」を選ぶと、アプリのように使えます。",
   },

@@ -5,11 +5,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { MeResponse, Role } from "@pawlog/shared";
+import type { MeResponse, Role } from "@pawary/shared";
 
 export type MePet = MeResponse["pets"][number];
 
-const STORAGE_KEY = "pawlog:selectedPetId";
+const STORAGE_KEY = "pawary:selectedPetId";
 
 type PetContextValue = {
   pets: MePet[];

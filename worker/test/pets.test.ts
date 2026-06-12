@@ -1,5 +1,5 @@
 import { env, SELF } from "cloudflare:test";
-import type { PetResponse } from "@pawlog/shared";
+import type { PetResponse } from "@pawary/shared";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { expect, it } from "vitest";

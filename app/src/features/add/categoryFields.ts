@@ -1,7 +1,7 @@
 import {
   activityDetailsSchemas,
   type Category,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import type { Messages } from "../../i18n/messages";
 
 export type OptionGroup = keyof Messages["options"];

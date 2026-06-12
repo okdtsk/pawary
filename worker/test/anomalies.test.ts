@@ -1,5 +1,5 @@
 import { SELF } from "cloudflare:test";
-import type { AnomaliesResponse, Anomaly, InsightsResponse } from "@pawlog/shared";
+import type { AnomaliesResponse, Anomaly, InsightsResponse } from "@pawary/shared";
 import { describe, expect, it } from "vitest";
 import {
   quietDay,

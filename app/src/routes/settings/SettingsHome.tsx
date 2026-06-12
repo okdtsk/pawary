@@ -1,4 +1,4 @@
-import type { Locale } from "@pawlog/shared";
+import type { Locale } from "@pawary/shared";
 import { useState } from "react";
 import { Link } from "react-router";
 import { myExportUrl, petExportUrl } from "../../api/export";

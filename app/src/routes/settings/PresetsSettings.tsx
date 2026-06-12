@@ -1,4 +1,4 @@
-import type { Category, PresetResponse } from "@pawlog/shared";
+import type { Category, PresetResponse } from "@pawary/shared";
 import { useEffect, useState } from "react";
 import {
   useCreatePreset,

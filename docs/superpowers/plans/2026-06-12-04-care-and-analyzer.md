@@ -1,4 +1,4 @@
-# Pawlog Plan 4: Care & Analyzer — Implementation Plan
+# Pawary Plan 4: Care & Analyzer — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** No new dependencies. TypeScript, Hono 4, Drizzle ORM 0.44+ (incl. D1 `db.batch`), D1, Zod, Vitest + @cloudflare/vitest-pool-workers; React 19, TanStack Query 5, Tailwind CSS 4, hand-rolled SVG charts.
 
-**Spec:** `docs/superpowers/specs/2026-06-11-pawlog-design.md` (read sections 1, 3, 4 "Proactive care", 5, and 7 before starting).
+**Spec:** `docs/superpowers/specs/2026-06-11-pawary-design.md` (read sections 1, 3, 4 "Proactive care", 5, and 7 before starting).
 
 **Roadmap context:** This is plan 4 of 5. Plans 1–3 are merged on `main`: the full API (auth, pets, activities, photos, presets, export) and the full frontend core (shell, add flow, calendar, log, settings) are complete and green. The D1 schema is complete and FROZEN: no migration files may be added or modified. The ONLY sanctioned touch to `worker/src/db/schema.ts` is one **type-only** export (`CareSchedule`, Task 2) — zero SQL changes. If you believe a schema change is needed, STOP and report instead of improvising. Plan 5 (PWA & Polish) follows.
 
@@ -560,7 +560,7 @@ export async function seedSchedule(
 
 ```ts
 import { SELF, env } from "cloudflare:test";
-import type { ScheduleResponse } from "@pawlog/shared";
+import type { ScheduleResponse } from "@pawary/shared";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { describe, expect, it } from "vitest";
@@ -798,8 +798,8 @@ Expected: FAIL — every request 404s (routes not registered yet).
 - [ ] **Step 4: Create `worker/src/routes/schedules.ts`**
 
 ```ts
-import type { ScheduleResponse } from "@pawlog/shared";
-import { activityDetailsSchemas, createScheduleSchema, updateScheduleSchema } from "@pawlog/shared";
+import type { ScheduleResponse } from "@pawary/shared";
+import { activityDetailsSchemas, createScheduleSchema, updateScheduleSchema } from "@pawary/shared";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -1047,7 +1047,7 @@ export function activityToResponse(
 
 ```ts
 import { SELF, env } from "cloudflare:test";
-import type { CompleteScheduleResponse } from "@pawlog/shared";
+import type { CompleteScheduleResponse } from "@pawary/shared";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { describe, expect, it } from "vitest";
@@ -1229,13 +1229,13 @@ Expected: FAIL — 404 on the complete route.
 Extend the imports at the top of the file:
 
 ```ts
-import type { CompleteScheduleResponse, ScheduleResponse } from "@pawlog/shared";
+import type { CompleteScheduleResponse, ScheduleResponse } from "@pawary/shared";
 import {
   activityDetailsSchemas,
   completeScheduleSchema,
   createScheduleSchema,
   updateScheduleSchema,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import { activities, careSchedules, type Activity, type CareSchedule } from "../db/schema";
 import { advanceSchedule } from "../domain/recurrence";
 import { activityToResponse } from "./activities";
@@ -1365,7 +1365,7 @@ The household-day boundary: with `tzMs = tz * 60000`, the next household midnigh
 
 ```ts
 import { SELF } from "cloudflare:test";
-import type { CareStatusResponse } from "@pawlog/shared";
+import type { CareStatusResponse } from "@pawary/shared";
 import { describe, expect, it } from "vitest";
 import { seedPet, seedSchedule, seedUserWithSession } from "./helpers";
 
@@ -1455,7 +1455,7 @@ Add the imports (`lt` joins the existing drizzle-orm import; `CareStatusResponse
 
 ```ts
 import { and, asc, desc, eq, lt } from "drizzle-orm";
-import type { CareStatusResponse, CompleteScheduleResponse, ScheduleResponse } from "@pawlog/shared";
+import type { CareStatusResponse, CompleteScheduleResponse, ScheduleResponse } from "@pawary/shared";
 import { parseTzQuery } from "../lib/tz";
 ```
 
@@ -1530,7 +1530,7 @@ Pure functions only — the SQL arrives in Task 7. The fold from household days 
 - [ ] **Step 1: Write the failing test `worker/test/insights-domain.test.ts`**
 
 ```ts
-import { isoWeekKey, isoWeekStartDay } from "@pawlog/shared";
+import { isoWeekKey, isoWeekStartDay } from "@pawary/shared";
 import { describe, expect, it } from "vitest";
 import {
   addDaysKey,
@@ -1684,8 +1684,8 @@ import type {
   ToiletMatrixRow,
   WeightPoint,
   WeightSeries,
-} from "@pawlog/shared";
-import { TOILET_SEVERITY, isoWeekKey } from "@pawlog/shared";
+} from "@pawary/shared";
+import { TOILET_SEVERITY, isoWeekKey } from "@pawary/shared";
 
 const DAY_MS = 86_400_000;
 
@@ -1878,7 +1878,7 @@ git commit -m "feat: add insights domain bucketing for weight and intake"
 
 ```ts
 import { SELF } from "cloudflare:test";
-import type { InsightsResponse } from "@pawlog/shared";
+import type { InsightsResponse } from "@pawary/shared";
 import { describe, expect, it } from "vitest";
 import { seedActivity, seedPet, seedUserWithSession } from "./helpers";
 
@@ -2037,8 +2037,8 @@ import type {
   InsightsResponse,
   SymptomSpan,
   VetMarker,
-} from "@pawlog/shared";
-import { INSIGHTS_PERIODS } from "@pawlog/shared";
+} from "@pawary/shared";
+import { INSIGHTS_PERIODS } from "@pawary/shared";
 import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -2261,7 +2261,7 @@ The four spec §7 rules as pure functions (table-driven tests) + one input loade
 
 ```ts
 import { SELF } from "cloudflare:test";
-import type { AnomaliesResponse, Anomaly, InsightsResponse } from "@pawlog/shared";
+import type { AnomaliesResponse, Anomaly, InsightsResponse } from "@pawary/shared";
 import { describe, expect, it } from "vitest";
 import {
   quietDay,
@@ -2471,7 +2471,7 @@ Expected: FAIL — cannot resolve `../src/domain/anomalies`.
 - [ ] **Step 3: Create `worker/src/domain/anomalies.ts`**
 
 ```ts
-import type { Anomaly } from "@pawlog/shared";
+import type { Anomaly } from "@pawary/shared";
 import { sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { addDaysKey, dayKeyOfHousehold } from "./insights";
@@ -2641,7 +2641,7 @@ export function evaluateAnomalies(
 Add the imports:
 
 ```ts
-import type { AnomaliesResponse } from "@pawlog/shared";
+import type { AnomaliesResponse } from "@pawary/shared";
 import { evaluateAnomalies, loadAnomalyInputs } from "../domain/anomalies";
 ```
 
@@ -2740,7 +2740,7 @@ import type {
   CreateScheduleInput,
   ScheduleResponse,
   UpdateScheduleInput,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deviceTzOffsetMin } from "../lib/dates";
 import { api } from "./client";
@@ -2831,7 +2831,7 @@ export function useCompleteSchedule(petId: string) {
 - [ ] **Step 3: Create `app/src/api/insights.ts`**
 
 ```ts
-import type { AnomaliesResponse, InsightsPeriod, InsightsResponse } from "@pawlog/shared";
+import type { AnomaliesResponse, InsightsPeriod, InsightsResponse } from "@pawary/shared";
 import { useQuery } from "@tanstack/react-query";
 import { deviceTzOffsetMin } from "../lib/dates";
 import { api } from "./client";
@@ -2901,7 +2901,7 @@ export function formatMonthDay(key: DayKey, locale: string): string {
 
 - [ ] **Step 6: Extend the `Messages` interface in `app/src/i18n/messages.ts`**
 
-Add to the import: `import type { Category, InsightsPeriod, Role, ScheduleType } from "@pawlog/shared";`
+Add to the import: `import type { Category, InsightsPeriod, Role, ScheduleType } from "@pawary/shared";`
 
 Extend the existing `health` section (keep `soonTitle`/`soonBody` for now — removed in Task 12):
 
@@ -3168,7 +3168,7 @@ Replace the `health` section with (keeping the two placeholder keys and their ex
 
 - [ ] **Step 9: Extend `app/test/dates.test.ts`**
 
-Add `formatMonthDay` to the existing import from `../src/lib/dates`, add a new import line `import { isoWeekKey, isoWeekStartDay } from "@pawlog/shared";`, and append:
+Add `formatMonthDay` to the existing import from `../src/lib/dates`, add a new import line `import { isoWeekKey, isoWeekStartDay } from "@pawary/shared";`, and append:
 
 ```ts
 describe("chart axis helpers (plan 4)", () => {
@@ -3216,7 +3216,7 @@ Chart conventions (apply to all four components, Tasks 10–11):
 - [ ] **Step 1: Create `app/src/features/health/bucketLabel.ts`**
 
 ```ts
-import { isoWeekStartDay } from "@pawlog/shared";
+import { isoWeekStartDay } from "@pawary/shared";
 import { formatMonthDay } from "../../lib/dates";
 
 /** Axis label for a chart bucket: the day itself, or the ISO week's Monday. */
@@ -3230,7 +3230,7 @@ export function bucketLabel(key: string, bucket: "day" | "week", locale: string)
 Geometry: 360×190 viewBox; plot area `x ∈ [38, 350]`, `y ∈ [16, 170]`. Buckets are centered slots: `x(b) = 38 + (index(b) + 0.5) · 312 / buckets.length`. The y-domain pads min/max by `max(20% of range, 0.3 kg)` so a flat series doesn't collapse: `y(kg) = 16 + (1 − (kg − lo)/(hi − lo)) · 154`.
 
 ```tsx
-import type { WeightSeries } from "@pawlog/shared";
+import type { WeightSeries } from "@pawary/shared";
 import { EmptyState } from "../../components/EmptyState";
 import { useLocaleTag, useT } from "../../i18n";
 import { bucketLabel } from "./bucketLabel";
@@ -3328,7 +3328,7 @@ export function WeightChart({
 Two stacked bar lanes (food g / water ml), each 84 px tall in a 360×222 viewBox. Per-lane scale: `scale = 84 / (1.15 · max(values, targetLine, 1))`; bar width `clamp(0.7 · slot, 1.5, 14)` where `slot = 312 / buckets.length`. Logged buckets are filled bars (`height = max(v · scale, 2)`); **not-logged buckets are 4 px hollow outline rects at the baseline** — visually distinct from any real bar. The dashed target line is `daily target × 7` for week buckets.
 
 ```tsx
-import type { InsightsResponse } from "@pawlog/shared";
+import type { InsightsResponse } from "@pawary/shared";
 import { EmptyState } from "../../components/EmptyState";
 import { useLocaleTag, useT } from "../../i18n";
 import { bucketLabel } from "./bucketLabel";
@@ -3485,8 +3485,8 @@ git commit -m "feat: add weight and intake svg charts"
 Bucket rows (newest first) × two cells (pee | poop). Geometry: 360-wide viewBox, 70 px label gutter, two `(360 − 70 − 18)/2 = 136` px cells, 16 px rows; total height `18 + rows · 16 + 4` (the SVG grows; a `max-h-80 overflow-y-auto` wrapper scrolls long periods). Cells are colored by the worst condition that bucket (severity legend below); count > 1 prints inside the cell; a bucket with no logs renders a faint outline.
 
 ```tsx
-import type { ToiletCell, ToiletMatrixRow, ToiletSeverity } from "@pawlog/shared";
-import { TOILET_SEVERITY } from "@pawlog/shared";
+import type { ToiletCell, ToiletMatrixRow, ToiletSeverity } from "@pawary/shared";
+import { TOILET_SEVERITY } from "@pawary/shared";
 import { EmptyState } from "../../components/EmptyState";
 import { useLocaleTag, useT } from "../../i18n";
 import { bucketLabel } from "./bucketLabel";
@@ -3609,7 +3609,7 @@ export function ToiletMatrix({
 Shared horizontal time axis over `[windowStart, windowEnd]` (household-naive ms, exactly what the API returns). 92 px name gutter; one row per vet-marker lane + per medication/symptom span; `x(ms) = 92 + clamp((ms − windowStart)/(windowEnd − windowStart), 0, 1) · 258`. Spans are rounded 10 px-tall rects from `x(firstAt)` to `x(lastAt)` (min 6 px so single entries stay visible); symptom span opacity encodes max severity (mild 0.45 / moderate 0.7 / severe 1). Vet visits are diamonds on the top lane.
 
 ```tsx
-import type { InsightsResponse } from "@pawlog/shared";
+import type { InsightsResponse } from "@pawary/shared";
 import { EmptyState } from "../../components/EmptyState";
 import { useLocaleTag, useT } from "../../i18n";
 
@@ -3739,7 +3739,7 @@ git commit -m "feat: add toilet matrix and care timeline svg charts"
 - [ ] **Step 1: Create `app/src/features/health/dismissals.ts`**
 
 ```ts
-import type { Anomaly } from "@pawlog/shared";
+import type { Anomaly } from "@pawary/shared";
 
 /**
  * Dismissals live client-side, scoped to pet + rule (+ symptom name for
@@ -3748,7 +3748,7 @@ import type { Anomaly } from "@pawlog/shared";
  */
 function storageKey(petId: string, anomaly: Anomaly, day: string): string {
   const sub = anomaly.rule === "symptom_streak" ? anomaly.params.name : "";
-  return `pawlog:anomaly:${petId}:${anomaly.rule}:${sub}:${day}`;
+  return `pawary:anomaly:${petId}:${anomaly.rule}:${sub}:${day}`;
 }
 
 export function isDismissed(petId: string, anomaly: Anomaly, day: string): boolean {
@@ -3771,7 +3771,7 @@ export function dismissAnomaly(petId: string, anomaly: Anomaly, day: string): vo
 - [ ] **Step 2: Create `app/src/features/health/AnomalyBanners.tsx`**
 
 ```tsx
-import type { Anomaly } from "@pawlog/shared";
+import type { Anomaly } from "@pawary/shared";
 import { useState } from "react";
 import { Link } from "react-router";
 import { IconButton } from "../../components/IconButton";
@@ -3867,7 +3867,7 @@ export function AnomalyBanners({
 - [ ] **Step 3: Create `app/src/features/health/useCompleteWithUndo.ts`**
 
 ```ts
-import type { ScheduleResponse } from "@pawlog/shared";
+import type { ScheduleResponse } from "@pawary/shared";
 import { useDeleteActivity } from "../../api/activities";
 import { useCompleteSchedule, useUpdateSchedule } from "../../api/schedules";
 import { useToast } from "../../components/Toast";
@@ -3930,8 +3930,8 @@ import type {
   RecurrenceUnit,
   ScheduleResponse,
   ScheduleType,
-} from "@pawlog/shared";
-import { CATEGORIES, RECURRENCE_UNITS, SCHEDULE_TYPES, createScheduleSchema } from "@pawlog/shared";
+} from "@pawary/shared";
+import { CATEGORIES, RECURRENCE_UNITS, SCHEDULE_TYPES, createScheduleSchema } from "@pawary/shared";
 import { useEffect, useState } from "react";
 import { useCreateSchedule, useDeleteSchedule, useUpdateSchedule } from "../../api/schedules";
 import { Button } from "../../components/Button";
@@ -4208,7 +4208,7 @@ export function ScheduleSheet({
 `DueBadge` and `recurrenceLabel` are exported — the Home care card (Task 13) reuses both.
 
 ```tsx
-import type { Role, ScheduleResponse } from "@pawlog/shared";
+import type { Role, ScheduleResponse } from "@pawary/shared";
 import { useState } from "react";
 import { useSchedules } from "../../api/schedules";
 import { Button } from "../../components/Button";
@@ -4341,8 +4341,8 @@ export function CareScheduleList({ petId, role }: { petId: string; role: Role })
 - [ ] **Step 6: Replace `app/src/routes/HealthTab.tsx`**
 
 ```tsx
-import type { InsightsPeriod } from "@pawlog/shared";
-import { INSIGHTS_PERIODS } from "@pawlog/shared";
+import type { InsightsPeriod } from "@pawary/shared";
+import { INSIGHTS_PERIODS } from "@pawary/shared";
 import { useState } from "react";
 import { useInsights } from "../api/insights";
 import { Button } from "../components/Button";
@@ -4462,7 +4462,7 @@ git commit -m "feat: assemble health tab with charts and care schedule managemen
 Shows overdue + due-today items (max 4) with the same complete/undo flow as the Health tab, plus a "see all" link. Renders nothing while loading or when the pet has no schedules at all (keeps Home clean); shows a gentle all-done line when schedules exist but nothing is due.
 
 ```tsx
-import type { Role } from "@pawlog/shared";
+import type { Role } from "@pawary/shared";
 import { Link } from "react-router";
 import { useCareStatus } from "../../api/schedules";
 import { Button } from "../../components/Button";
@@ -4661,14 +4661,14 @@ Expected: app builds, ALL worker tests pass (Plans 1–3 suites + the ~52 added 
 - [ ] **Step 5: Dev smoke (`npm run dev -w worker` in the background)**
 
 ```bash
-curl -s -X POST http://localhost:8787/api/auth/dev-login -H "Content-Type: application/json" -d '{}' -c /tmp/pawlog.jar
-CSRF=$(curl -s http://localhost:8787/api/me -b /tmp/pawlog.jar | sed -E 's/.*"csrfToken":"([^"]+)".*/\1/')
-PET=$(curl -s -X POST http://localhost:8787/api/pets -b /tmp/pawlog.jar -H "X-CSRF-Token: $CSRF" -H "Content-Type: application/json" -d '{"name":"Momo","species":"cat"}' | sed -E 's/.*"id":"([^"]+)".*/\1/')
-SCHED=$(curl -s -X POST "http://localhost:8787/api/pets/$PET/schedules" -b /tmp/pawlog.jar -H "X-CSRF-Token: $CSRF" -H "Content-Type: application/json" -d "{\"type\":\"medication\",\"name\":\"Heart pills\",\"categoryLink\":\"medication\",\"detailsTemplate\":{\"name\":\"Heart pills\"},\"recurrenceUnit\":\"day\",\"recurrenceN\":1,\"nextDueAt\":$(($(date +%s) * 1000))}" | sed -E 's/.*"id":"([^"]+)".*/\1/')
-curl -s -X POST "http://localhost:8787/api/pets/$PET/schedules/$SCHED/complete" -b /tmp/pawlog.jar -H "X-CSRF-Token: $CSRF" -H "Content-Type: application/json" -d '{"tzOffsetMin":540}'
-curl -s "http://localhost:8787/api/pets/$PET/care-status?tz=540" -b /tmp/pawlog.jar
-curl -s "http://localhost:8787/api/pets/$PET/insights?period=4w&tz=540" -b /tmp/pawlog.jar
-curl -s "http://localhost:8787/api/pets/$PET/anomalies?tz=540" -b /tmp/pawlog.jar
+curl -s -X POST http://localhost:8787/api/auth/dev-login -H "Content-Type: application/json" -d '{}' -c /tmp/pawary.jar
+CSRF=$(curl -s http://localhost:8787/api/me -b /tmp/pawary.jar | sed -E 's/.*"csrfToken":"([^"]+)".*/\1/')
+PET=$(curl -s -X POST http://localhost:8787/api/pets -b /tmp/pawary.jar -H "X-CSRF-Token: $CSRF" -H "Content-Type: application/json" -d '{"name":"Momo","species":"cat"}' | sed -E 's/.*"id":"([^"]+)".*/\1/')
+SCHED=$(curl -s -X POST "http://localhost:8787/api/pets/$PET/schedules" -b /tmp/pawary.jar -H "X-CSRF-Token: $CSRF" -H "Content-Type: application/json" -d "{\"type\":\"medication\",\"name\":\"Heart pills\",\"categoryLink\":\"medication\",\"detailsTemplate\":{\"name\":\"Heart pills\"},\"recurrenceUnit\":\"day\",\"recurrenceN\":1,\"nextDueAt\":$(($(date +%s) * 1000))}" | sed -E 's/.*"id":"([^"]+)".*/\1/')
+curl -s -X POST "http://localhost:8787/api/pets/$PET/schedules/$SCHED/complete" -b /tmp/pawary.jar -H "X-CSRF-Token: $CSRF" -H "Content-Type: application/json" -d '{"tzOffsetMin":540}'
+curl -s "http://localhost:8787/api/pets/$PET/care-status?tz=540" -b /tmp/pawary.jar
+curl -s "http://localhost:8787/api/pets/$PET/insights?period=4w&tz=540" -b /tmp/pawary.jar
+curl -s "http://localhost:8787/api/pets/$PET/anomalies?tz=540" -b /tmp/pawary.jar
 ```
 
 Expected: complete returns `{"data":{"activity":{...,"details":{"name":"Heart pills","scheduleId":"..."}},"schedule":{...}}}`; care-status shows the schedule under `today` or `upcoming` (advanced by one day); insights returns all four datasets + `anomalies`; the anomalies call returns `{"data":{"anomalies":[...]}}`. Stop the background worker afterward.

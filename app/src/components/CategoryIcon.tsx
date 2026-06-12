@@ -1,4 +1,4 @@
-import type { Category } from "@pawlog/shared";
+import type { Category } from "@pawary/shared";
 import type { ReactElement, SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement>;

@@ -1,9 +1,9 @@
-import type { PresetResponse } from "@pawlog/shared";
+import type { PresetResponse } from "@pawary/shared";
 import {
   activityDetailsSchemas,
   presetSchema,
   updatePresetSchema,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import { and, asc, eq } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";

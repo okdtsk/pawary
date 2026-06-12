@@ -1,5 +1,5 @@
 {
-  "name": "@pawlog/app",
+  "name": "@pawary/app",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,7 @@
   "dependencies": {
     "@fontsource-variable/fredoka": "^5.2.10",
     "@fontsource-variable/nunito": "^5.2.7",
-    "@pawlog/shared": "*",
+    "@pawary/shared": "*",
     "@tanstack/react-query": "^5.66.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

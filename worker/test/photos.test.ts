@@ -1,5 +1,5 @@
 import { env, SELF } from "cloudflare:test";
-import type { ActivityPhotoMeta, ActivityResponse } from "@pawlog/shared";
+import type { ActivityPhotoMeta, ActivityResponse } from "@pawary/shared";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { expect, it } from "vitest";

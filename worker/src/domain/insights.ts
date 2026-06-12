@@ -3,8 +3,8 @@ import type {
   ToiletMatrixRow,
   WeightPoint,
   WeightSeries,
-} from "@pawlog/shared";
-import { TOILET_SEVERITY, isoWeekKey } from "@pawlog/shared";
+} from "@pawary/shared";
+import { TOILET_SEVERITY, isoWeekKey } from "@pawary/shared";
 
 const DAY_MS = 86_400_000;
 

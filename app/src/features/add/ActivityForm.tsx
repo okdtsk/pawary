@@ -1,4 +1,4 @@
-import type { ActivityResponse, Category } from "@pawlog/shared";
+import type { ActivityResponse, Category } from "@pawary/shared";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {

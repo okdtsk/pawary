@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: "prompt",
       manifest: {
         id: "/",
-        name: "Pawlog",
-        short_name: "Pawlog",
+        name: "Pawary",
+        short_name: "Pawary",
         description: "Pet activity log & health management for the whole family",
         lang: "en",
         start_url: "/",
@@ -49,7 +49,7 @@ export default defineConfig({
               sameOrigin && url.pathname.startsWith("/api/photos/"),
             handler: "CacheFirst",
             options: {
-              cacheName: "pawlog-photos",
+              cacheName: "pawary-photos",
               expiration: {
                 maxEntries: 200,
                 maxAgeSeconds: 30 * 24 * 3600,
@@ -65,7 +65,7 @@ export default defineConfig({
               sameOrigin && url.pathname.startsWith("/api/"),
             handler: "NetworkFirst",
             options: {
-              cacheName: "pawlog-api",
+              cacheName: "pawary-api",
               networkTimeoutSeconds: 3,
               expiration: {
                 maxEntries: 200,

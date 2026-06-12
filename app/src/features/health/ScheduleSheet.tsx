@@ -4,8 +4,8 @@ import type {
   RecurrenceUnit,
   ScheduleResponse,
   ScheduleType,
-} from "@pawlog/shared";
-import { CATEGORIES, RECURRENCE_UNITS, SCHEDULE_TYPES, createScheduleSchema } from "@pawlog/shared";
+} from "@pawary/shared";
+import { CATEGORIES, RECURRENCE_UNITS, SCHEDULE_TYPES, createScheduleSchema } from "@pawary/shared";
 import { useEffect, useState } from "react";
 import { useCreateSchedule, useDeleteSchedule, useUpdateSchedule } from "../../api/schedules";
 import { Button } from "../../components/Button";

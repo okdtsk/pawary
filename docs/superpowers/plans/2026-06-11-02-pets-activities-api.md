@@ -1,4 +1,4 @@
-# Pawlog Plan 2: Pets & Activities API — Implementation Plan
+# Pawary Plan 2: Pets & Activities API — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** No new dependencies. TypeScript, Hono 4, Drizzle ORM, D1, R2, ulidx, Zod, Vitest + @cloudflare/vitest-pool-workers.
 
-**Spec:** `docs/superpowers/specs/2026-06-11-pawlog-design.md` (read sections 4, 5, 6 before starting).
+**Spec:** `docs/superpowers/specs/2026-06-11-pawary-design.md` (read sections 4, 5, 6 before starting).
 
 **Roadmap context:** This is plan 2 of 5. Plan 1 (Foundation & Auth) is merged on `main`. The D1 schema is complete and FROZEN: migrations `0000_init.sql` and `0001_add-fk-indexes.sql` must not be modified, and **this plan adds NO schema changes**. If you believe a schema change is needed, STOP and report instead of improvising. Plans 3–5 (Frontend Core; Care & Analyzer; PWA & Polish) consume the API built here.
 
@@ -309,7 +309,7 @@ git commit -m "feat: add plan 2 shared schemas and api types for pets and activi
 Replace the whole file with:
 
 ```ts
-import type { Role } from "@pawlog/shared";
+import type { Role } from "@pawary/shared";
 import type { Pet, Session, User } from "./db/schema";
 
 export type Env = {
@@ -335,7 +335,7 @@ export type AppEnv = {
 
 - [ ] **Step 2: Extend `worker/test/helpers.ts`**
 
-Append (and add the new imports to the existing import block: `petMembers`, `pets` from `../src/db/schema`; `type Role` from `@pawlog/shared`):
+Append (and add the new imports to the existing import block: `petMembers`, `pets` from `../src/db/schema`; `type Role` from `@pawary/shared`):
 
 ```ts
 export async function seedPet(
@@ -488,7 +488,7 @@ Expected: FAIL — module `../src/middleware/pet-access` not found.
 - [ ] **Step 5: Create `worker/src/middleware/pet-access.ts`**
 
 ```ts
-import type { Role } from "@pawlog/shared";
+import type { Role } from "@pawary/shared";
 import { and, eq } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { createMiddleware } from "hono/factory";
@@ -677,7 +677,7 @@ git commit -m "feat: add audit log domain helper"
 
 ```ts
 import { env, SELF } from "cloudflare:test";
-import type { PetResponse } from "@pawlog/shared";
+import type { PetResponse } from "@pawary/shared";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { expect, it } from "vitest";
@@ -862,8 +862,8 @@ Expected: new tests FAIL (404 — routes don't exist).
 - [ ] **Step 3: Create `worker/src/routes/pets.ts`**
 
 ```ts
-import type { PetResponse, PetTargets, Role } from "@pawlog/shared";
-import { createPetSchema, updatePetSchema } from "@pawlog/shared";
+import type { PetResponse, PetTargets, Role } from "@pawary/shared";
+import { createPetSchema, updatePetSchema } from "@pawary/shared";
 import { eq } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -1120,7 +1120,7 @@ Expected: the two targets tests FAIL (404 — PUT route missing); the archive te
 
 - [ ] **Step 3: Append the PUT handler to `worker/src/routes/pets.ts`**
 
-Add `petTargetsSchema` to the `@pawlog/shared` import, then append:
+Add `petTargetsSchema` to the `@pawary/shared` import, then append:
 
 ```ts
 petRoutes.put(
@@ -1370,7 +1370,7 @@ git commit -m "feat: add fixed-window rate limiter and apply to auth routes"
 
 ```ts
 import { env, SELF } from "cloudflare:test";
-import type { ActivityResponse, Category } from "@pawlog/shared";
+import type { ActivityResponse, Category } from "@pawary/shared";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { describe, expect, it } from "vitest";
@@ -1574,8 +1574,8 @@ Expected: new tests FAIL (404 — routes don't exist).
 - [ ] **Step 3: Create `worker/src/routes/activities.ts`**
 
 ```ts
-import type { ActivityPhotoMeta, ActivityResponse } from "@pawlog/shared";
-import { createActivitySchema } from "@pawlog/shared";
+import type { ActivityPhotoMeta, ActivityResponse } from "@pawary/shared";
+import { createActivitySchema } from "@pawary/shared";
 import { and, eq, isNull } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -1892,7 +1892,7 @@ Expected: new tests FAIL (404 — PATCH/DELETE routes don't exist).
 
 - [ ] **Step 3: Append the handlers to `worker/src/routes/activities.ts`**
 
-Add `activityDetailsSchemas, updateActivitySchema` to the `@pawlog/shared` import, then append:
+Add `activityDetailsSchemas, updateActivitySchema` to the `@pawary/shared` import, then append:
 
 ```ts
 activityRoutes.patch(
@@ -2070,7 +2070,7 @@ Expected: PASS (2 new).
 
 - [ ] **Step 5: Add `seedActivity` to `worker/test/helpers.ts`**
 
-Append (add `activities` to the schema import and `type Category` to the `@pawlog/shared` import):
+Append (add `activities` to the schema import and `type Category` to the `@pawary/shared` import):
 
 ```ts
 export async function seedActivity(
@@ -2109,7 +2109,7 @@ export async function seedActivity(
 
 ```ts
 import { SELF } from "cloudflare:test";
-import type { ActivityListResponse } from "@pawlog/shared";
+import type { ActivityListResponse } from "@pawary/shared";
 import { expect, it } from "vitest";
 import { seedActivity, seedPet, seedUserWithSession } from "./helpers";
 
@@ -2256,7 +2256,7 @@ Expected: new tests FAIL (404 — the list route doesn't exist; `GET /api/pets/:
 
 - [ ] **Step 8: Append the list handler to `worker/src/routes/activities.ts`**
 
-Extend the imports: add `CATEGORIES, type ActivityListResponse, type Category` to the `@pawlog/shared` import; add `desc, gte, inArray, lt, lte, or, sql` to the `drizzle-orm` import; add:
+Extend the imports: add `CATEGORIES, type ActivityListResponse, type Category` to the `@pawary/shared` import; add `desc, gte, inArray, lt, lte, or, sql` to the `drizzle-orm` import; add:
 
 ```ts
 import { decodeCursor, encodeCursor } from "../lib/cursor";
@@ -2411,7 +2411,7 @@ The household-time day of an activity is `occurred_at + tz_offset_min * 60000` i
 
 ```ts
 import { SELF } from "cloudflare:test";
-import type { DaySummaryResponse } from "@pawlog/shared";
+import type { DaySummaryResponse } from "@pawary/shared";
 import { expect, it } from "vitest";
 import { seedActivity, seedPet, seedUserWithSession } from "./helpers";
 
@@ -2513,7 +2513,7 @@ Expected: new tests FAIL (404 — route doesn't exist).
 
 - [ ] **Step 3: Append the summary handler to `worker/src/routes/activities.ts`**
 
-Add `type DaySummaryResponse` to the `@pawlog/shared` import, then append:
+Add `type DaySummaryResponse` to the `@pawary/shared` import, then append:
 
 ```ts
 const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -2580,7 +2580,7 @@ git commit -m "feat: add monthly summary endpoint in household time"
 
 ```ts
 import { env, SELF } from "cloudflare:test";
-import type { PresetResponse } from "@pawlog/shared";
+import type { PresetResponse } from "@pawary/shared";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { expect, it } from "vitest";
@@ -2750,12 +2750,12 @@ Expected: new tests FAIL (404 — routes don't exist).
 - [ ] **Step 3: Create `worker/src/routes/presets.ts`**
 
 ```ts
-import type { PresetResponse } from "@pawlog/shared";
+import type { PresetResponse } from "@pawary/shared";
 import {
   activityDetailsSchemas,
   presetSchema,
   updatePresetSchema,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import { and, asc, eq } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -3524,7 +3524,7 @@ Completes the pet route group: `DELETE /api/pets/:petId` (excluded from Task 4) 
 
 ```ts
 import { env, SELF } from "cloudflare:test";
-import type { ActivityPhotoMeta, ActivityResponse } from "@pawlog/shared";
+import type { ActivityPhotoMeta, ActivityResponse } from "@pawary/shared";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { expect, it } from "vitest";
@@ -4441,7 +4441,7 @@ exportRoutes.get("/api/me/export", requireSession, async (c) => {
   };
   return c.body(JSON.stringify(payload, null, 2), 200, {
     "Content-Type": "application/json",
-    "Content-Disposition": 'attachment; filename="pawlog-export.json"',
+    "Content-Disposition": 'attachment; filename="pawary-export.json"',
   });
 });
 
@@ -4487,7 +4487,7 @@ exportRoutes.get(
       };
       return c.body(JSON.stringify(payload, null, 2), 200, {
         "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="pawlog-${pet.id}.json"`,
+        "Content-Disposition": `attachment; filename="pawary-${pet.id}.json"`,
       });
     }
 
@@ -4506,7 +4506,7 @@ exportRoutes.get(
     }
     return c.body(lines.join("\r\n") + "\r\n", 200, {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="pawlog-${pet.id}.csv"`,
+      "Content-Disposition": `attachment; filename="pawary-${pet.id}.csv"`,
     });
   },
 );
@@ -4662,7 +4662,7 @@ Expected: new tests FAIL (404 — DELETE /api/me doesn't exist).
 
 - [ ] **Step 3: Add the handler to `worker/src/routes/me.ts`**
 
-Extend the imports: add `deleteMeSchema` to the `@pawlog/shared` import; add `and` to the `drizzle-orm` import; and add:
+Extend the imports: add `deleteMeSchema` to the `@pawary/shared` import; add `and` to the `drizzle-orm` import; and add:
 
 ```ts
 import { deletePetWithStorage } from "../domain/pet-deletion";
@@ -4746,9 +4746,9 @@ Expected: app builds, ALL worker tests pass (~125 tests: ~20 from Plan 1 + ~105 
 Run (background): `npm run dev -w worker`, then:
 
 ```bash
-curl -s -X POST http://localhost:8787/api/auth/dev-login -H "Content-Type: application/json" -d '{}' -c /tmp/pawlog.jar
-CSRF=$(curl -s http://localhost:8787/api/me -b /tmp/pawlog.jar | sed -E 's/.*"csrfToken":"([^"]+)".*/\1/')
-curl -s -X POST http://localhost:8787/api/pets -b /tmp/pawlog.jar -H "X-CSRF-Token: $CSRF" -H "Content-Type: application/json" -d '{"name":"Momo","species":"cat"}'
+curl -s -X POST http://localhost:8787/api/auth/dev-login -H "Content-Type: application/json" -d '{}' -c /tmp/pawary.jar
+CSRF=$(curl -s http://localhost:8787/api/me -b /tmp/pawary.jar | sed -E 's/.*"csrfToken":"([^"]+)".*/\1/')
+curl -s -X POST http://localhost:8787/api/pets -b /tmp/pawary.jar -H "X-CSRF-Token: $CSRF" -H "Content-Type: application/json" -d '{"name":"Momo","species":"cat"}'
 ```
 
 Expected: the last command returns `{"data":{"id":"...","name":"Momo",...,"role":"owner",...}}`. Stop the background worker afterward.

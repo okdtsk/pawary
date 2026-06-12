@@ -21,7 +21,7 @@ export function AccountSettings() {
   const onDelete = () =>
     deleteAccount.mutate(confirmEmail, {
       onSuccess: () => {
-        localStorage.removeItem("pawlog:selectedPetId");
+        localStorage.removeItem("pawary:selectedPetId");
         window.location.assign("/");
       },
       onError: (error) =>

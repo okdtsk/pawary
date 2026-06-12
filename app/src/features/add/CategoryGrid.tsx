@@ -1,4 +1,4 @@
-import { CATEGORIES, type Category } from "@pawlog/shared";
+import { CATEGORIES, type Category } from "@pawary/shared";
 import { CategoryIcon, categoryTone } from "../../components/CategoryIcon";
 import { useT } from "../../i18n";
 import { cn } from "../../lib/cn";

@@ -1,5 +1,5 @@
-import type { ToiletCell, ToiletMatrixRow, ToiletSeverity } from "@pawlog/shared";
-import { TOILET_SEVERITY } from "@pawlog/shared";
+import type { ToiletCell, ToiletMatrixRow, ToiletSeverity } from "@pawary/shared";
+import { TOILET_SEVERITY } from "@pawary/shared";
 import { EmptyState } from "../../components/EmptyState";
 import { useLocaleTag, useT } from "../../i18n";
 import { bucketLabel } from "./bucketLabel";

@@ -1,5 +1,5 @@
-import type { ActivityListResponse, ActivityPhotoMeta, ActivityResponse, Category, DaySummaryResponse } from "@pawlog/shared";
-import { CATEGORIES, activityDetailsSchemas, createActivitySchema, updateActivitySchema } from "@pawlog/shared";
+import type { ActivityListResponse, ActivityPhotoMeta, ActivityResponse, Category, DaySummaryResponse } from "@pawary/shared";
+import { CATEGORIES, activityDetailsSchemas, createActivitySchema, updateActivitySchema } from "@pawary/shared";
 import { and, desc, eq, gte, inArray, isNull, lt, lte, or, sql } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";

@@ -1,4 +1,4 @@
-import type { ActivityResponse } from "@pawlog/shared";
+import type { ActivityResponse } from "@pawary/shared";
 import { useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router";
 import { useActivitiesRange } from "../../api/activities";

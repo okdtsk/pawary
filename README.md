@@ -1,4 +1,4 @@
-# Pawlog
+# Pawary
 
 Pet activity log & health management. Mobile-first PWA on Cloudflare Workers.
 
@@ -110,5 +110,5 @@ then open http://localhost:8787 (the Vite dev server does not register it).
 
 ## Docs
 
-- Spec: `docs/superpowers/specs/2026-06-11-pawlog-design.md`
+- Spec: `docs/superpowers/specs/2026-06-11-pawary-design.md`
 - Plans: `docs/superpowers/plans/`

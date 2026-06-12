@@ -1,4 +1,4 @@
-import type { Category } from "@pawlog/shared";
+import type { Category } from "@pawary/shared";
 import { useEffect, useState } from "react";
 import { IconButton } from "../../components/IconButton";
 import { ArrowLeftIcon } from "../../components/icons";

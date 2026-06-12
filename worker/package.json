@@ -1,5 +1,5 @@
 {
-  "name": "@pawlog/worker",
+  "name": "@pawary/worker",
   "private": true,
   "type": "module",
   "scripts": {
@@ -7,10 +7,10 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate:local": "wrangler d1 migrations apply pawlog --local"
+    "db:migrate:local": "wrangler d1 migrations apply pawary --local"
   },
   "dependencies": {
-    "@pawlog/shared": "*",
+    "@pawary/shared": "*",
     "drizzle-orm": "^0.44.0",
     "hono": "^4.7.0",
     "jose": "^6.0.0",

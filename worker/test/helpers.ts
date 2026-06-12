@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { drizzle } from "drizzle-orm/d1";
-import type { Category, Role } from "@pawlog/shared";
+import type { Category, Role } from "@pawary/shared";
 import { activities, careSchedules, petMembers, pets, users } from "../src/db/schema";
 import { createSession } from "../src/domain/sessions";
 import { newId } from "../src/lib/id";

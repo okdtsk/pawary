@@ -1,4 +1,4 @@
-import type { Category } from "@pawlog/shared";
+import type { Category } from "@pawary/shared";
 
 /**
  * Query-key conventions (everything pet-scoped starts with [root, petId]):

@@ -5,7 +5,7 @@ import type {
   CreateActivityInput,
   DaySummaryResponse,
   UpdateActivityInput,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import {
   useInfiniteQuery,
   useMutation,

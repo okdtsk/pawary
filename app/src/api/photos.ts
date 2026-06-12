@@ -1,4 +1,4 @@
-import type { ActivityPhotoMeta } from "@pawlog/shared";
+import type { ActivityPhotoMeta } from "@pawary/shared";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
 import { keys } from "./keys";

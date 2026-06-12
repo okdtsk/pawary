@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
-import type { Locale } from "@pawlog/shared";
+import type { Locale } from "@pawary/shared";
 import { setOfflineWriteMessage } from "../api/client";
 import { en } from "./en";
 import { ja } from "./ja";

@@ -19,7 +19,7 @@ function Base({ children, ...props }: IconProps) {
   );
 }
 
-/** The Pawlog mark: solid paw print. */
+/** The Pawary mark: solid paw print. */
 export function PawIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>

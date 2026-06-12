@@ -1,5 +1,5 @@
 /**
- * Date math for Pawlog views.
+ * Date math for Pawary views.
  *
  * Two clocks exist:
  * - HOUSEHOLD time: `occurredAt + tzOffsetMin * 60000`, read via UTC getters.

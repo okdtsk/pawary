@@ -1,4 +1,4 @@
-import type { CreatePetInput } from "@pawlog/shared";
+import type { CreatePetInput } from "@pawary/shared";
 import { useCreatePet } from "../api/pets";
 import { Card } from "../components/Card";
 import { PawIcon } from "../components/icons";

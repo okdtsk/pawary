@@ -1,4 +1,4 @@
-import type { Anomaly } from "@pawlog/shared";
+import type { Anomaly } from "@pawary/shared";
 import { sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { addDaysKey, dayKeyOfHousehold } from "./insights";

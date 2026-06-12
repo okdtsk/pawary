@@ -1,4 +1,4 @@
-import type { PetResponse, UpdatePetInput } from "@pawlog/shared";
+import type { PetResponse, UpdatePetInput } from "@pawary/shared";
 import { useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { MAX_PHOTO_BYTES } from "../../api/photos";

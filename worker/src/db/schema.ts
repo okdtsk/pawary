@@ -1,4 +1,4 @@
-import { CATEGORIES } from "@pawlog/shared";
+import { CATEGORIES } from "@pawary/shared";
 import {
   index,
   integer,

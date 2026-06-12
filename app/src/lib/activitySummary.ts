@@ -1,4 +1,4 @@
-import type { ActivityResponse } from "@pawlog/shared";
+import type { ActivityResponse } from "@pawary/shared";
 import type { Messages } from "../i18n/messages";
 import { parseDetails } from "./details";
 

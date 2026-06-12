@@ -1,4 +1,4 @@
-import { CATEGORIES, type DaySummaryResponse } from "@pawlog/shared";
+import { CATEGORIES, type DaySummaryResponse } from "@pawary/shared";
 import { categoryTone } from "../../components/CategoryIcon";
 import { useLocaleTag } from "../../i18n";
 import { cn } from "../../lib/cn";

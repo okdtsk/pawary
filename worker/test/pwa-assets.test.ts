@@ -12,7 +12,7 @@ it("serves the service worker as javascript with no-cache", async () => {
   expect(res.headers.get("Cache-Control")).toContain("no-cache");
 });
 
-it("serves the web app manifest with the Pawlog identity", async () => {
+it("serves the web app manifest with the Pawary identity", async () => {
   const res = await SELF.fetch("https://app.local/manifest.webmanifest");
   expect(res.status).toBe(200);
   expect(res.headers.get("Cache-Control")).toContain("no-cache");
@@ -21,7 +21,7 @@ it("serves the web app manifest with the Pawlog identity", async () => {
     display: string;
     icons: { src: string }[];
   };
-  expect(manifest.name).toBe("Pawlog");
+  expect(manifest.name).toBe("Pawary");
   expect(manifest.display).toBe("standalone");
   expect(manifest.icons.length).toBeGreaterThanOrEqual(3);
 });

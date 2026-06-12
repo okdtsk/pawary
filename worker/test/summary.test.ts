@@ -1,5 +1,5 @@
 import { SELF } from "cloudflare:test";
-import type { DaySummaryResponse } from "@pawlog/shared";
+import type { DaySummaryResponse } from "@pawary/shared";
 import { expect, it } from "vitest";
 import { seedActivity, seedPet, seedUserWithSession } from "./helpers";
 

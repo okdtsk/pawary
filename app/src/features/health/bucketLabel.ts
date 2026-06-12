@@ -1,4 +1,4 @@
-import { isoWeekStartDay } from "@pawlog/shared";
+import { isoWeekStartDay } from "@pawary/shared";
 import { formatMonthDay } from "../../lib/dates";
 
 /** Axis label for a chart bucket: the day itself, or the ISO week's Monday. */

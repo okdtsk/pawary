@@ -1,4 +1,4 @@
-import type { MeResponse, UpdateMeInput, UpdateMeResponse } from "@pawlog/shared";
+import type { MeResponse, UpdateMeInput, UpdateMeResponse } from "@pawary/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError, setCsrfToken } from "./client";
 import { keys } from "./keys";

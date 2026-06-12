@@ -4,7 +4,7 @@ import { IconButton } from "../../components/IconButton";
 import { ShareIcon, XIcon } from "../../components/icons";
 import { useT } from "../../i18n";
 
-const DISMISS_KEY = "pawlog:iosInstallHint";
+const DISMISS_KEY = "pawary:iosInstallHint";
 
 function isIosSafari(): boolean {
   const ua = navigator.userAgent;

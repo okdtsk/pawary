@@ -1,5 +1,5 @@
-import type { MeResponse } from "@pawlog/shared";
-import { deleteMeSchema, updateMeSchema } from "@pawlog/shared";
+import type { MeResponse } from "@pawary/shared";
+import { deleteMeSchema, updateMeSchema } from "@pawary/shared";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";

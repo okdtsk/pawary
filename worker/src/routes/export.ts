@@ -80,7 +80,7 @@ exportRoutes.get("/api/me/export", requireSession, async (c) => {
   };
   return c.body(JSON.stringify(payload, null, 2), 200, {
     "Content-Type": "application/json",
-    "Content-Disposition": 'attachment; filename="pawlog-export.json"',
+    "Content-Disposition": 'attachment; filename="pawary-export.json"',
   });
 });
 
@@ -126,7 +126,7 @@ exportRoutes.get(
       };
       return c.body(JSON.stringify(payload, null, 2), 200, {
         "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="pawlog-${pet.id}.json"`,
+        "Content-Disposition": `attachment; filename="pawary-${pet.id}.json"`,
       });
     }
 
@@ -145,7 +145,7 @@ exportRoutes.get(
     }
     return c.body(lines.join("\r\n") + "\r\n", 200, {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="pawlog-${pet.id}.csv"`,
+      "Content-Disposition": `attachment; filename="pawary-${pet.id}.csv"`,
     });
   },
 );

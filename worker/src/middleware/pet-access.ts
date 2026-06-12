@@ -1,4 +1,4 @@
-import type { Role } from "@pawlog/shared";
+import type { Role } from "@pawary/shared";
 import { and, eq } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { createMiddleware } from "hono/factory";

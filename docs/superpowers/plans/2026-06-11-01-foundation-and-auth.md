@@ -1,4 +1,4 @@
-# Pawlog Plan 1: Foundation & Auth — Implementation Plan
+# Pawary Plan 1: Foundation & Auth — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Hono 4, Drizzle ORM + drizzle-kit, D1, R2, jose (OIDC verification), ulidx, Zod, Vitest + @cloudflare/vitest-pool-workers, React 19, Vite 6, Tailwind CSS 4, TanStack Query 5, React Router 7.
 
-**Spec:** `docs/superpowers/specs/2026-06-11-pawlog-design.md` (read sections 2, 4, 6 before starting).
+**Spec:** `docs/superpowers/specs/2026-06-11-pawary-design.md` (read sections 2, 4, 6 before starting).
 
 **Roadmap context:** This is plan 1 of 5. Later plans (Pets & Activities API; Frontend Core; Care & Analyzer; PWA & Polish) build on the schema, middleware, and test harness created here. The full DB schema for ALL plans is created in Task 4 — do not trim it.
 
@@ -31,7 +31,7 @@
 
 ```json
 {
-  "name": "pawlog",
+  "name": "pawary",
   "private": true,
   "type": "module",
   "workspaces": ["shared", "worker", "app"],
@@ -106,7 +106,7 @@ git commit -m "chore: scaffold npm workspaces monorepo"
 
 ```json
 {
-  "name": "@pawlog/shared",
+  "name": "@pawary/shared",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -216,7 +216,7 @@ git commit -m "feat: add shared package with categories, locales, and api types"
 
 ```json
 {
-  "name": "@pawlog/worker",
+  "name": "@pawary/worker",
   "private": true,
   "type": "module",
   "scripts": {
@@ -224,10 +224,10 @@ git commit -m "feat: add shared package with categories, locales, and api types"
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate:local": "wrangler d1 migrations apply pawlog --local"
+    "db:migrate:local": "wrangler d1 migrations apply pawary --local"
   },
   "dependencies": {
-    "@pawlog/shared": "*",
+    "@pawary/shared": "*",
     "drizzle-orm": "^0.44.0",
     "hono": "^4.7.0",
     "jose": "^6.0.0",
@@ -251,19 +251,19 @@ No `assets` block yet — that arrives in Task 12 once `app/dist` exists.
 ```jsonc
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "pawlog",
+  "name": "pawary",
   "main": "src/index.ts",
   "compatibility_date": "2026-05-01",
   "compatibility_flags": ["nodejs_compat"],
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "pawlog",
+      "database_name": "pawary",
       "database_id": "00000000-0000-0000-0000-000000000000",
       "migrations_dir": "drizzle"
     }
   ],
-  "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "pawlog-photos" }],
+  "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "pawary-photos" }],
   "vars": { "ENVIRONMENT": "development" },
   "observability": { "enabled": true }
 }
@@ -384,7 +384,7 @@ This is the COMPLETE schema from spec §4 — later plans depend on every table 
 deletion (plan 2) removes the user row while shared pets' history must survive.
 
 ```ts
-import { CATEGORIES } from "@pawlog/shared";
+import { CATEGORIES } from "@pawary/shared";
 import {
   index,
   integer,
@@ -1258,7 +1258,7 @@ export const requireSession = createMiddleware<AppEnv>(async (c, next) => {
 - [ ] **Step 7: Create `worker/src/routes/me.ts`**
 
 ```ts
-import type { MeResponse } from "@pawlog/shared";
+import type { MeResponse } from "@pawary/shared";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -1422,7 +1422,7 @@ export const requireCsrf = createMiddleware<AppEnv>(async (c, next) => {
 
 - [ ] **Step 4: Add the PATCH handler to `worker/src/routes/me.ts`**
 
-Append (and add imports for `updateMeSchema` from `@pawlog/shared`, `users` from `../db/schema`, `requireCsrf` from `../middleware/csrf`, `err` from `../lib/respond`):
+Append (and add imports for `updateMeSchema` from `@pawary/shared`, `users` from `../db/schema`, `requireCsrf` from `../middleware/csrf`, `err` from `../lib/respond`):
 
 ```ts
 meRoutes.patch("/", requireSession, requireCsrf, async (c) => {
@@ -1988,7 +1988,7 @@ This task is scaffolding (no test framework on the frontend yet); verification i
 
 ```json
 {
-  "name": "@pawlog/app",
+  "name": "@pawary/app",
   "private": true,
   "type": "module",
   "scripts": {
@@ -1997,7 +1997,7 @@ This task is scaffolding (no test framework on the frontend yet); verification i
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@pawlog/shared": "*",
+    "@pawary/shared": "*",
     "@tanstack/react-query": "^5.66.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -2052,7 +2052,7 @@ export default defineConfig({
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f59e0b" />
-    <title>Pawlog</title>
+    <title>Pawary</title>
   </head>
   <body>
     <div id="root"></div>
@@ -2120,7 +2120,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 - [ ] **Step 6: Create `app/src/api/me.ts`**
 
 ```ts
-import type { MeResponse } from "@pawlog/shared";
+import type { MeResponse } from "@pawary/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError, setCsrfToken } from "./client";
 
@@ -2168,7 +2168,7 @@ export interface Messages {
 import type { Messages } from "./messages";
 
 export const en: Messages = {
-  appName: "Pawlog",
+  appName: "Pawary",
   tagline: "Your pet's daily life and health, in one place",
   signInWithGoogle: "Sign in with Google",
   signInDev: "Dev sign-in (local)",
@@ -2184,7 +2184,7 @@ export const en: Messages = {
 import type { Messages } from "./messages";
 
 export const ja: Messages = {
-  appName: "Pawlog",
+  appName: "Pawary",
   tagline: "ペットの毎日と健康を、ひとつの場所に",
   signInWithGoogle: "Google でサインイン",
   signInDev: "開発用サインイン（ローカル）",
@@ -2198,7 +2198,7 @@ export const ja: Messages = {
 ```tsx
 // app/src/i18n/index.tsx
 import { createContext, useContext, type ReactNode } from "react";
-import type { Locale } from "@pawlog/shared";
+import type { Locale } from "@pawary/shared";
 import { en } from "./en";
 import { ja } from "./ja";
 import type { Messages } from "./messages";
@@ -2278,7 +2278,7 @@ export function Login() {
 
 ```tsx
 // app/src/routes/Shell.tsx
-import type { MeResponse } from "@pawlog/shared";
+import type { MeResponse } from "@pawary/shared";
 import { useLogout } from "../api/me";
 import { useT } from "../i18n";
 
@@ -2446,7 +2446,7 @@ GOOGLE_CLIENT_SECRET=your-client-secret
 - [ ] **Step 4: Create `README.md`**
 
 ````markdown
-# Pawlog
+# Pawary
 
 Pet activity log & health management. Mobile-first PWA on Cloudflare Workers.
 
@@ -2474,7 +2474,7 @@ npm run typecheck
 
 ## Docs
 
-- Spec: `docs/superpowers/specs/2026-06-11-pawlog-design.md`
+- Spec: `docs/superpowers/specs/2026-06-11-pawary-design.md`
 - Plans: `docs/superpowers/plans/`
 ````
 

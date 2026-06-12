@@ -1,4 +1,4 @@
-import type { WeightSeries } from "@pawlog/shared";
+import type { WeightSeries } from "@pawary/shared";
 import { EmptyState } from "../../components/EmptyState";
 import { useLocaleTag, useT } from "../../i18n";
 import { bucketLabel } from "./bucketLabel";

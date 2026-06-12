@@ -1,16 +1,16 @@
-# Pawlog — Design Spec (v1)
+# Pawary — Design Spec (v1)
 
 Date: 2026-06-11
 Status: Approved (brainstorming complete; all six sections approved section-by-section)
 
-Pawlog is a mobile-first PWA (installable on iOS, equally usable on desktop) for logging
+Pawary is a mobile-first PWA (installable on iOS, equally usable on desktop) for logging
 pet activities and proactively managing pet health, backed by a single Cloudflare Worker.
 
 ## 1. Product Scope
 
 ### Center of gravity: proactive care
 
-Not just a journal. Pawlog records daily activities, surfaces care schedules and due
+Not just a journal. Pawary records daily activities, surfaces care schedules and due
 dates, tracks daily intake targets, and flags simple anomalies — while staying advisory,
 never diagnostic.
 
@@ -54,7 +54,7 @@ fallback via Workers static assets).
 ### Repo layout (npm workspaces)
 
 ```
-pawlog/
+pawary/
 ├── app/                    # React PWA (Vite)
 │   └── src/
 │       ├── routes/         # screen components (one dir per tab/screen)

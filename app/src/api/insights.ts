@@ -1,4 +1,4 @@
-import type { AnomaliesResponse, InsightsPeriod, InsightsResponse } from "@pawlog/shared";
+import type { AnomaliesResponse, InsightsPeriod, InsightsResponse } from "@pawary/shared";
 import { useQuery } from "@tanstack/react-query";
 import { deviceTzOffsetMin } from "../lib/dates";
 import { api } from "./client";

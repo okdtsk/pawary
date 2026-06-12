@@ -5,7 +5,7 @@ import type {
   CreateScheduleInput,
   ScheduleResponse,
   UpdateScheduleInput,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deviceTzOffsetMin } from "../lib/dates";
 import { api } from "./client";

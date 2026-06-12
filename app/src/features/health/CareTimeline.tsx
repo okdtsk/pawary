@@ -1,4 +1,4 @@
-import type { InsightsResponse } from "@pawlog/shared";
+import type { InsightsResponse } from "@pawary/shared";
 import { EmptyState } from "../../components/EmptyState";
 import { useLocaleTag, useT } from "../../i18n";
 

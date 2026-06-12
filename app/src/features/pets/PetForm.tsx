@@ -1,4 +1,4 @@
-import type { Sex, Species } from "@pawlog/shared";
+import type { Sex, Species } from "@pawary/shared";
 import { useState, type ReactNode } from "react";
 import { Button } from "../../components/Button";
 import { DateInput, Field, Select, TextInput } from "../../components/form";

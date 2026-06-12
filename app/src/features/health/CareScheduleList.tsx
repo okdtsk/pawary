@@ -1,4 +1,4 @@
-import type { Role, ScheduleResponse } from "@pawlog/shared";
+import type { Role, ScheduleResponse } from "@pawary/shared";
 import { useState } from "react";
 import { useSchedules } from "../../api/schedules";
 import { Button } from "../../components/Button";

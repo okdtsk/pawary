@@ -1,4 +1,4 @@
-import { isoWeekKey, isoWeekStartDay } from "@pawlog/shared";
+import { isoWeekKey, isoWeekStartDay } from "@pawary/shared";
 import { describe, expect, it } from "vitest";
 import {
   addDaysKey,

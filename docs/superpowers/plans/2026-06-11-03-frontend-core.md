@@ -1,14 +1,14 @@
-# Pawlog Plan 3: Frontend Core — Implementation Plan
+# Pawary Plan 3: Frontend Core — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** The complete v1 frontend on top of the Plan-2 API: a warm, family-pet-journal app shell (tab bar + FAB on mobile, sidebar on desktop), pet onboarding and management, the 11-category add/edit flow with photos, Quick Add with undo, the Home dashboard, Calendar (Month / Week / 3-Day / Day), the filterable infinite Log, activity detail, and Settings (profile, pets, presets, export, account deletion) — fully i18n'd (EN + JA) and visually distinctive per the approved "warm & friendly" direction.
 
-**Architecture:** React 19 SPA in `app/` consuming the existing Worker API. React Router v7 in **library mode** (`BrowserRouter` + `<Routes>` — no framework mode, no loaders). One typed TanStack Query hook module per resource in `app/src/api/`, all types imported from `@pawlog/shared`. A `PetProvider` keeps the selected pet id in React context + `localStorage`; every data hook takes an explicit `petId`. The design system lives in `app/src/index.css` (Tailwind 4 `@theme` tokens) + `app/src/components/` primitives. Pure date/grid math lives in `app/src/lib/dates.ts` and is the only unit-tested frontend code (plus timeline lane math), per spec §9.
+**Architecture:** React 19 SPA in `app/` consuming the existing Worker API. React Router v7 in **library mode** (`BrowserRouter` + `<Routes>` — no framework mode, no loaders). One typed TanStack Query hook module per resource in `app/src/api/`, all types imported from `@pawary/shared`. A `PetProvider` keeps the selected pet id in React context + `localStorage`; every data hook takes an explicit `petId`. The design system lives in `app/src/index.css` (Tailwind 4 `@theme` tokens) + `app/src/components/` primitives. Pure date/grid math lives in `app/src/lib/dates.ts` and is the only unit-tested frontend code (plus timeline lane math), per spec §9.
 
-**Tech Stack:** React 19, React Router 7 (library mode), TanStack Query 5, Tailwind CSS 4, Zod (via `@pawlog/shared`), Vitest 3 (node environment, no jsdom) for `app/`, self-hosted variable fonts via `@fontsource-variable/*`. **No chart, animation, or component libraries** — motion is CSS-only.
+**Tech Stack:** React 19, React Router 7 (library mode), TanStack Query 5, Tailwind CSS 4, Zod (via `@pawary/shared`), Vitest 3 (node environment, no jsdom) for `app/`, self-hosted variable fonts via `@fontsource-variable/*`. **No chart, animation, or component libraries** — motion is CSS-only.
 
-**Spec:** `docs/superpowers/specs/2026-06-11-pawlog-design.md` (read sections 1, 3, 8 before starting).
+**Spec:** `docs/superpowers/specs/2026-06-11-pawary-design.md` (read sections 1, 3, 8 before starting).
 
 **Roadmap context:** This is plan 3 of 5. Plans 1–2 are merged on `main`: the Worker API (auth, me, pets, activities, photos, presets, export, account deletion) is complete and its tests are green. **The worker is FROZEN for this plan** with exactly two sanctioned touches, both itemized in tasks below: (a) the OAuth error-redirect fix in Task 4 (a deferred Plan-1 review item), and (b) nothing else — schema, middleware, and all other routes must not change. `shared/` gets exactly one addition (`UpdateMeResponse`, Task 3). Plan 4 (Care & Analyzer) fills the Health tab and the Home care/anomaly slots; Plan 5 does PWA polish. This plan ships warm placeholders for those slots.
 
@@ -28,8 +28,8 @@
 | Visual direction | **Warm & friendly**: cream paper surfaces, clay/terracotta primary, blob-shaped avatars, rounded display type, hand-drawn-feel SVG empty states | Approved in spec §3 "Visual language". A family pet journal — NOT a clinical dashboard, NOT default-Tailwind gray. |
 | Fonts | Self-hosted `@fontsource-variable/fredoka` (display) + `@fontsource-variable/nunito` (body); JA falls back to rounded system fonts | CSP is `default-src 'self'` — external font CDNs are blocked. Fredoka/Nunito are OFL. |
 | Router | React Router 7 **library mode** (`BrowserRouter`), routes declared in `App.tsx`, `Shell` as a layout route | Already a dependency; SPA-fallback serving is configured in the Worker. |
-| Selected pet | `localStorage["pawlog:selectedPetId"]` + `PetProvider` context; invalid/missing id falls back to the first pet; zero pets ⇒ Onboarding replaces the routed UI | Spec §3: all views scoped to the selected pet. |
-| Types | Frontend types come **ONLY** from `@pawlog/shared` (one addition: `UpdateMeResponse`); per-category details types are derived via `z.infer<typeof activityDetailsSchemas[C]>` | Single source of truth; drift impossible. |
+| Selected pet | `localStorage["pawary:selectedPetId"]` + `PetProvider` context; invalid/missing id falls back to the first pet; zero pets ⇒ Onboarding replaces the routed UI | Spec §3: all views scoped to the selected pet. |
+| Types | Frontend types come **ONLY** from `@pawary/shared` (one addition: `UpdateMeResponse`); per-category details types are derived via `z.infer<typeof activityDetailsSchemas[C]>` | Single source of truth; drift impossible. |
 | Query keys | Namespaced by petId: `["activities", petId, ...]`, `["summary", petId, month]`, `["presets", petId]`, `["pets", petId]`; mutations invalidate by prefix as itemized in Task 3 | Pet switching must never show stale cross-pet data. |
 | Category forms | ONE config map (`CATEGORY_FIELDS`) + ONE renderer drives all 11 category forms; built payloads are validated client-side with the **same** `activityDetailsSchemas` the server uses | DRY and provably schema-exact. |
 | Photo attach | Create the activity first, then upload photos **sequentially** in the same submit handler with a progress label | `POST .../activities/:activityId/photos` requires an existing activity (Plan-2 locked decision). |
@@ -256,7 +256,7 @@ function Base({ children, ...props }: IconProps) {
   );
 }
 
-/** The Pawlog mark: solid paw print. */
+/** The Pawary mark: solid paw print. */
 export function PawIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
@@ -461,7 +461,7 @@ export function CatIcon(props: IconProps) {
 The 11-category visual identity: one inline-SVG icon per category plus the `categoryTone` map of **literal** Tailwind classes (literal strings are required so Tailwind's scanner extracts them — never build class names dynamically).
 
 ```tsx
-import type { Category } from "@pawlog/shared";
+import type { Category } from "@pawary/shared";
 import type { ReactElement, SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement>;
@@ -1021,7 +1021,7 @@ Replace `app/src/i18n/index.tsx` with (adds `useLocaleTag` for `Intl` formatting
 
 ```tsx
 import { createContext, useContext, useMemo, type ReactNode } from "react";
-import type { Locale } from "@pawlog/shared";
+import type { Locale } from "@pawary/shared";
 import { en } from "./en";
 import { ja } from "./ja";
 import type { Messages } from "./messages";
@@ -1067,7 +1067,7 @@ export function useLocaleTag(): LocaleTag {
 Add this import at the top of `app/src/i18n/messages.ts`:
 
 ```ts
-import type { Category } from "@pawlog/shared";
+import type { Category } from "@pawary/shared";
 ```
 
 Append inside the `Messages` interface (before the closing brace):
@@ -1327,7 +1327,7 @@ Expected: FAIL — `../src/lib/dates` not found.
 
 ```ts
 /**
- * Date math for Pawlog views.
+ * Date math for Pawary views.
  *
  * Two clocks exist:
  * - HOUSEHOLD time: `occurredAt + tzOffsetMin * 60000`, read via UTC getters.
@@ -1611,7 +1611,7 @@ with:
 - [ ] **Step 3: Create `app/src/api/keys.ts`**
 
 ```ts
-import type { Category } from "@pawlog/shared";
+import type { Category } from "@pawary/shared";
 
 /**
  * Query-key conventions (everything pet-scoped starts with [root, petId]):
@@ -1651,7 +1651,7 @@ export const keys = {
 Append (and extend the imports at the top of the file to):
 
 ```ts
-import type { MeResponse, UpdateMeInput, UpdateMeResponse } from "@pawlog/shared";
+import type { MeResponse, UpdateMeInput, UpdateMeResponse } from "@pawary/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError, setCsrfToken } from "./client";
 import { keys } from "./keys";
@@ -1695,7 +1695,7 @@ import type {
   PetResponse,
   PetTargetsInput,
   UpdatePetInput,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
 import { keys } from "./keys";
@@ -1780,7 +1780,7 @@ import type {
   CreateActivityInput,
   DaySummaryResponse,
   UpdateActivityInput,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import {
   useInfiniteQuery,
   useMutation,
@@ -1926,7 +1926,7 @@ import type {
   PresetInput,
   PresetResponse,
   UpdatePresetInput,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
 import { keys } from "./keys";
@@ -1977,7 +1977,7 @@ export function useDeletePreset(petId: string) {
 - [ ] **Step 8: Create `app/src/api/photos.ts`**
 
 ```ts
-import type { ActivityPhotoMeta } from "@pawlog/shared";
+import type { ActivityPhotoMeta } from "@pawary/shared";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
 import { keys } from "./keys";
@@ -2036,7 +2036,7 @@ Typed access to the per-category `details` payloads, derived from the SAME Zod s
 import {
   activityDetailsSchemas,
   type Category,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import type { z } from "zod";
 
 export type DetailsMap = {
@@ -2094,11 +2094,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { MeResponse, Role } from "@pawlog/shared";
+import type { MeResponse, Role } from "@pawary/shared";
 
 export type MePet = MeResponse["pets"][number];
 
-const STORAGE_KEY = "pawlog:selectedPetId";
+const STORAGE_KEY = "pawary:selectedPetId";
 
 type PetContextValue = {
   pets: MePet[];
@@ -2710,7 +2710,7 @@ Append inside `en` in `app/src/i18n/en.ts`:
   },
   errors: {
     title: "Something went wrong",
-    body: "We couldn't reach Pawlog. Check your connection and try again.",
+    body: "We couldn't reach Pawary. Check your connection and try again.",
     notFound: "We couldn't find that.",
   },
   health: {
@@ -2740,7 +2740,7 @@ Append inside `ja` in `app/src/i18n/ja.ts`:
   },
   errors: {
     title: "問題が発生しました",
-    body: "Pawlog に接続できませんでした。通信環境を確認して再試行してください。",
+    body: "Pawary に接続できませんでした。通信環境を確認して再試行してください。",
     notFound: "見つかりませんでした。",
   },
   health: {
@@ -2834,7 +2834,7 @@ The pet-settings screens are fully functional now and get linked from the Settin
 One form used by Onboarding (create) and PetEditor (edit). It is presentational: collects values, parent builds the API payload.
 
 ```tsx
-import type { Sex, Species } from "@pawlog/shared";
+import type { Sex, Species } from "@pawary/shared";
 import { useState, type ReactNode } from "react";
 import { Button } from "../../components/Button";
 import { DateInput, Field, Select, TextInput } from "../../components/form";
@@ -2983,7 +2983,7 @@ export function PetForm({
 The first-run moment: warm hero + the pet form. On success the new pet is selected and `["me"]` refetches, which flips the Shell into the real app.
 
 ```tsx
-import type { CreatePetInput } from "@pawlog/shared";
+import type { CreatePetInput } from "@pawary/shared";
 import { useCreatePet } from "../api/pets";
 import { Card } from "../components/Card";
 import { PawIcon } from "../components/icons";
@@ -3138,7 +3138,7 @@ export function SettingsPage({
 Handles both `/settings/pets/new` and `/settings/pets/:petId`: create, edit (null-clears), avatar upload (crop-free direct upload with a client-side 10 MB pre-check), daily targets, archive/unarchive. Editing controls hide for viewers.
 
 ```tsx
-import type { PetResponse, UpdatePetInput } from "@pawlog/shared";
+import type { PetResponse, UpdatePetInput } from "@pawary/shared";
 import { useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { MAX_PHOTO_BYTES } from "../../api/photos";
@@ -3381,7 +3381,7 @@ and add inside the `<Route element={<Shell />}>` block (before the wildcard):
 
 - [ ] **Step 7: Add the i18n keys**
 
-Append inside the `Messages` interface in `app/src/i18n/messages.ts` (and add `import type { Role } from "@pawlog/shared";` — extend the existing type-import line):
+Append inside the `Messages` interface in `app/src/i18n/messages.ts` (and add `import type { Role } from "@pawary/shared";` — extend the existing type-import line):
 
 ```ts
   onboarding: {
@@ -3813,7 +3813,7 @@ One config map drives all 11 category forms. `buildDetails` constructs the paylo
 import {
   activityDetailsSchemas,
   type Category,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import type { Messages } from "../../i18n/messages";
 
 export type OptionGroup = keyof Messages["options"];
@@ -3944,7 +3944,7 @@ export function initialValues(
 - [ ] **Step 2: Create `app/src/features/add/DetailsFields.tsx`**
 
 ```tsx
-import type { Category } from "@pawlog/shared";
+import type { Category } from "@pawary/shared";
 import {
   DateInput,
   Field,
@@ -4048,7 +4048,7 @@ export function DetailsFields({
 The 11-category picker (reused by the preset editor in Task 14).
 
 ```tsx
-import { CATEGORIES, type Category } from "@pawlog/shared";
+import { CATEGORIES, type Category } from "@pawary/shared";
 import { CategoryIcon, categoryTone } from "../../components/CategoryIcon";
 import { useT } from "../../i18n";
 import { cn } from "../../lib/cn";
@@ -4105,7 +4105,7 @@ export function CategoryGrid({
 Create AND edit in one component: time (defaults to now), the category's config-driven fields, memo, photos. On create: POST the activity, then upload photos sequentially with progress; on edit: PATCH, manage existing photos, upload new ones.
 
 ```tsx
-import type { ActivityResponse, Category } from "@pawlog/shared";
+import type { ActivityResponse, Category } from "@pawary/shared";
 import { useRef, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -4338,7 +4338,7 @@ export function ActivityForm({
 Two-step sheet: category grid → form. The back arrow returns to the grid.
 
 ```tsx
-import type { Category } from "@pawlog/shared";
+import type { Category } from "@pawary/shared";
 import { useEffect, useState } from "react";
 import { IconButton } from "../../components/IconButton";
 import { ArrowLeftIcon } from "../../components/icons";
@@ -4614,7 +4614,7 @@ One tap on a preset = activity logged at `now` with the preset's stored details;
 - [ ] **Step 1: Create `app/src/features/quickadd/QuickAddGrid.tsx`**
 
 ```tsx
-import type { PresetResponse } from "@pawlog/shared";
+import type { PresetResponse } from "@pawary/shared";
 import { Link } from "react-router";
 import { useCreateActivity, useDeleteActivity } from "../../api/activities";
 import { usePresets } from "../../api/presets";
@@ -4867,7 +4867,7 @@ git commit -m "feat: add quick add presets with undo toast and fab long-press"
 One localized summary line per activity, reused by Home, the calendar day sheet, timeline chips, and the Log.
 
 ```ts
-import type { ActivityResponse } from "@pawlog/shared";
+import type { ActivityResponse } from "@pawary/shared";
 import type { Messages } from "../i18n/messages";
 import { parseDetails } from "./details";
 
@@ -4937,7 +4937,7 @@ export function summarizeActivity(a: ActivityResponse, t: Messages): string {
 - [ ] **Step 2: Create `app/src/components/ActivityRow.tsx`**
 
 ```tsx
-import type { ActivityResponse } from "@pawlog/shared";
+import type { ActivityResponse } from "@pawary/shared";
 import { Link } from "react-router";
 import { useLocaleTag, useT } from "../i18n";
 import { summarizeActivity } from "../lib/activitySummary";
@@ -5216,7 +5216,7 @@ export function useSwipe(opts: {
 Per-day colored category dots (max 4 + "+n"), today ring, dimmed out-of-month cells, Monday-start weekday header.
 
 ```tsx
-import { CATEGORIES, type DaySummaryResponse } from "@pawlog/shared";
+import { CATEGORIES, type DaySummaryResponse } from "@pawary/shared";
 import { categoryTone } from "../../components/CategoryIcon";
 import { useLocaleTag } from "../../i18n";
 import { cn } from "../../lib/cn";
@@ -5668,7 +5668,7 @@ Expected: PASS (dates + timeline).
 - [ ] **Step 5: Create `app/src/features/calendar/Timeline.tsx`**
 
 ```tsx
-import type { ActivityResponse } from "@pawlog/shared";
+import type { ActivityResponse } from "@pawary/shared";
 import { useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router";
 import { useActivitiesRange } from "../../api/activities";
@@ -5902,7 +5902,7 @@ git commit -m "feat: add week, 3-day, and day timeline views with swipe"
 - [ ] **Step 1: Replace `app/src/routes/LogTab.tsx`**
 
 ```tsx
-import { CATEGORIES, type Category } from "@pawlog/shared";
+import { CATEGORIES, type Category } from "@pawary/shared";
 import { useEffect, useRef, useState } from "react";
 import { useLogActivities } from "../api/activities";
 import { ActivityRow } from "../components/ActivityRow";
@@ -6110,7 +6110,7 @@ The detail screen renders the category banner in the category's accent, a defini
 - [ ] **Step 1: Create `app/src/routes/ActivityDetail.tsx`**
 
 ```tsx
-import type { ActivityResponse } from "@pawlog/shared";
+import type { ActivityResponse } from "@pawary/shared";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useParams } from "react-router";
@@ -6476,7 +6476,7 @@ Spec §3 "Other screens → Settings": account (profile, logout), pets (Task 5, 
 - [ ] **Step 1: Create `app/src/routes/settings/SettingsHome.tsx`**
 
 ```tsx
-import type { Locale } from "@pawlog/shared";
+import type { Locale } from "@pawary/shared";
 import { useState } from "react";
 import { Link } from "react-router";
 import { myExportUrl, petExportUrl } from "../../api/export";
@@ -6612,7 +6612,7 @@ export function SettingsHome() {
 CRUD + reorder (up/down swaps re-number `sortOrder` to `index * 10`). The editor reuses the Task-7 category grid and config-driven fields — presets must store **complete** schema-valid details, enforced by the same `buildDetails`.
 
 ```tsx
-import type { Category, PresetResponse } from "@pawlog/shared";
+import type { Category, PresetResponse } from "@pawary/shared";
 import { useEffect, useState } from "react";
 import {
   useCreatePreset,
@@ -6884,7 +6884,7 @@ export function AccountSettings() {
   const onDelete = () =>
     deleteAccount.mutate(confirmEmail, {
       onSuccess: () => {
-        localStorage.removeItem("pawlog:selectedPetId");
+        localStorage.removeItem("pawary:selectedPetId");
         window.location.assign("/");
       },
       onError: (error) =>

@@ -1,4 +1,4 @@
-import type { ActivityResponse } from "@pawlog/shared";
+import type { ActivityResponse } from "@pawary/shared";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useParams } from "react-router";

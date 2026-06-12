@@ -1,7 +1,7 @@
 import {
   activityDetailsSchemas,
   type Category,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import type { z } from "zod";
 
 export type DetailsMap = {

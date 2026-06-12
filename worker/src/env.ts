@@ -1,4 +1,4 @@
-import type { Role } from "@pawlog/shared";
+import type { Role } from "@pawary/shared";
 import type { Pet, Session, User } from "./db/schema";
 
 export type Env = {

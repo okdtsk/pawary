@@ -1,11 +1,11 @@
-import type { Anomaly } from "@pawlog/shared";
+import type { Anomaly } from "@pawary/shared";
 
 /**
  * Dismissals live client-side, scoped to pet + rule (+ symptom name for
  * symptom_streak) + household day — a new day re-evaluates, which is how
  * "reappear only on new triggering data" (spec §7) works in practice.
  */
-const PREFIX = "pawlog:anomaly:";
+const PREFIX = "pawary:anomaly:";
 
 function storageKey(petId: string, anomaly: Anomaly, day: string): string {
   const sub = anomaly.rule === "symptom_streak" ? anomaly.params.name : "";

@@ -1,5 +1,5 @@
-import type { InsightsPeriod } from "@pawlog/shared";
-import { INSIGHTS_PERIODS } from "@pawlog/shared";
+import type { InsightsPeriod } from "@pawary/shared";
+import { INSIGHTS_PERIODS } from "@pawary/shared";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 import { useInsights } from "../api/insights";

@@ -1,5 +1,5 @@
-import type { PetResponse, PetTargets, Role } from "@pawlog/shared";
-import { createPetSchema, petTargetsSchema, updatePetSchema } from "@pawlog/shared";
+import type { PetResponse, PetTargets, Role } from "@pawary/shared";
+import { createPetSchema, petTargetsSchema, updatePetSchema } from "@pawary/shared";
 import { eq } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";

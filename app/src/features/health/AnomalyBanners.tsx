@@ -1,4 +1,4 @@
-import type { Anomaly } from "@pawlog/shared";
+import type { Anomaly } from "@pawary/shared";
 import { useState } from "react";
 import { Link } from "react-router";
 import { IconButton } from "../../components/IconButton";

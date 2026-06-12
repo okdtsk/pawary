@@ -2,7 +2,7 @@ import type {
   PresetInput,
   PresetResponse,
   UpdatePresetInput,
-} from "@pawlog/shared";
+} from "@pawary/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
 import { keys } from "./keys";

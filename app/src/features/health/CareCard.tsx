@@ -1,4 +1,4 @@
-import type { Role } from "@pawlog/shared";
+import type { Role } from "@pawary/shared";
 import { Link } from "react-router";
 import { useCareStatus } from "../../api/schedules";
 import { Button } from "../../components/Button";

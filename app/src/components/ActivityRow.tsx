@@ -1,4 +1,4 @@
-import type { ActivityResponse } from "@pawlog/shared";
+import type { ActivityResponse } from "@pawary/shared";
 import { Link } from "react-router";
 import { useLocaleTag, useT } from "../i18n";
 import { summarizeActivity } from "../lib/activitySummary";

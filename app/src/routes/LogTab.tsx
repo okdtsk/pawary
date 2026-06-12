@@ -1,4 +1,4 @@
-import { CATEGORIES, type Category } from "@pawlog/shared";
+import { CATEGORIES, type Category } from "@pawary/shared";
 import { useEffect, useRef, useState } from "react";
 import { useLogActivities } from "../api/activities";
 import { ActivityRow } from "../components/ActivityRow";

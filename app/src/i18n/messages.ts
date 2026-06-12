@@ -1,4 +1,4 @@
-import type { Category, InsightsPeriod, Role, ScheduleType } from "@pawlog/shared";
+import type { Category, InsightsPeriod, Role, ScheduleType } from "@pawary/shared";
 
 export interface Messages {
   appName: string;

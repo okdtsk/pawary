@@ -1,5 +1,5 @@
 import { SELF } from "cloudflare:test";
-import type { CareStatusResponse } from "@pawlog/shared";
+import type { CareStatusResponse } from "@pawary/shared";
 import { describe, expect, it } from "vitest";
 import { seedPet, seedSchedule, seedUserWithSession } from "./helpers";
 
