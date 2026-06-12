@@ -29,6 +29,18 @@ npm run dev                           # worker on :8787, app on :5173
 Open http://localhost:5173 and use **Dev sign-in (local)**, or configure real
 Google OAuth via `worker/.dev.vars` (see `worker/.dev.vars.example`).
 
+## Deployment
+
+Production runs on Cloudflare Workers at https://pawary.okdtsk.dev (Worker `pawary`, D1 `pawary`, R2 `pawary-photos`), configured via the `production` wrangler environment.
+
+```sh
+npm run build                                                       # build the app bundle
+npx wrangler d1 migrations apply pawary --remote --env production   # apply pending migrations (from worker/)
+npx wrangler deploy --env production                                # deploy worker + assets (from worker/)
+```
+
+Secrets (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) are managed with `wrangler secret put <NAME> --env production`. Rollback: `npx wrangler rollback --env production`.
+
 ## Testing
 
 ```bash
