@@ -21,6 +21,9 @@ export type Category = (typeof CATEGORIES)[number];
 export const ROLES = ["owner", "editor", "viewer"] as const;
 export type Role = (typeof ROLES)[number];
 
+export const INVITE_ROLES = ["editor", "viewer"] as const;
+export type InviteRole = (typeof INVITE_ROLES)[number];
+
 export type ApiOk<T> = { data: T };
 export type ApiErr = { error: { code: string; message: string } };
 
@@ -197,6 +200,16 @@ export const petTargetsSchema = z
   .strict();
 export type PetTargetsInput = z.infer<typeof petTargetsSchema>;
 
+export const createInviteSchema = z
+  .object({ role: z.enum(INVITE_ROLES) })
+  .strict();
+export type CreateInviteInput = z.infer<typeof createInviteSchema>;
+
+export const updateMemberRoleSchema = z
+  .object({ role: z.enum(ROLES) })
+  .strict();
+export type UpdateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>;
+
 export const presetSchema = z
   .object({
     category: z.enum(CATEGORIES),
@@ -226,6 +239,46 @@ export type DeleteMeInput = z.infer<typeof deleteMeSchema>;
 export type PetTargets = {
   foodGPerDay: number | null;
   waterMlPerDay: number | null;
+};
+
+export type PetMemberResponse = {
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  role: Role;
+  createdAt: number;
+  isMe: boolean;
+};
+
+export type PetInviteResponse = {
+  id: string;
+  role: InviteRole;
+  expiresAt: number;
+  createdByName: string;
+};
+
+/** `invites` is null for non-owners (pending invites are owner-only data). */
+export type MembersResponse = {
+  members: PetMemberResponse[];
+  invites: PetInviteResponse[] | null;
+};
+
+export type CreateInviteResponse = {
+  id: string;
+  url: string;
+  expiresAt: number;
+};
+
+export type InvitePreviewResponse = {
+  petName: string;
+  role: InviteRole;
+  inviterName: string;
+};
+
+export type AcceptInviteResponse = {
+  petId: string;
+  role: Role;
+  alreadyMember: boolean;
 };
 
 export type PetResponse = {
