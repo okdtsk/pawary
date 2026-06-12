@@ -3,6 +3,7 @@ import { afterEach, beforeAll, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { advisorConversations, advisorMessages, auditLog } from "../src/db/schema";
+import { newId } from "../src/lib/id";
 import { authHeaders, seedPet, seedUserWithSession, withMember } from "./helpers";
 
 // ---------------------------------------------------------------------------
@@ -408,4 +409,82 @@ it("empty message → 400; message >4000 chars → 400", async () => {
     },
   );
   expect(longRes.status).toBe(400);
+});
+
+// ---------------------------------------------------------------------------
+// Case 8: History window must start with a user turn
+// ---------------------------------------------------------------------------
+
+it("long conversation: provider history window starts with a user turn", async () => {
+  const editor = await seedUserWithSession();
+  const { petId } = await seedPet(editor.userId);
+  await configureAdvisor(editor);
+
+  // Seed a conversation with 20 alternating pre-existing messages (u,a,...,a).
+  // The append below makes 21 total — the naive last-20 window then starts
+  // with an assistant turn (message #2).
+  const db = drizzle(env.DB);
+  const convId = newId();
+  const base = Date.now() - 100_000;
+  await db.insert(advisorConversations).values({
+    id: convId,
+    petId,
+    title: "Long chat",
+    createdBy: editor.userId,
+    createdAt: base,
+    updatedAt: base,
+  });
+  for (let i = 0; i < 20; i++) {
+    const role = i % 2 === 0 ? ("user" as const) : ("assistant" as const);
+    await db.insert(advisorMessages).values({
+      id: newId(),
+      conversationId: convId,
+      role,
+      content: `${role} message ${i + 1}`,
+      authorId: editor.userId,
+      provider: role === "assistant" ? "anthropic" : null,
+      model: role === "assistant" ? "claude-opus-4-8" : null,
+      createdAt: base + i * 1000,
+    });
+  }
+
+  // Capture the provider request body via the interceptor's body matcher.
+  let capturedBody: string | null = null;
+  fetchMock
+    .get("https://api.anthropic.com")
+    .intercept({
+      path: "/v1/messages",
+      method: "POST",
+      body: (b: string) => {
+        capturedBody = b;
+        return true;
+      },
+    })
+    .reply(200, mockAnthropicStream(["ok"]), {
+      headers: { "content-type": "text/event-stream" },
+    });
+
+  const res = await SELF.fetch(
+    `https://app.local/api/pets/${petId}/advisor/conversations/${convId}/messages`,
+    {
+      method: "POST",
+      headers: authHeaders(editor.cookie, editor.csrfToken),
+      body: JSON.stringify({ message: "Latest question", tz: 0, locale: "en" }),
+    },
+  );
+  expect(res.status).toBe(200);
+  const body = await res.text();
+  expect(body).toContain("event: done");
+
+  // The provider request must start with a user turn and end with the new message.
+  expect(capturedBody).not.toBeNull();
+  const providerReq = JSON.parse(capturedBody!) as {
+    messages: Array<{ role: string; content: string }>;
+  };
+  expect(providerReq.messages.length).toBeGreaterThan(0);
+  expect(providerReq.messages[0]!.role).toBe("user");
+  expect(providerReq.messages[providerReq.messages.length - 1]).toEqual({
+    role: "user",
+    content: "Latest question",
+  });
 });

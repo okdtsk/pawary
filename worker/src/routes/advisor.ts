@@ -17,7 +17,7 @@ import {
   userAiSettings,
   users,
 } from "../db/schema";
-import type { AdvisorConversation } from "../db/schema";
+import type { AdvisorConversation, UserAiSettings } from "../db/schema";
 import { AdvisorProviderError, streamProvider } from "../domain/advisor/providers";
 import { buildAdvisorSystemPrompt } from "../domain/advisor/context";
 import { writeAudit } from "../domain/audit";
@@ -41,10 +41,10 @@ async function chatAndStream(
   c: Context<AppEnv>,
   conversation: AdvisorConversation,
   input: AdvisorChatInput,
+  config: UserAiSettings,
 ) {
   const db = drizzle(c.env.DB);
   const user = c.get("user");
-  const config = (await loadAdvisorConfig(db, user.id))!;
   const now = Date.now();
 
   // Persist user message BEFORE the provider call
@@ -70,6 +70,9 @@ async function chatAndStream(
     .limit(HISTORY_LIMIT)
     .all();
   history.reverse(); // oldest-first for the provider
+  // providers require the first turn to be from the user — drop leading
+  // assistant turns left over from the fixed-size window
+  while (history.length > 0 && history[0]!.role !== "user") history.shift();
 
   const system = await buildAdvisorSystemPrompt(db, c.get("pet"), input.tz, input.locale);
   const apiKey = await decryptKey(config.encryptedKey, c.env.ADVISOR_KEK);
@@ -175,7 +178,7 @@ advisorRoutes.post(
       diff: { title: conversation.title },
     });
 
-    return chatAndStream(c, conversation, parsed.data);
+    return chatAndStream(c, conversation, parsed.data, config);
   },
 );
 
@@ -218,7 +221,7 @@ advisorRoutes.post(
       return err(c, 409, "advisor_not_configured", "AI Advisor is not configured");
     }
 
-    return chatAndStream(c, conversation, parsed.data);
+    return chatAndStream(c, conversation, parsed.data, config);
   },
 );
 

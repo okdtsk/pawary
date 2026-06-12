@@ -8,3 +8,6 @@
 #   http://localhost:8787/api/auth/google/callback   (wrangler dev direct)
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-client-secret
+
+# Key-encryption key for AI Advisor BYO API keys (required for the AI Advisor).
+ADVISOR_KEK="<32-byte base64, e.g. openssl rand -base64 32>"
