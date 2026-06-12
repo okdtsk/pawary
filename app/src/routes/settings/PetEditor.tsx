@@ -14,6 +14,7 @@ import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { Field, NumberInput } from "../../components/form";
 import { Spinner } from "../../components/Spinner";
+import { MembersSection } from "../../features/pets/MembersSection";
 import { PetForm, type PetFormValues } from "../../features/pets/PetForm";
 import { useT } from "../../i18n";
 import { SettingsPage } from "./SettingsPage";
@@ -149,6 +150,8 @@ function EditExisting({ pet }: { pet: PetResponse }) {
           </div>
         </Card>
       ) : null}
+
+      <MembersSection pet={pet} />
 
       {canEdit && (
         <Button
