@@ -96,6 +96,32 @@ export interface Messages {
     saved: string;
     role: Record<Role, string>;
   };
+  members: {
+    title: string;
+    you: string;
+    pendingTitle: string;
+    expires: (date: string) => string;
+    revoke: string;
+    remove: string;
+    removeConfirm: string;
+    leave: string;
+    leaveConfirm: string;
+    lastOwner: string;
+    inviteCreate: string;
+    inviteRole: string;
+    linkCopied: string;
+    shareText: (pet: string) => string;
+    joinTitle: string;
+    joinPrompt: (pet: string, inviter: string) => string;
+    joinAs: (role: string) => string;
+    accept: string;
+    decline: string;
+    joined: string;
+    alreadyMember: string;
+    invalidTitle: string;
+    invalidBody: string;
+    goHome: string;
+  };
   add: {
     pickCategory: string;
     time: string;
