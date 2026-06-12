@@ -7,11 +7,13 @@ import { PawIcon } from "../components/icons";
 import { Spinner } from "../components/Spinner";
 import { useToast } from "../components/Toast";
 import { useT } from "../i18n";
+import { usePets } from "../state/pets";
 
 export function JoinInvite() {
   const t = useT();
   const toast = useToast();
   const navigate = useNavigate();
+  const { selectPet } = usePets();
   const { token } = useParams<{ token: string }>();
   const preview = useInvitePreview(token ?? "");
   const accept = useAcceptInvite();
@@ -54,6 +56,7 @@ export function JoinInvite() {
                   // token is defined here: the invalid branch handled undefined
                   accept.mutate(token!, {
                     onSuccess: (data) => {
+                      selectPet(data.petId);
                       toast.show(
                         data.alreadyMember
                           ? t.members.alreadyMember

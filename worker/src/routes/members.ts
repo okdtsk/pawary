@@ -69,6 +69,7 @@ memberRoutes.get(
             gt(petInvites.expiresAt, Date.now()),
           ),
         )
+        .orderBy(asc(petInvites.createdAt), asc(petInvites.id))
         .all();
     }
     return c.json({ data: { members, invites } satisfies MembersResponse });
