@@ -360,4 +360,14 @@ export const ja: Messages = {
     iosInstallBody:
       "Safariの共有ボタンから「ホーム画面に追加」を選ぶと、アプリのように使えます。",
   },
+  push: {
+    title: "通知",
+    enable: "プッシュ通知を有効にする",
+    disable: "通知を無効にする",
+    enabledStatus: "このデバイスでプッシュ通知が有効です",
+    unsupported: "このブラウザはプッシュ通知に対応していません",
+    denied: "通知の許可が拒否されています — ブラウザの設定から許可してください",
+    iosInstallHint: "iOSでプッシュ通知を受け取るには、まずPawaryをホーム画面に追加してください",
+    error: "通知の処理中にエラーが発生しました — もう一度お試しください",
+  },
 };

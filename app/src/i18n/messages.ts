@@ -325,4 +325,14 @@ export interface Messages {
     iosInstallTitle: string;
     iosInstallBody: string;
   };
+  push: {
+    title: string;
+    enable: string;
+    disable: string;
+    enabledStatus: string;
+    unsupported: string;
+    denied: string;
+    iosInstallHint: string;
+    error: string;
+  };
 }

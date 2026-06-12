@@ -361,4 +361,14 @@ export const en: Messages = {
     iosInstallBody:
       'Tap the Share button in Safari, then choose "Add to Home Screen" to use Pawary like an app.',
   },
+  push: {
+    title: "Notifications",
+    enable: "Enable push notifications",
+    disable: "Disable notifications",
+    enabledStatus: "Push notifications are enabled for this device",
+    unsupported: "Push notifications are not supported in this browser",
+    denied: "Notification permission was denied — enable it in your browser settings",
+    iosInstallHint: "To receive push notifications on iOS, install Pawary to your Home Screen first",
+    error: "Something went wrong with notifications — please try again",
+  },
 };
