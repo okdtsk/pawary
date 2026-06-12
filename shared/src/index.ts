@@ -24,6 +24,16 @@ export type Role = (typeof ROLES)[number];
 export const INVITE_ROLES = ["editor", "viewer"] as const;
 export type InviteRole = (typeof INVITE_ROLES)[number];
 
+export const AI_PROVIDERS = ["anthropic", "openai", "gemini"] as const;
+export type AiProvider = (typeof AI_PROVIDERS)[number];
+
+/** Pre-filled (editable) default model per provider. */
+export const AI_DEFAULT_MODELS: Record<AiProvider, string> = {
+  anthropic: "claude-opus-4-8",
+  openai: "gpt-4o",
+  gemini: "gemini-2.0-flash",
+};
+
 export type ApiOk<T> = { data: T };
 export type ApiErr = { error: { code: string; message: string } };
 
@@ -209,6 +219,24 @@ export const updateMemberRoleSchema = z
   .object({ role: z.enum(ROLES) })
   .strict();
 export type UpdateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>;
+
+export const putAdvisorSettingsSchema = z
+  .object({
+    provider: z.enum(AI_PROVIDERS),
+    model: z.string().min(1).max(100),
+    apiKey: z.string().min(1).max(512),
+  })
+  .strict();
+export type PutAdvisorSettingsInput = z.infer<typeof putAdvisorSettingsSchema>;
+
+export const advisorChatSchema = z
+  .object({
+    message: z.string().min(1).max(4000),
+    tz: z.number().int().min(-840).max(840).default(0),
+    locale: z.enum(["en", "ja"]).default("en"),
+  })
+  .strict();
+export type AdvisorChatInput = z.infer<typeof advisorChatSchema>;
 
 export const presetSchema = z
   .object({
@@ -580,3 +608,37 @@ export function isoWeekStartDay(weekKey: string): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${monday.getUTCFullYear()}-${pad(monday.getUTCMonth() + 1)}-${pad(monday.getUTCDate())}`;
 }
+
+// ---------------------------------------------------------------------------
+// Plan 8: AI Advisor
+// ---------------------------------------------------------------------------
+
+/** `settings` is null when the user has not configured a key. The key itself never appears in any response. */
+export type AdvisorSettingsResponse = {
+  settings: { provider: AiProvider; model: string } | null;
+};
+
+export type AdvisorConversationSummary = {
+  id: string;
+  title: string;
+  createdByName: string | null;
+  updatedAt: number;
+};
+
+export type AdvisorMessageView = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  authorName: string | null;
+  provider: string | null;
+  model: string | null;
+  createdAt: number;
+};
+
+export type AdvisorConversationDetail = {
+  id: string;
+  title: string;
+  createdByName: string | null;
+  updatedAt: number;
+  messages: AdvisorMessageView[];
+};
