@@ -6,6 +6,7 @@ import { PetAvatar } from "../components/Avatar";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { EmptyState } from "../components/EmptyState";
+import { ChevronRightIcon } from "../components/icons";
 import { Spinner } from "../components/Spinner";
 import { AnomalyBanners } from "../features/health/AnomalyBanners";
 import { InstallHint } from "../features/pwa/InstallHint";
@@ -58,6 +59,17 @@ export function Home() {
 
       {/* care items: overdue / due today, complete with undo */}
       <CareCard petId={pet.id} role={pet.role} />
+
+      {/* AI Advisor entry card */}
+      <Link to="/advisor" className="block animate-pop" style={{ animationDelay: "80ms" }}>
+        <Card className="flex items-center gap-3 p-4 hover:shadow-md transition-shadow">
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-base text-ink">{t.advisor.homeCard}</p>
+            <p className="truncate text-sm text-ink-faint">{t.advisor.homeCardHint}</p>
+          </div>
+          <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
+        </Card>
+      </Link>
 
       {/* today so far */}
       <section className="animate-pop" style={{ animationDelay: "120ms" }}>

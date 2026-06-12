@@ -44,10 +44,15 @@ export function useAdvisorConversations(petId: string) {
   });
 }
 
-export function useAdvisorConversation(petId: string, id: string) {
+export function useAdvisorConversation(
+  petId: string,
+  id: string,
+  opts?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: keys.advisorConversation(petId, id),
     queryFn: () => api<AdvisorConversationDetail>(`/api/pets/${petId}/advisor/conversations/${id}`),
+    enabled: opts?.enabled,
   });
 }
 

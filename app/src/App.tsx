@@ -7,6 +7,7 @@ import { PawIcon } from "./components/icons";
 import { I18nProvider } from "./i18n";
 import { UpdatePrompt } from "./features/pwa/UpdatePrompt";
 import { ActivityDetail } from "./routes/ActivityDetail";
+import { Advisor } from "./routes/Advisor";
 import { CalendarTab } from "./routes/CalendarTab";
 import { HealthTab } from "./routes/HealthTab";
 import { Home } from "./routes/Home";
@@ -77,6 +78,7 @@ export function App() {
                 <Route path="/health" element={<HealthTab />} />
                 <Route path="/settings" element={<SettingsHome />} />
                 <Route path="/settings/presets" element={<PresetsSettings />} />
+                <Route path="/advisor" element={<Advisor />} />
                 <Route path="/settings/advisor" element={<AdvisorSettings />} />
                 <Route path="/settings/account" element={<AccountSettings />} />
                 <Route path="/settings/pets" element={<PetsSettings />} />
