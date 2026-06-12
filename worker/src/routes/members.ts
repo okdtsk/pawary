@@ -1,5 +1,7 @@
 import type {
+  AcceptInviteResponse,
   CreateInviteResponse,
+  InvitePreviewResponse,
   MembersResponse,
   PetInviteResponse,
   PetMemberResponse,
@@ -8,7 +10,7 @@ import { createInviteSchema, updateMemberRoleSchema } from "@pawary/shared";
 import { and, asc, eq, gt, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
-import { petInvites, petMembers, users } from "../db/schema";
+import { petInvites, petMembers, pets, users } from "../db/schema";
 import { writeAudit } from "../domain/audit";
 import type { AppEnv } from "../env";
 import { generateToken, sha256Hex } from "../lib/crypto";
@@ -239,5 +241,114 @@ memberRoutes.delete(
       diff: { role: target.role, reason: isSelf ? "left" : "removed" },
     });
     return c.json({ data: { ok: true } });
+  },
+);
+
+memberRoutes.get(
+  "/api/invites/:token",
+  requireSession,
+  rateLimit("invite-preview", 30, 60_000, "user"),
+  async (c) => {
+    const db = drizzle(c.env.DB);
+    const tokenHash = await sha256Hex(c.req.param("token"));
+    const row = await db
+      .select({
+        petName: pets.name,
+        role: petInvites.role,
+        inviterName: users.displayName,
+      })
+      .from(petInvites)
+      .innerJoin(pets, eq(petInvites.petId, pets.id))
+      .innerJoin(users, eq(petInvites.createdBy, users.id))
+      .where(
+        and(
+          eq(petInvites.tokenHash, tokenHash),
+          isNull(petInvites.usedAt),
+          gt(petInvites.expiresAt, Date.now()),
+        ),
+      )
+      .get();
+    if (!row) return err(c, 404, "not_found", "Not found");
+    return c.json({ data: row satisfies InvitePreviewResponse });
+  },
+);
+
+memberRoutes.post(
+  "/api/invites/:token/accept",
+  requireSession,
+  requireCsrf,
+  rateLimit("invite-accept", 10, 60_000, "user"),
+  async (c) => {
+    const db = drizzle(c.env.DB);
+    const user = c.get("user");
+    const now = Date.now();
+    const tokenHash = await sha256Hex(c.req.param("token"));
+    const invite = await db
+      .select()
+      .from(petInvites)
+      .where(
+        and(
+          eq(petInvites.tokenHash, tokenHash),
+          isNull(petInvites.usedAt),
+          gt(petInvites.expiresAt, now),
+        ),
+      )
+      .get();
+    if (!invite) return err(c, 404, "not_found", "Not found");
+    // atomic claim: the WHERE re-checks unused+unexpired, so of N racing
+    // accepts exactly one UPDATE reports a changed row
+    const claim = await db
+      .update(petInvites)
+      .set({ usedAt: now, usedBy: user.id })
+      .where(
+        and(
+          eq(petInvites.id, invite.id),
+          isNull(petInvites.usedAt),
+          gt(petInvites.expiresAt, now),
+        ),
+      )
+      .run();
+    if (claim.meta.changes === 0) return err(c, 404, "not_found", "Not found");
+
+    const existing = await db
+      .select()
+      .from(petMembers)
+      .where(
+        and(eq(petMembers.petId, invite.petId), eq(petMembers.userId, user.id)),
+      )
+      .get();
+    if (existing) {
+      return c.json({
+        data: {
+          petId: invite.petId,
+          role: existing.role,
+          alreadyMember: true,
+        } satisfies AcceptInviteResponse,
+      });
+    }
+    await db.insert(petMembers).values({
+      petId: invite.petId,
+      userId: user.id,
+      role: invite.role,
+      createdAt: now,
+    });
+    await writeAudit(db, {
+      petId: invite.petId,
+      userId: user.id,
+      action: "create",
+      entity: "member",
+      entityId: user.id,
+      diff: { role: invite.role, inviteId: invite.id },
+    });
+    return c.json(
+      {
+        data: {
+          petId: invite.petId,
+          role: invite.role,
+          alreadyMember: false,
+        } satisfies AcceptInviteResponse,
+      },
+      201,
+    );
   },
 );
