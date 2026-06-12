@@ -3,7 +3,7 @@ import type {
   PetInviteResponse,
   PetMemberResponse,
 } from "@pawary/shared";
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, asc, eq, gt, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { petInvites, petMembers, users } from "../db/schema";
@@ -32,10 +32,12 @@ memberRoutes.get(
       .from(petMembers)
       .innerJoin(users, eq(petMembers.userId, users.id))
       .where(eq(petMembers.petId, petId))
+      .orderBy(asc(petMembers.createdAt), asc(petMembers.userId))
       .all();
-    const members: PetMemberResponse[] = rows
-      .sort((a, b) => a.createdAt - b.createdAt)
-      .map((r) => ({ ...r, isMe: r.userId === me.id }));
+    const members: PetMemberResponse[] = rows.map((r) => ({
+      ...r,
+      isMe: r.userId === me.id,
+    }));
 
     let invites: PetInviteResponse[] | null = null;
     if (c.get("petRole") === "owner") {
