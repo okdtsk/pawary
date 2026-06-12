@@ -53,6 +53,9 @@ async function* sseData(body: ReadableStream<Uint8Array>): AsyncGenerator<string
       }
     }
   } finally {
+    // a consumer that stops early must also stop the upstream fetch —
+    // otherwise the provider keeps streaming (and billing) into a void
+    await reader.cancel().catch(() => {});
     reader.releaseLock();
   }
 }
