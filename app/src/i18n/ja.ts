@@ -112,6 +112,9 @@ export const ja: Messages = {
   add: {
     pickCategory: "なにがあった？",
     time: "日時",
+    pickerDate: "日付",
+    pickerHour: "時",
+    pickerMinute: "分",
     memo: "メモ",
     photos: "写真",
     addPhotos: "写真を追加",

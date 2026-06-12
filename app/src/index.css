@@ -88,6 +88,14 @@
   }
 }
 
+/* wheel-picker columns scroll without a visible scrollbar */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* organic avatar / illustration shape */
 .blob {
   border-radius: 53% 47% 52% 48% / 51% 49% 53% 47%;

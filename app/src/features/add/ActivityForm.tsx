@@ -15,7 +15,8 @@ import {
   useDeletePhoto,
 } from "../../api/photos";
 import { Button } from "../../components/Button";
-import { DateTimeInput, Field, Textarea } from "../../components/form";
+import { Field, Textarea } from "../../components/form";
+import { WheelDateTimePicker } from "../../components/WheelDateTimePicker";
 import { IconButton } from "../../components/IconButton";
 import { CameraIcon, XIcon } from "../../components/icons";
 import { Spinner } from "../../components/Spinner";
@@ -156,7 +157,7 @@ export function ActivityForm({
   return (
     <form className="flex flex-col gap-4" onSubmit={(e) => void submit(e)}>
       <Field label={t.add.time}>
-        <DateTimeInput valueMs={occurredAtMs} onChangeMs={setOccurredAtMs} />
+        <WheelDateTimePicker valueMs={occurredAtMs} onChangeMs={setOccurredAtMs} />
       </Field>
 
       <DetailsFields category={category} values={values} onChange={setValues} />

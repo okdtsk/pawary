@@ -112,6 +112,9 @@ export const en: Messages = {
   add: {
     pickCategory: "What happened?",
     time: "When",
+    pickerDate: "Date",
+    pickerHour: "Hour",
+    pickerMinute: "Minute",
     memo: "Memo",
     photos: "Photos",
     addPhotos: "Add photos",

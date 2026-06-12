@@ -140,6 +140,18 @@ export function shiftAnchor(
   return addDays(anchor, delta * step);
 }
 
+/** Device-local day-key of an instant (wheel-picker decomposition). */
+export function localDayKey(ms: number): DayKey {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+/** Device-local epoch ms for a day-key + wall-clock hour/minute (seconds zeroed). */
+export function localComposeMs(key: DayKey, hour: number, minute: number): number {
+  const { year, month, day } = dayKeyToParts(key);
+  return new Date(year, month - 1, day, hour, minute).getTime();
+}
+
 /** Household wall-clock time of an activity, via Intl. */
 export function formatTime(
   occurredAt: number,

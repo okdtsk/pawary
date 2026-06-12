@@ -5,6 +5,8 @@ import {
   dayKeyOf,
   formatMonthDay,
   formatTime,
+  localComposeMs,
+  localDayKey,
   minutesIntoDay,
   monthGrid,
   monthKeyOf,
@@ -104,5 +106,26 @@ describe("chart axis helpers (plan 4)", () => {
   it("shared ISO week math is importable from the app side", () => {
     expect(isoWeekKey("2026-06-12")).toBe("2026-W24");
     expect(isoWeekStartDay("2026-W24")).toBe("2026-06-08");
+  });
+});
+
+describe("wheel-picker local helpers", () => {
+  it("round-trips an instant through localDayKey + localComposeMs", () => {
+    const ms = new Date(2026, 5, 12, 9, 30).getTime();
+    expect(localDayKey(ms)).toBe("2026-06-12");
+    expect(localComposeMs("2026-06-12", 9, 30)).toBe(ms);
+  });
+
+  it("zeroes seconds when composing", () => {
+    const withSeconds = new Date(2026, 0, 1, 23, 59, 45).getTime();
+    expect(localComposeMs(localDayKey(withSeconds), 23, 59)).toBe(
+      new Date(2026, 0, 1, 23, 59).getTime(),
+    );
+  });
+
+  it("composes across month boundaries via day-keys", () => {
+    expect(localComposeMs("2026-03-01", 0, 0)).toBe(
+      new Date(2026, 2, 1).getTime(),
+    );
   });
 });

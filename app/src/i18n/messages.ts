@@ -99,6 +99,9 @@ export interface Messages {
   add: {
     pickCategory: string;
     time: string;
+    pickerDate: string;
+    pickerHour: string;
+    pickerMinute: string;
     memo: string;
     photos: string;
     addPhotos: string;
