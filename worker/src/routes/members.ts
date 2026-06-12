@@ -297,6 +297,9 @@ memberRoutes.post(
     if (!invite) return err(c, 404, "not_found", "Not found");
     // atomic claim: the WHERE re-checks unused+unexpired, so of N racing
     // accepts exactly one UPDATE reports a changed row
+    // claim-before-insert is deliberate: a crash between the two statements
+    // consumes the invite without granting membership (fail-closed; owner
+    // reissues), never the reverse.
     const claim = await db
       .update(petInvites)
       .set({ usedAt: now, usedBy: user.id })
@@ -318,6 +321,14 @@ memberRoutes.post(
       )
       .get();
     if (existing) {
+      await writeAudit(db, {
+        petId: invite.petId,
+        userId: user.id,
+        action: "update",
+        entity: "invite",
+        entityId: invite.id,
+        diff: { usedBy: user.id, alreadyMember: true },
+      });
       return c.json({
         data: {
           petId: invite.petId,
@@ -326,12 +337,17 @@ memberRoutes.post(
         } satisfies AcceptInviteResponse,
       });
     }
-    await db.insert(petMembers).values({
-      petId: invite.petId,
-      userId: user.id,
-      role: invite.role,
-      createdAt: now,
-    });
+    // onConflictDoNothing: the same user racing two invites to the same pet
+    // can pass the `existing` check twice; the PK conflict must not 500
+    await db
+      .insert(petMembers)
+      .values({
+        petId: invite.petId,
+        userId: user.id,
+        role: invite.role,
+        createdAt: now,
+      })
+      .onConflictDoNothing();
     await writeAudit(db, {
       petId: invite.petId,
       userId: user.id,
