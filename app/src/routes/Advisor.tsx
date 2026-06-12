@@ -1,6 +1,6 @@
 import type { AdvisorConversationSummary, AdvisorMessageView } from "@pawary/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   sendAdvisorMessage,
@@ -117,7 +117,7 @@ function ChatView({
   onStreamStart: (userText: string) => void;
   onStreamDelta: (chunk: string) => void;
   onStreamDone: (conversationId: string, messageId: string) => void;
-  onStreamError: (gotStream: boolean) => void;
+  onStreamError: (gotStream: boolean, convIdAtSend: string | null) => void;
   onReconciled: () => void;
   canEdit: boolean;
 }) {
@@ -152,7 +152,9 @@ function ChatView({
 
   // Clear the optimistic exchange only once the fetched data contains the
   // persisted assistant message — query data is the source of truth.
-  useEffect(() => {
+  // Layout effect: clear before paint so the fetched rows and the optimistic
+  // bubbles never coexist on screen for a frame.
+  useLayoutEffect(() => {
     if (
       pendingDoneId !== null &&
       conversationQuery.data?.messages.some((m) => m.id === pendingDoneId)
@@ -191,14 +193,11 @@ function ChatView({
         onStreamDone(conversationId, messageId);
       },
       onError: (code) => {
-        // Invalidate regardless of mount state — a partial may be persisted.
+        // Invalidate the list regardless of mount state; the parent handler
+        // owns the conversation-query invalidation (it clears the optimistic
+        // bubbles once the persisted partial has refetched).
         void qc.invalidateQueries({ queryKey: keys.advisorConversations(petId) });
-        if (convIdAtSend !== null) {
-          void qc.invalidateQueries({
-            queryKey: keys.advisorConversation(petId, convIdAtSend),
-          });
-        }
-        onStreamError(gotStream);
+        onStreamError(gotStream, convIdAtSend);
         if (!aliveRef.current) return;
         toast.show(advisorErrorText(code, t), { tone: "danger" });
         if (!gotStream) {
@@ -206,8 +205,6 @@ function ChatView({
           // their text back to retry (the parent dropped the false bubbles).
           setText(trimmed);
         }
-        // gotStream: the partial bubbles stay; the refetch reconciles
-        // against whatever the server persisted.
       },
     });
   };
@@ -468,6 +465,9 @@ export function Advisor() {
   const handleStreamStart = (userText: string) => {
     setStreaming(true);
     setPending({ userText, assistantText: "" });
+    // A stale done-id from a previous exchange must not reconcile (and wipe)
+    // this fresh stream against the previous refetch.
+    setPendingDoneId(null);
   };
 
   const handleStreamDelta = (chunk: string) => {
@@ -486,13 +486,28 @@ export function Advisor() {
     }
   };
 
-  const handleStreamError = (gotStream: boolean) => {
+  const handleStreamError = (gotStream: boolean, convIdAtSend: string | null) => {
     setStreaming(false);
     if (!gotStream) {
       // Pre-stream rejection: nothing was persisted — the bubbles are false.
       setPending(null);
       setPendingDoneId(null);
+      return;
     }
+    if (convIdAtSend !== null) {
+      // Mid-stream failure on an existing conversation: the worker persisted
+      // the partial. invalidateQueries resolves after the active query has
+      // refetched, so the canonical rows are already rendering when the
+      // optimistic bubbles clear — no vanish window, no permanent duplicates.
+      void qc
+        .invalidateQueries({ queryKey: keys.advisorConversation(pet.id, convIdAtSend) })
+        .then(() => {
+          setPending(null);
+          setPendingDoneId(null);
+        });
+    }
+    // gotStream on a NEW conversation: keep the bubbles visible — the real
+    // id is unknown here; the invalidated list shows the persisted row.
   };
 
   const handleReconciled = () => {
