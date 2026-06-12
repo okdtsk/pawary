@@ -37,6 +37,13 @@ export function useDeleteAdvisorSettings() {
   });
 }
 
+/** Probes the SAVED configuration end-to-end (key + model) with a tiny provider call. */
+export function useTestAdvisorSettings() {
+  return useMutation({
+    mutationFn: () => api<{ ok: true }>("/api/me/advisor/test", { method: "POST" }),
+  });
+}
+
 export function useAdvisorConversations(petId: string) {
   return useQuery({
     queryKey: keys.advisorConversations(petId),

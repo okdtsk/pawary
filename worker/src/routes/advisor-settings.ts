@@ -4,8 +4,13 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { userAiSettings } from "../db/schema";
+import {
+  AdvisorProviderError,
+  streamProvider,
+} from "../domain/advisor/providers";
 import type { AppEnv } from "../env";
-import { encryptKey } from "../lib/keycrypt";
+import { decryptKey, encryptKey } from "../lib/keycrypt";
+import { rateLimit } from "../lib/rate-limit";
 import { err } from "../lib/respond";
 import { requireCsrf } from "../middleware/csrf";
 import { requireSession } from "../middleware/session";
@@ -57,6 +62,44 @@ advisorSettingsRoutes.put("/api/me/advisor", requireSession, requireCsrf, async 
     } satisfies AdvisorSettingsResponse,
   });
 });
+
+advisorSettingsRoutes.post(
+  "/api/me/advisor/test",
+  requireSession,
+  requireCsrf,
+  rateLimit("advisor-test", 5, 60_000, "user"),
+  async (c) => {
+    const db = drizzle(c.env.DB);
+    const config = await db
+      .select()
+      .from(userAiSettings)
+      .where(eq(userAiSettings.userId, c.get("user").id))
+      .get();
+    if (!config) {
+      return err(c, 409, "advisor_not_configured", "Advisor is not configured");
+    }
+    const apiKey = await decryptKey(config.encryptedKey, c.env.ADVISOR_KEK);
+    try {
+      // a tiny probe: the request being accepted proves key + model end-to-end;
+      // bail after the first chunk so the user pays a handful of tokens at most
+      for await (const chunk of streamProvider(config.provider, {
+        apiKey,
+        model: config.model,
+        system: "You are a connection test. Reply with the single word OK.",
+        messages: [{ role: "user", content: "ping" }],
+        maxTokens: 8,
+      })) {
+        if (chunk.length > 0) break;
+      }
+      return c.json({ data: { ok: true } });
+    } catch (e) {
+      const code = e instanceof AdvisorProviderError ? e.code : "provider_error";
+      const message =
+        e instanceof AdvisorProviderError ? e.message : "Provider test failed";
+      return err(c, 502, code, message);
+    }
+  },
+);
 
 advisorSettingsRoutes.delete("/api/me/advisor", requireSession, requireCsrf, async (c) => {
   const db = drizzle(c.env.DB);

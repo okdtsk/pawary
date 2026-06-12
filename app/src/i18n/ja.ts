@@ -159,6 +159,7 @@ export const ja: Messages = {
       rate_limited: "送信が多すぎます。少し待ってから再試行してください。",
       offline: "オフラインです。アドバイザーには接続が必要です。",
       network: "接続が切れました。返答が途中までの可能性があります。",
+      provider_model: "モデル名がプロバイダに認識されません。モデル欄を確認してください。",
     },
     settings: {
       title: "AIアドバイザー",
@@ -171,6 +172,8 @@ export const ja: Messages = {
       saved: "アドバイザー設定を保存しました！",
       remove: "キーを削除",
       removeConfirm: "本当に削除？",
+      test: "接続テスト",
+      testSuccess: "接続OK！キーとモデルは正常に動作しています。",
     },
   },
   add: {

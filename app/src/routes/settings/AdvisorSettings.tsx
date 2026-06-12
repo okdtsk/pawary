@@ -5,7 +5,9 @@ import {
   useAdvisorSettings,
   useDeleteAdvisorSettings,
   useSaveAdvisorSettings,
+  useTestAdvisorSettings,
 } from "../../api/advisor";
+import { ApiError } from "../../api/client";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { Field, Select, TextInput } from "../../components/form";
@@ -29,6 +31,21 @@ function AdvisorForm({
   const toast = useToast();
   const saveSettings = useSaveAdvisorSettings();
   const deleteSettings = useDeleteAdvisorSettings();
+  const testSettings = useTestAdvisorSettings();
+
+  const onTest = () => {
+    testSettings.mutate(undefined, {
+      onSuccess: () => toast.show(t.advisor.settings.testSuccess),
+      onError: (error) => {
+        const known = t.advisor.errors as Record<string, string | undefined>;
+        const text =
+          error instanceof ApiError
+            ? (known[error.code] ?? t.advisor.errors.provider_error)
+            : t.errors.title;
+        toast.show(text, { tone: "danger" });
+      },
+    });
+  };
 
   const [provider, setProvider] = useState<AiProvider>(
     saved?.provider ?? AI_PROVIDERS[0],
@@ -127,10 +144,22 @@ function AdvisorForm({
           />
         </Field>
 
-        <Button disabled={saveDisabled} onClick={onSave}>
-          {saveSettings.isPending ? <Spinner className="h-4 w-4" /> : null}
-          {t.common.save}
-        </Button>
+        <div className="flex gap-2">
+          <Button disabled={saveDisabled} onClick={onSave} className="flex-1">
+            {saveSettings.isPending ? <Spinner className="h-4 w-4" /> : null}
+            {t.common.save}
+          </Button>
+          {saved != null && (
+            <Button
+              variant="soft"
+              disabled={testSettings.isPending || saveSettings.isPending}
+              onClick={onTest}
+            >
+              {testSettings.isPending ? <Spinner className="h-4 w-4" /> : null}
+              {t.advisor.settings.test}
+            </Button>
+          )}
+        </div>
       </Card>
 
       {saved != null && (
