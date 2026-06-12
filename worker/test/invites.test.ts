@@ -260,6 +260,22 @@ it("POST accept by an existing member consumes the invite without changing the r
     role: "editor", // their existing role, NOT the invite's viewer
     alreadyMember: true,
   });
+
+  // consuming the invite is a state change — it must leave an audit trail
+  const db = drizzle(env.DB);
+  const inviteAudits = await db
+    .select()
+    .from(auditLog)
+    .where(
+      and(
+        eq(auditLog.petId, petId),
+        eq(auditLog.entity, "invite"),
+        eq(auditLog.action, "update"),
+      ),
+    )
+    .all();
+  expect(inviteAudits).toHaveLength(1);
+  expect(inviteAudits[0]).toMatchObject({ userId: editor.userId });
 });
 
 it("two concurrent accepts: exactly one wins", async () => {
@@ -269,6 +285,8 @@ it("two concurrent accepts: exactly one wins", async () => {
   const { petId } = await seedPet(owner.userId);
   const token = tokenOf(await createdInviteUrl(petId, owner));
 
+  // the atomic-claim guard is exercised when the two handlers interleave at
+  // D1 awaits; the assertion also holds under full serialization
   const [resA, resB] = await Promise.all([
     SELF.fetch(`https://app.local/api/invites/${token}/accept`, {
       method: "POST",
