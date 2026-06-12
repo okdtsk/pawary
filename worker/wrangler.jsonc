@@ -23,6 +23,8 @@
   "env": {
     "production": {
       "name": "pawary",
+      "workers_dev": false,
+      "preview_urls": false,
       "vars": { "ENVIRONMENT": "production" },
       "d1_databases": [
         {
