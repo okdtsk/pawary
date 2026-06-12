@@ -11,3 +11,7 @@ GOOGLE_CLIENT_SECRET=your-client-secret
 
 # Key-encryption key for AI Advisor BYO API keys (required for the AI Advisor).
 ADVISOR_KEK="<32-byte base64, e.g. openssl rand -base64 32>"
+
+# VAPID keypair for Web Push (see README "Deployment" for the generation one-liner).
+VAPID_PUBLIC_KEY="<base64url 65-byte uncompressed P-256 public point>"
+VAPID_PRIVATE_KEY="<base64url 32-byte P-256 private scalar>"

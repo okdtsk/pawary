@@ -41,6 +41,14 @@ npx wrangler deploy --env production                                # deploy wor
 
 Secrets (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) are managed with `wrangler secret put <NAME> --env production`. The AI Advisor additionally requires `ADVISOR_KEK` (32-byte base64, e.g. `openssl rand -base64 32`): `npx wrangler secret put ADVISOR_KEK --env production`; local dev reads it from `worker/.dev.vars`. Rollback: `npx wrangler rollback --env production`.
 
+Web Push requires a VAPID keypair (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, base64url). Generate once and store both as secrets:
+
+```sh
+node -e 'crypto.subtle.generateKey({name:"ECDSA",namedCurve:"P-256"},true,["sign","verify"]).then(async k=>{const pub=Buffer.from(await crypto.subtle.exportKey("raw",k.publicKey)).toString("base64url");const jwk=await crypto.subtle.exportKey("jwk",k.privateKey);console.log("VAPID_PUBLIC_KEY="+pub);console.log("VAPID_PRIVATE_KEY="+jwk.d)})'
+npx wrangler secret put VAPID_PUBLIC_KEY --env production   # paste the public value
+npx wrangler secret put VAPID_PRIVATE_KEY --env production  # paste the private value
+```
+
 ## Testing
 
 ```bash
