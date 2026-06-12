@@ -39,7 +39,7 @@ npx wrangler d1 migrations apply pawary --remote --env production   # apply pend
 npx wrangler deploy --env production                                # deploy worker + assets (from worker/)
 ```
 
-Secrets (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) are managed with `wrangler secret put <NAME> --env production`. Rollback: `npx wrangler rollback --env production`.
+Secrets (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) are managed with `wrangler secret put <NAME> --env production`. The AI Advisor additionally requires `ADVISOR_KEK` (32-byte base64, e.g. `openssl rand -base64 32`): `npx wrangler secret put ADVISOR_KEK --env production`; local dev reads it from `worker/.dev.vars`. Rollback: `npx wrangler rollback --env production`.
 
 ## Testing
 

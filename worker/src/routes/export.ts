@@ -1,9 +1,12 @@
 import { and, eq, inArray } from "drizzle-orm";
+import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import {
   activities,
   activityPhotos,
+  advisorConversations,
+  advisorMessages,
   careSchedules,
   petMembers,
   pets,
@@ -17,6 +20,41 @@ import { requirePetRole } from "../middleware/pet-access";
 import { requireSession } from "../middleware/session";
 
 export const exportRoutes = new Hono<AppEnv>();
+
+/**
+ * Load all advisor conversations for a pet and attach their messages.
+ * Uses a single inArray query for messages — no N+1.
+ */
+async function loadAdvisorData(
+  db: DrizzleD1Database,
+  petId: string,
+): Promise<Array<(typeof advisorConversations.$inferSelect) & { messages: (typeof advisorMessages.$inferSelect)[] }>> {
+  const convs = await db
+    .select()
+    .from(advisorConversations)
+    .where(eq(advisorConversations.petId, petId))
+    .all();
+  if (convs.length === 0) return [];
+
+  const convIds = convs.map((c) => c.id);
+  const msgs = await db
+    .select()
+    .from(advisorMessages)
+    .where(inArray(advisorMessages.conversationId, convIds))
+    .all();
+
+  const byConversation = new Map<string, (typeof advisorMessages.$inferSelect)[]>();
+  for (const msg of msgs) {
+    const list = byConversation.get(msg.conversationId) ?? [];
+    list.push(msg);
+    byConversation.set(msg.conversationId, list);
+  }
+
+  return convs.map((conv) => ({
+    ...conv,
+    messages: byConversation.get(conv.id) ?? [],
+  }));
+}
 
 exportRoutes.get("/api/me/export", requireSession, async (c) => {
   const user = c.get("user");
@@ -55,6 +93,7 @@ exportRoutes.get("/api/me/export", requireSession, async (c) => {
       .from(petTargets)
       .where(eq(petTargets.petId, pet.id))
       .get();
+    const advisorData = await loadAdvisorData(db, pet.id);
     exportedPets.push({
       pet,
       targets: targets ?? null,
@@ -64,6 +103,7 @@ exportRoutes.get("/api/me/export", requireSession, async (c) => {
         ...a,
         deleted: a.deletedAt !== null,
       })),
+      advisorConversations: advisorData,
     });
   }
 
@@ -118,11 +158,13 @@ exportRoutes.get(
               .where(inArray(activityPhotos.activityId, ids))
               .all()
           : [];
+      const advisorData = await loadAdvisorData(db, pet.id);
       const payload = {
         exportedAt: new Date().toISOString(),
         pet,
         activities: rows.map((a) => ({ ...a, deleted: a.deletedAt !== null })),
         photos,
+        advisorConversations: advisorData,
       };
       return c.body(JSON.stringify(payload, null, 2), 200, {
         "Content-Type": "application/json",
