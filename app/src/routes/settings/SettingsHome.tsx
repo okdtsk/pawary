@@ -10,6 +10,7 @@ import { Field, Select, TextInput } from "../../components/form";
 import { ChevronRightIcon, DownloadIcon } from "../../components/icons";
 import { useToast } from "../../components/Toast";
 import { useT } from "../../i18n";
+import { NotificationsCard } from "../../features/pwa/NotificationsCard";
 import { useRequiredPet } from "../../state/pets";
 import { SettingsPage } from "./SettingsPage";
 
@@ -92,6 +93,9 @@ export function SettingsHome() {
           </Link>
         ))}
       </Card>
+
+      {/* notifications */}
+      <NotificationsCard />
 
       {/* data export */}
       <Card className="flex flex-col gap-1 p-2">
