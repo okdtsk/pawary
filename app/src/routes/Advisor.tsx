@@ -115,8 +115,20 @@ function ChatView({
   const [text, setText] = useState("");
   const [pending, setPending] = useState<PendingExchange | null>(null);
   const [streaming, setStreaming] = useState(false);
+  // Set from onDone's messageId: pending bubbles survive until the fetched
+  // data actually contains the persisted assistant message (no flicker).
+  const [pendingDoneId, setPendingDoneId] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Stream callbacks can fire after unmount (back mid-stream) — guard them.
+  const aliveRef = useRef(true);
+  useEffect(() => {
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
+    };
+  }, []);
 
   // Only fetch when we have a real conversation id (not "new")
   const conversationQuery = useAdvisorConversation(
@@ -126,6 +138,18 @@ function ChatView({
   );
 
   const messages: AdvisorMessageView[] = conversationQuery.data?.messages ?? [];
+
+  // Clear the optimistic exchange only once the fetched data contains the
+  // persisted assistant message — query data is the source of truth.
+  useEffect(() => {
+    if (
+      pendingDoneId !== null &&
+      conversationQuery.data?.messages.some((m) => m.id === pendingDoneId)
+    ) {
+      setPending(null);
+      setPendingDoneId(null);
+    }
+  }, [pendingDoneId, conversationQuery.data]);
 
   // Auto-scroll to bottom when assistant text grows or new messages appear
   useEffect(() => {
@@ -140,43 +164,53 @@ function ChatView({
     setPending({ userText: trimmed, assistantText: "" });
 
     const convIdAtSend = selected === "new" ? null : selected;
+    // True once any stream content arrived — distinguishes pre-stream
+    // rejections (nothing persisted) from mid-stream failures (partial saved).
+    let gotStream = false;
 
     void sendAdvisorMessage(petId, convIdAtSend, trimmed, locale, {
       onDelta: (chunk) => {
+        gotStream = true;
+        if (!aliveRef.current) return;
         setPending((prev) =>
           prev ? { ...prev, assistantText: prev.assistantText + chunk } : null,
         );
       },
-      onDone: ({ conversationId }) => {
-        // Invalidate both lists and the specific conversation
+      onDone: ({ conversationId, messageId }) => {
+        gotStream = true;
+        // Invalidate regardless of mount state — the server data changed.
         void qc.invalidateQueries({ queryKey: keys.advisorConversations(petId) });
         void qc.invalidateQueries({
           queryKey: keys.advisorConversation(petId, conversationId),
         });
-        // Wait for the refetch to settle, then clear pending state
-        // (the fetched data becomes the source of truth)
-        void qc
-          .refetchQueries({ queryKey: keys.advisorConversation(petId, conversationId) })
-          .then(() => {
-            setPending(null);
-            setStreaming(false);
-          });
-        // If this was a new conversation, switch selected to the real id
+        if (!aliveRef.current) return;
+        setStreaming(false);
+        setPendingDoneId(messageId);
+        // If this was a new conversation, switch selected to the real id;
+        // the newly mounted query fetches the persisted exchange.
         if (selected === "new") {
           onSelectConversation(conversationId);
         }
       },
       onError: (code) => {
-        toast.show(advisorErrorText(code, t), { tone: "danger" });
-        // Invalidate even on error — server may have persisted a partial
+        // Invalidate regardless of mount state — a partial may be persisted.
         void qc.invalidateQueries({ queryKey: keys.advisorConversations(petId) });
-        if (convIdAtSend) {
+        if (convIdAtSend !== null) {
           void qc.invalidateQueries({
             queryKey: keys.advisorConversation(petId, convIdAtSend),
           });
         }
-        setPending(null);
+        if (!aliveRef.current) return;
+        toast.show(advisorErrorText(code, t), { tone: "danger" });
         setStreaming(false);
+        if (!gotStream) {
+          // Pre-stream rejection: nothing was persisted — the optimistic
+          // bubbles are false. Drop them and give the text back to retry.
+          setText(trimmed);
+          setPending(null);
+        }
+        // gotStream: keep the partial bubbles; the refetch reconciles
+        // against whatever the server persisted.
       },
     });
   };
@@ -202,7 +236,7 @@ function ChatView({
 
       {/* Messages */}
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto py-2">
-        {conversationQuery.isLoading && selected !== "new" ? (
+        {conversationQuery.isLoading && selected !== "new" && !pending ? (
           <div className="flex justify-center py-8">
             <Spinner />
           </div>
@@ -346,7 +380,7 @@ function ListView({
         <Card>
           <EmptyState
             title={t.advisor.emptyTitle}
-            hint={t.advisor.setupCta}
+            hint={t.advisor.errors.advisor_not_configured}
             action={
               <Button onClick={() => navigate("/settings/advisor")}>
                 {t.advisor.setupCta}
@@ -418,9 +452,19 @@ export function Advisor() {
     setSelected(null);
   };
 
+  // Don't flash the setup CTA before the settings query has resolved.
+  if (settings.isLoading) {
+    return (
+      <div className="flex justify-center py-16">
+        <Spinner />
+      </div>
+    );
+  }
+
   if (selected !== null) {
     return (
       <ChatView
+        key={selected}
         petId={pet.id}
         selected={selected}
         onBack={handleBack}
