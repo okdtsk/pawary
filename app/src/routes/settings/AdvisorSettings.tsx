@@ -20,14 +20,15 @@ const PROVIDER_LABELS: Record<AiProvider, string> = {
   gemini: "Gemini (Google)",
 };
 
-export function AdvisorSettings() {
+function AdvisorForm({
+  saved,
+}: {
+  saved: { provider: AiProvider; model: string } | null;
+}) {
   const t = useT();
   const toast = useToast();
-  const settingsQuery = useAdvisorSettings();
   const saveSettings = useSaveAdvisorSettings();
   const deleteSettings = useDeleteAdvisorSettings();
-
-  const saved = settingsQuery.data?.settings ?? null;
 
   const [provider, setProvider] = useState<AiProvider>(
     saved?.provider ?? AI_PROVIDERS[0],
@@ -38,14 +39,6 @@ export function AdvisorSettings() {
   const [modelTouched, setModelTouched] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [removeArmed, setRemoveArmed] = useState(false);
-
-  if (settingsQuery.isLoading) {
-    return (
-      <div className="flex justify-center py-16">
-        <Spinner />
-      </div>
-    );
-  }
 
   const onProviderChange = (newProvider: AiProvider) => {
     setProvider(newProvider);
@@ -85,7 +78,6 @@ export function AdvisorSettings() {
         setModel(AI_DEFAULT_MODELS[AI_PROVIDERS[0]]);
         setModelTouched(false);
         setApiKey("");
-        toast.show(t.advisor.settings.saved);
       },
       onError: () => toast.show(t.errors.title, { tone: "danger" }),
     });
@@ -156,4 +148,18 @@ export function AdvisorSettings() {
       )}
     </SettingsPage>
   );
+}
+
+export function AdvisorSettings() {
+  const settingsQuery = useAdvisorSettings();
+
+  if (settingsQuery.isLoading) {
+    return (
+      <div className="flex justify-center py-16">
+        <Spinner />
+      </div>
+    );
+  }
+
+  return <AdvisorForm saved={settingsQuery.data?.settings ?? null} />;
 }
