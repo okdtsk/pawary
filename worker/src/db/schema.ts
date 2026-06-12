@@ -183,13 +183,56 @@ export const auditLog = sqliteTable(
     userId: text("user_id").notNull(),
     action: text("action", { enum: ["create", "update", "delete"] }).notNull(),
     entity: text("entity", {
-      enum: ["activity", "pet", "schedule", "preset", "member", "invite"],
+      enum: ["activity", "pet", "schedule", "preset", "member", "invite", "advisor"],
     }).notNull(),
     entityId: text("entity_id").notNull(),
     diff: text("diff", { mode: "json" }),
     createdAt: integer("created_at").notNull(),
   },
   (t) => [index("idx_audit_pet").on(t.petId)],
+);
+
+export const userAiSettings = sqliteTable("user_ai_settings", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider", { enum: ["anthropic", "openai", "gemini"] }).notNull(),
+  model: text("model").notNull(),
+  encryptedKey: text("encrypted_key").notNull(),
+  createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+});
+
+export const advisorConversations = sqliteTable(
+  "advisor_conversations",
+  {
+    id: text("id").primaryKey(),
+    petId: text("pet_id")
+      .notNull()
+      .references(() => pets.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [index("idx_advisor_conversations_pet").on(t.petId, t.updatedAt)],
+);
+
+export const advisorMessages = sqliteTable(
+  "advisor_messages",
+  {
+    id: text("id").primaryKey(),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => advisorConversations.id, { onDelete: "cascade" }),
+    role: text("role", { enum: ["user", "assistant"] }).notNull(),
+    content: text("content").notNull(),
+    authorId: text("author_id").references(() => users.id, { onDelete: "set null" }),
+    provider: text("provider"),
+    model: text("model"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [index("idx_advisor_messages_conversation").on(t.conversationId, t.createdAt)],
 );
 
 export type User = typeof users.$inferSelect;
@@ -199,3 +242,6 @@ export type PetMember = typeof petMembers.$inferSelect;
 export type PetInvite = typeof petInvites.$inferSelect;
 export type Activity = typeof activities.$inferSelect;
 export type CareSchedule = typeof careSchedules.$inferSelect;
+export type UserAiSettings = typeof userAiSettings.$inferSelect;
+export type AdvisorConversation = typeof advisorConversations.$inferSelect;
+export type AdvisorMessage = typeof advisorMessages.$inferSelect;

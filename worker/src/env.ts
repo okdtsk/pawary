@@ -7,6 +7,7 @@ export type Env = {
   ENVIRONMENT: "development" | "production";
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
+  ADVISOR_KEK: string;
 };
 
 export type AppEnv = {

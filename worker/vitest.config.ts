@@ -17,6 +17,7 @@ export default defineWorkersConfig(async () => {
               TEST_MIGRATIONS: migrations,
               GOOGLE_CLIENT_ID: "test-client-id",
               GOOGLE_CLIENT_SECRET: "test-client-secret",
+              ADVISOR_KEK: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
             },
           },
         },

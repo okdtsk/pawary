@@ -6,7 +6,7 @@ export type AuditEntry = {
   petId: string;
   userId: string;
   action: "create" | "update" | "delete";
-  entity: "activity" | "pet" | "schedule" | "preset" | "member" | "invite";
+  entity: "activity" | "pet" | "schedule" | "preset" | "member" | "invite" | "advisor";
   entityId: string;
   diff?: unknown;
 };
