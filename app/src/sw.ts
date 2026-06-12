@@ -86,3 +86,69 @@ registerRoute(
   }),
   "GET",
 );
+
+// ---------------------------------------------------------------------------
+// Web Push handlers
+// ---------------------------------------------------------------------------
+
+/** Expected shape of the push payload JSON. */
+interface PushPayload {
+  title: string;
+  body: string;
+  url: string;
+}
+
+function isPushPayload(v: unknown): v is PushPayload {
+  return (
+    typeof v === "object" &&
+    v !== null &&
+    typeof (v as Record<string, unknown>).title === "string" &&
+    typeof (v as Record<string, unknown>).body === "string" &&
+    typeof (v as Record<string, unknown>).url === "string"
+  );
+}
+
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  let payload: PushPayload;
+  try {
+    const parsed: unknown = event.data.json();
+    if (!isPushPayload(parsed)) return;
+    payload = parsed;
+  } catch {
+    // Malformed JSON — ignore silently.
+    return;
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      data: { url: payload.url },
+      icon: "/icon-192.png",
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url: string = (event.notification.data as { url?: string } | undefined)?.url ?? "/";
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        const existing = clientList[0];
+        if (existing) {
+          return existing.focus().then(() => {
+            // navigate() may not be supported in all browsers; guard gracefully.
+            if ("navigate" in existing) {
+              return (existing as WindowClient).navigate(url).catch(() => {
+                // If navigate fails (e.g. cross-origin), just focus is fine.
+              });
+            }
+          });
+        }
+        return self.clients.openWindow(url);
+      }),
+  );
+});
