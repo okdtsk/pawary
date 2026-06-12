@@ -12,6 +12,7 @@ import { presetRoutes } from "./routes/presets";
 import { insightRoutes } from "./routes/insights";
 import { memberRoutes } from "./routes/members";
 import { scheduleRoutes } from "./routes/schedules";
+import { advisorSettingsRoutes } from "./routes/advisor-settings";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -28,6 +29,7 @@ app.route("/", exportRoutes);
 app.route("/", scheduleRoutes);
 app.route("/", insightRoutes);
 app.route("/", memberRoutes);
+app.route("/", advisorSettingsRoutes);
 
 app.notFound((c) => err(c, 404, "not_found", "Not found"));
 app.onError((e, c) => {
