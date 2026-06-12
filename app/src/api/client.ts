@@ -15,6 +15,11 @@ export function setCsrfToken(token: string): void {
   csrfToken = token;
 }
 
+/** For non-JSON fetch paths (advisor SSE) that must attach the CSRF header themselves. */
+export function getCsrfToken(): string | null {
+  return csrfToken;
+}
+
 let offlineWriteMessage = "You're offline — this can't be saved until you reconnect";
 
 /** Localized by I18nProvider whenever the locale resolves/changes. */

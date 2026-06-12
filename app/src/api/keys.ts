@@ -20,6 +20,8 @@ import type { Category } from "@pawary/shared";
  *   schedule complete              → schedules + care-status + activities + summary + insights + anomalies
  *   member/invite mutations          → ["members", petId] (+ ["me"] on role change / removal)
  *   invite accept                    → ["me"]
+ *   advisor settings mutations       → ["advisor-settings"]
+ *   advisor send/delete              → ["advisor", petId]
  */
 export const keys = {
   me: ["me"] as const,
@@ -41,4 +43,7 @@ export const keys = {
   anomalies: (petId: string) => ["anomalies", petId] as const,
   members: (petId: string) => ["members", petId] as const,
   invitePreview: (token: string) => ["invite-preview", token] as const,
+  advisorSettings: ["advisor-settings"] as const,
+  advisorConversations: (petId: string) => ["advisor", petId] as const,
+  advisorConversation: (petId: string, id: string) => ["advisor", petId, "one", id] as const,
 };
