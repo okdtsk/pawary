@@ -5,8 +5,8 @@ import type {
   PetMemberResponse,
 } from "@pawary/shared";
 import { createInviteSchema, updateMemberRoleSchema } from "@pawary/shared";
-import { and, asc, eq, gt, isNull } from "drizzle-orm";
-import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
+import { and, asc, eq, gt, isNull, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { petInvites, petMembers, users } from "../db/schema";
 import { writeAudit } from "../domain/audit";
@@ -22,18 +22,6 @@ import { requireSession } from "../middleware/session";
 export const memberRoutes = new Hono<AppEnv>();
 
 export const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-
-async function countOwners(
-  db: DrizzleD1Database,
-  petId: string,
-): Promise<number> {
-  const rows = await db
-    .select({ userId: petMembers.userId })
-    .from(petMembers)
-    .where(and(eq(petMembers.petId, petId), eq(petMembers.role, "owner")))
-    .all();
-  return rows.length;
-}
 
 memberRoutes.get(
   "/api/pets/:petId/members",
@@ -180,13 +168,21 @@ memberRoutes.patch(
       .get();
     if (!target) return err(c, 404, "not_found", "Not found");
     if (target.role === parsed.data.role) return c.json({ data: { ok: true } });
-    if (target.role === "owner" && (await countOwners(db, petId)) === 1) {
-      return err(c, 409, "last_owner", "A pet must keep at least one owner");
-    }
-    await db
+    // last-owner invariant enforced inside the statement — immune to check-then-act races
+    const result = await db
       .update(petMembers)
       .set({ role: parsed.data.role })
-      .where(and(eq(petMembers.petId, petId), eq(petMembers.userId, targetId)));
+      .where(
+        and(
+          eq(petMembers.petId, petId),
+          eq(petMembers.userId, targetId),
+          sql`(${petMembers.role} != 'owner' OR (SELECT COUNT(*) FROM pet_members WHERE pet_id = ${petId} AND role = 'owner') > 1)`,
+        ),
+      )
+      .run();
+    if (result.meta.changes === 0) {
+      return err(c, 409, "last_owner", "A pet must keep at least one owner");
+    }
     await writeAudit(db, {
       petId,
       userId: c.get("user").id,
@@ -220,12 +216,20 @@ memberRoutes.delete(
       .where(and(eq(petMembers.petId, petId), eq(petMembers.userId, targetId)))
       .get();
     if (!target) return err(c, 404, "not_found", "Not found");
-    if (target.role === "owner" && (await countOwners(db, petId)) === 1) {
+    // last-owner invariant enforced inside the statement — immune to check-then-act races
+    const result = await db
+      .delete(petMembers)
+      .where(
+        and(
+          eq(petMembers.petId, petId),
+          eq(petMembers.userId, targetId),
+          sql`(${petMembers.role} != 'owner' OR (SELECT COUNT(*) FROM pet_members WHERE pet_id = ${petId} AND role = 'owner') > 1)`,
+        ),
+      )
+      .run();
+    if (result.meta.changes === 0) {
       return err(c, 409, "last_owner", "A pet must keep at least one owner");
     }
-    await db
-      .delete(petMembers)
-      .where(and(eq(petMembers.petId, petId), eq(petMembers.userId, targetId)));
     await writeAudit(db, {
       petId,
       userId: me.id,
