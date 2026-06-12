@@ -14,6 +14,28 @@ function dayKey(ms: number, tz: number): string {
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
 }
 
+/**
+ * Noon of the calendar day that is `daysBack` before today's household day
+ * (computed in tz=TZ).  Using noon rather than midnight means any wall-clock
+ * time — including the few milliseconds around local midnight — keeps the
+ * seed firmly inside the intended day bucket.
+ *
+ * Algorithm:
+ *   1. Find today's household day-key (the day "now" falls in for TZ=540).
+ *   2. Step back `daysBack` full calendar days.
+ *   3. Return UTC midnight of that day (ISO date) + TZ offset inverted back to
+ *      UTC, then add 12 hours for noon.  Equivalently: the UTC instant whose
+ *      local TZ time is noon on (today – daysBack).
+ */
+function householdNoon(daysBack: number): number {
+  // UTC midnight of today's TZ-local calendar day
+  const nowLocal = Date.now() + TZ * 60_000;
+  const todayMidnightLocal = nowLocal - (nowLocal % DAY); // truncate to day
+  const targetMidnightLocal = todayMidnightLocal - daysBack * DAY;
+  // Convert back to UTC, then add 12 hours for noon
+  return targetMidnightLocal - TZ * 60_000 + 12 * HOUR;
+}
+
 async function insights(petId: string, cookie: string, query = `period=4w&tz=${TZ}`) {
   const res = await SELF.fetch(`https://app.local/api/pets/${petId}/insights?${query}`, {
     headers: { Cookie: cookie },
@@ -25,11 +47,13 @@ describe("GET /api/pets/:petId/insights", () => {
   it("returns the weight series with latest-per-day points and pct change", async () => {
     const { userId, cookie } = await seedUserWithSession();
     const { petId } = await seedPet(userId);
-    const now = Date.now();
-    await seedActivity(petId, userId, { category: "weight", occurredAt: now - 10 * DAY, tzOffsetMin: TZ, details: { kg: 4.0 } });
+    // Seed at household noon so the day bucket is stable at any wall-clock time.
+    const noon10 = householdNoon(10);
+    const noon2 = householdNoon(2);
+    await seedActivity(petId, userId, { category: "weight", occurredAt: noon10, tzOffsetMin: TZ, details: { kg: 4.0 } });
     // two weighings on the same household day — only the later one counts
-    await seedActivity(petId, userId, { category: "weight", occurredAt: now - 2 * DAY, tzOffsetMin: TZ, details: { kg: 9.9 } });
-    await seedActivity(petId, userId, { category: "weight", occurredAt: now - 2 * DAY + HOUR, tzOffsetMin: TZ, details: { kg: 4.4 } });
+    await seedActivity(petId, userId, { category: "weight", occurredAt: noon2, tzOffsetMin: TZ, details: { kg: 9.9 } });
+    await seedActivity(petId, userId, { category: "weight", occurredAt: noon2 + HOUR, tzOffsetMin: TZ, details: { kg: 4.4 } });
 
     const { status, body } = await insights(petId, cookie);
     expect(status).toBe(200);
@@ -37,8 +61,8 @@ describe("GET /api/pets/:petId/insights", () => {
     expect(body.data.bucket).toBe("day");
     expect(body.data.buckets).toHaveLength(28);
     expect(body.data.weight.points.map((p) => [p.bucket, p.kg])).toEqual([
-      [dayKey(now - 10 * DAY, TZ), 4.0],
-      [dayKey(now - 2 * DAY + HOUR, TZ), 4.4],
+      [dayKey(noon10, TZ), 4.0],
+      [dayKey(noon2 + HOUR, TZ), 4.4],
     ]);
     expect(body.data.weight.min).toBe(4.0);
     expect(body.data.weight.max).toBe(4.4);
@@ -48,14 +72,15 @@ describe("GET /api/pets/:petId/insights", () => {
   it("intake: sums food grams (g only) and water ml per day; absent ≠ zero", async () => {
     const { userId, cookie } = await seedUserWithSession();
     const { petId } = await seedPet(userId);
-    const now = Date.now();
-    const day = dayKey(now - DAY, TZ);
-    await seedActivity(petId, userId, { category: "food", occurredAt: now - DAY, tzOffsetMin: TZ, details: { foodType: "dry", unit: "g", amount: 60 } });
-    await seedActivity(petId, userId, { category: "food", occurredAt: now - DAY + HOUR, tzOffsetMin: TZ, details: { foodType: "wet", unit: "g", amount: 40 } });
-    await seedActivity(petId, userId, { category: "food", occurredAt: now - DAY, tzOffsetMin: TZ, details: { foodType: "wet", unit: "ml", amount: 500 } }); // ml excluded
-    await seedActivity(petId, userId, { category: "food", occurredAt: now - DAY, tzOffsetMin: TZ, details: { foodType: "treat", unit: "pieces", amount: 3 } }); // pieces excluded
-    await seedActivity(petId, userId, { category: "food", occurredAt: now - DAY, tzOffsetMin: TZ, details: { foodType: "dry", unit: "g" } }); // no amount → excluded
-    await seedActivity(petId, userId, { category: "water", occurredAt: now - DAY, tzOffsetMin: TZ, details: { amountMl: 120 } });
+    // Anchor at household noon so the day bucket is stable at any wall-clock time.
+    const noon1 = householdNoon(1);
+    const day = dayKey(noon1, TZ);
+    await seedActivity(petId, userId, { category: "food", occurredAt: noon1, tzOffsetMin: TZ, details: { foodType: "dry", unit: "g", amount: 60 } });
+    await seedActivity(petId, userId, { category: "food", occurredAt: noon1 + HOUR, tzOffsetMin: TZ, details: { foodType: "wet", unit: "g", amount: 40 } });
+    await seedActivity(petId, userId, { category: "food", occurredAt: noon1, tzOffsetMin: TZ, details: { foodType: "wet", unit: "ml", amount: 500 } }); // ml excluded
+    await seedActivity(petId, userId, { category: "food", occurredAt: noon1, tzOffsetMin: TZ, details: { foodType: "treat", unit: "pieces", amount: 3 } }); // pieces excluded
+    await seedActivity(petId, userId, { category: "food", occurredAt: noon1, tzOffsetMin: TZ, details: { foodType: "dry", unit: "g" } }); // no amount → excluded
+    await seedActivity(petId, userId, { category: "water", occurredAt: noon1, tzOffsetMin: TZ, details: { amountMl: 120 } });
 
     const { body } = await insights(petId, cookie);
     expect(body.data.intake.food).toEqual({ [day]: 100 });
@@ -66,11 +91,12 @@ describe("GET /api/pets/:petId/insights", () => {
   it("toilet matrix: per-day cells with count and worst condition", async () => {
     const { userId, cookie } = await seedUserWithSession();
     const { petId } = await seedPet(userId);
-    const now = Date.now();
-    const day = dayKey(now - DAY, TZ);
-    await seedActivity(petId, userId, { category: "toilet", occurredAt: now - DAY, tzOffsetMin: TZ, details: { kind: "poop", condition: "normal" } });
-    await seedActivity(petId, userId, { category: "toilet", occurredAt: now - DAY + HOUR, tzOffsetMin: TZ, details: { kind: "poop", condition: "diarrhea" } });
-    await seedActivity(petId, userId, { category: "toilet", occurredAt: now - DAY, tzOffsetMin: TZ, details: { kind: "pee", condition: "normal" } });
+    // Anchor at household noon so the day bucket is stable at any wall-clock time.
+    const noon1 = householdNoon(1);
+    const day = dayKey(noon1, TZ);
+    await seedActivity(petId, userId, { category: "toilet", occurredAt: noon1, tzOffsetMin: TZ, details: { kind: "poop", condition: "normal" } });
+    await seedActivity(petId, userId, { category: "toilet", occurredAt: noon1 + HOUR, tzOffsetMin: TZ, details: { kind: "poop", condition: "diarrhea" } });
+    await seedActivity(petId, userId, { category: "toilet", occurredAt: noon1, tzOffsetMin: TZ, details: { kind: "pee", condition: "normal" } });
 
     const { body } = await insights(petId, cookie);
     const row = body.data.toilet.find((r) => r.bucket === day);
