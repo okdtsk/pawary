@@ -18,8 +18,7 @@ type Status =
   | "ios-hint"
   | "disabled"
   | "denied"
-  | "enabled"
-  | "pending";
+  | "enabled";
 
 function isIos(): boolean {
   return (
@@ -45,6 +44,10 @@ export function NotificationsCard() {
     }
     if (isIos() && !isStandalone()) {
       setStatus("ios-hint");
+      return;
+    }
+    if (Notification.permission === "denied") {
+      setStatus("denied");
       return;
     }
     getCurrentSubscription()
@@ -128,12 +131,6 @@ export function NotificationsCard() {
             {t.push.disable}
           </Button>
         </>
-      )}
-
-      {status === "pending" && (
-        <div className="flex items-center gap-2 text-sm text-ink-faint">
-          <Spinner className="h-4 w-4" />
-        </div>
       )}
     </Card>
   );

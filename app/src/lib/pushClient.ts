@@ -83,12 +83,19 @@ export async function enablePush(tz: number): Promise<EnablePushResult> {
       return { ok: false, reason: "error", error: new Error("Subscription keys missing") };
     }
 
-    await subscribePush({
-      endpoint: sub.endpoint,
-      p256dh: keys.p256dh,
-      auth: keys.auth,
-      tz,
-    });
+    try {
+      await subscribePush({
+        endpoint: sub.endpoint,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+        tz,
+      });
+    } catch (error) {
+      // the server never saw this subscription — drop the browser side too,
+      // otherwise the card would later read the orphan as "enabled"
+      await sub.unsubscribe().catch(() => {});
+      return { ok: false, reason: "error", error };
+    }
 
     return { ok: true, subscription: sub };
   } catch (error) {

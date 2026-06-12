@@ -124,7 +124,7 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(payload.title, {
       body: payload.body,
       data: { url: payload.url },
-      icon: "/icon-192.png",
+      icon: "/icons/icon-192.png",
     }),
   );
 });
