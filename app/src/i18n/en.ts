@@ -159,6 +159,7 @@ export const en: Messages = {
       rate_limited: "Too many messages — wait a moment and try again.",
       offline: "You're offline — the advisor needs a connection.",
       network: "Connection lost. The reply may be incomplete.",
+      provider_model: "The provider doesn't recognize that model name — check the Model field.",
     },
     settings: {
       title: "AI Advisor",
@@ -171,6 +172,8 @@ export const en: Messages = {
       saved: "Advisor settings saved!",
       remove: "Remove key",
       removeConfirm: "Really remove?",
+      test: "Test connection",
+      testSuccess: "Connection OK — your key and model work!",
     },
   },
   add: {

@@ -141,6 +141,7 @@ export interface Messages {
     errors: {
       provider_auth: string;
       provider_overloaded: string;
+      provider_model: string;
       provider_error: string;
       advisor_not_configured: string;
       rate_limited: string;
@@ -158,6 +159,8 @@ export interface Messages {
       saved: string;
       remove: string;
       removeConfirm: string;
+      test: string;
+      testSuccess: string;
     };
   };
   add: {

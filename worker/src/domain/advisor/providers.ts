@@ -7,9 +7,15 @@ export type ProviderCall = {
   model: string;
   system: string;
   messages: ChatTurn[];
+  /** Per-call output cap; defaults to MAX_TOKENS. The settings test probe uses a tiny value. */
+  maxTokens?: number;
 };
 
-export type AdvisorErrorCode = "provider_auth" | "provider_overloaded" | "provider_error";
+export type AdvisorErrorCode =
+  | "provider_auth"
+  | "provider_overloaded"
+  | "provider_model"
+  | "provider_error";
 
 export class AdvisorProviderError extends Error {
   constructor(
@@ -27,6 +33,10 @@ function httpError(status: number): AdvisorProviderError {
   }
   if (status === 429 || status === 529) {
     return new AdvisorProviderError("provider_overloaded", "The provider is overloaded");
+  }
+  if (status === 404) {
+    // all three providers 404 on an unknown model name
+    return new AdvisorProviderError("provider_model", "The provider does not recognize the model");
   }
   return new AdvisorProviderError("provider_error", `Provider returned HTTP ${status}`);
 }
@@ -70,7 +80,7 @@ async function* streamAnthropic(call: ProviderCall): AsyncGenerator<string> {
     },
     body: JSON.stringify({
       model: call.model,
-      max_tokens: MAX_TOKENS,
+      max_tokens: call.maxTokens ?? MAX_TOKENS,
       stream: true,
       system: call.system,
       messages: call.messages,
@@ -99,7 +109,7 @@ async function* streamOpenAi(call: ProviderCall): AsyncGenerator<string> {
     },
     body: JSON.stringify({
       model: call.model,
-      max_completion_tokens: MAX_TOKENS,
+      max_completion_tokens: call.maxTokens ?? MAX_TOKENS,
       stream: true,
       messages: [
         { role: "system", content: call.system },
@@ -135,7 +145,7 @@ async function* streamGemini(call: ProviderCall): AsyncGenerator<string> {
         role: m.role === "assistant" ? "model" : "user",
         parts: [{ text: m.content }],
       })),
-      generationConfig: { maxOutputTokens: MAX_TOKENS },
+      generationConfig: { maxOutputTokens: call.maxTokens ?? MAX_TOKENS },
     }),
   });
   if (!res.ok || !res.body) throw httpError(res.status);
