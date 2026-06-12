@@ -14,6 +14,7 @@
   ],
   "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "pawary-photos" }],
   "vars": { "ENVIRONMENT": "development" },
+  "triggers": { "crons": ["*/15 * * * *"] },
   "observability": { "enabled": true },
   "assets": {
     "directory": "../app/dist",
@@ -26,6 +27,7 @@
       "workers_dev": false,
       "preview_urls": false,
       "vars": { "ENVIRONMENT": "production" },
+      "triggers": { "crons": ["*/15 * * * *"] },
       "d1_databases": [
         {
           "binding": "DB",

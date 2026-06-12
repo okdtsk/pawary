@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { Env } from "./env";
+import { runPushCron } from "./domain/push/cron";
 import { err } from "./lib/respond";
 import { securityHeaders } from "./middleware/headers";
 import { activityRoutes } from "./routes/activities";
@@ -41,4 +42,9 @@ app.onError((e, c) => {
   return err(c, 500, "internal", "Internal server error");
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  scheduled: (_controller: ScheduledController, env: Env, ctx: ExecutionContext) => {
+    ctx.waitUntil(runPushCron(env, Date.now()).then((r) => console.log("push cron", r)));
+  },
+} satisfies ExportedHandler<Env>;
