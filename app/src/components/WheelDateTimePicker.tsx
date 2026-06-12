@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useLocaleTag, useT } from "../i18n";
 import { cn } from "../lib/cn";
 import {
@@ -14,9 +14,9 @@ const ITEM_H = 36;
 const VISIBLE = 5;
 // spacer so the first/last option can rest in the center band
 const PAD = (ITEM_H * (VISIBLE - 1)) / 2;
-// how long the picker stays fully scrollable into the past / future
+// how far the wheels scroll into the past / future before re-anchoring
 const DAYS_BACK = 366;
-const DAYS_AHEAD = 31;
+const DAYS_AHEAD = 366;
 
 function pad2(n: number): string {
   return String(n).padStart(2, "0");
@@ -161,17 +161,26 @@ export function WheelDateTimePicker({
   const t = useT();
   const locale = useLocaleTag();
   const today = todayKey();
+  const dayKey = localDayKey(valueMs);
 
-  // fixed on mount so the wheels never shift under the user mid-edit
-  const days = useMemo(() => {
-    const anchor = localDayKey(valueMs);
+  const buildDays = (anchor: DayKey): DayKey[] => {
     const first = addDays(anchor < today ? anchor : today, -DAYS_BACK);
     const last = addDays(anchor > today ? anchor : today, DAYS_AHEAD);
     const out: DayKey[] = [];
     for (let key = first; key <= last; key = addDays(key, 1)) out.push(key);
     return out;
+  };
+
+  // stable while the value stays inside it (no shifting under a scroll);
+  // re-anchored when the value lands outside, e.g. a form reseeding its
+  // state after this picker has already mounted
+  const [days, setDays] = useState<DayKey[]>(() => buildDays(dayKey));
+  useEffect(() => {
+    if (dayKey < days[0]! || dayKey > days[days.length - 1]!) {
+      setDays(buildDays(dayKey));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dayKey]);
 
   const dayLabels = useMemo(() => {
     const sameYear = new Intl.DateTimeFormat(locale, {
@@ -196,7 +205,6 @@ export function WheelDateTimePicker({
     });
   }, [days, locale, t, today]);
 
-  const dayKey = localDayKey(valueMs);
   const dayIdx = Math.max(0, days.indexOf(dayKey));
   const local = new Date(valueMs);
   const hour = local.getHours();

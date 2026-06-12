@@ -82,35 +82,3 @@ export function DateInput({
 }: InputHTMLAttributes<HTMLInputElement>) {
   return <input type="date" className={cn(inputBase, className)} {...rest} />;
 }
-
-function pad2(n: number): string {
-  return String(n).padStart(2, "0");
-}
-
-/** Epoch-ms → device-local `datetime-local` string. */
-export function msToLocalInput(ms: number): string {
-  const d = new Date(ms);
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-}
-
-export function DateTimeInput({
-  valueMs,
-  onChangeMs,
-  className,
-}: {
-  valueMs: number;
-  onChangeMs: (ms: number) => void;
-  className?: string;
-}) {
-  return (
-    <input
-      type="datetime-local"
-      className={cn(inputBase, className)}
-      value={msToLocalInput(valueMs)}
-      onChange={(e) => {
-        const parsed = new Date(e.target.value).getTime();
-        if (Number.isFinite(parsed)) onChangeMs(parsed);
-      }}
-    />
-  );
-}

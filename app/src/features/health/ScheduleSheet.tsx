@@ -9,7 +9,8 @@ import { CATEGORIES, RECURRENCE_UNITS, SCHEDULE_TYPES, createScheduleSchema } fr
 import { useEffect, useState } from "react";
 import { useCreateSchedule, useDeleteSchedule, useUpdateSchedule } from "../../api/schedules";
 import { Button } from "../../components/Button";
-import { DateInput, DateTimeInput, Field, NumberInput, Select, TextInput } from "../../components/form";
+import { DateInput, Field, NumberInput, Select, TextInput } from "../../components/form";
+import { WheelDateTimePicker } from "../../components/WheelDateTimePicker";
 import { Sheet } from "../../components/Sheet";
 import { useToast } from "../../components/Toast";
 import { useT } from "../../i18n";
@@ -248,7 +249,7 @@ export function ScheduleSheet({
           )}
         </div>
         <Field label={t.care.firstDueLabel}>
-          <DateTimeInput valueMs={firstDueMs} onChangeMs={setFirstDueMs} />
+          <WheelDateTimePicker valueMs={firstDueMs} onChangeMs={setFirstDueMs} />
         </Field>
         <Field label={`${t.care.endLabel} (${t.common.optional})`} hint={t.care.endHint}>
           <DateInput value={endDate} onChange={(e) => setEndDate(e.target.value)} />
