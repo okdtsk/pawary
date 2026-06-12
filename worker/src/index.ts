@@ -10,6 +10,7 @@ import { exportRoutes } from "./routes/export";
 import { photoRoutes } from "./routes/photos";
 import { presetRoutes } from "./routes/presets";
 import { insightRoutes } from "./routes/insights";
+import { memberRoutes } from "./routes/members";
 import { scheduleRoutes } from "./routes/schedules";
 
 const app = new Hono<{ Bindings: Env }>();
@@ -26,6 +27,7 @@ app.route("/", photoRoutes);
 app.route("/", exportRoutes);
 app.route("/", scheduleRoutes);
 app.route("/", insightRoutes);
+app.route("/", memberRoutes);
 
 app.notFound((c) => err(c, 404, "not_found", "Not found"));
 app.onError((e, c) => {
