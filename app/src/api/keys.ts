@@ -18,6 +18,8 @@ import type { Category } from "@pawary/shared";
  *   pet create/update/avatar       → ["me"] + ["pets", petId]
  *   schedule create/update/delete  → ["schedules", petId] + ["care-status", petId]
  *   schedule complete              → schedules + care-status + activities + summary + insights + anomalies
+ *   member/invite mutations          → ["members", petId] (+ ["me"] on role change / removal)
+ *   invite accept                    → ["me"]
  */
 export const keys = {
   me: ["me"] as const,
@@ -37,4 +39,6 @@ export const keys = {
   insightsRoot: (petId: string) => ["insights", petId] as const,
   insights: (petId: string, period: string) => ["insights", petId, period] as const,
   anomalies: (petId: string) => ["anomalies", petId] as const,
+  members: (petId: string) => ["members", petId] as const,
+  invitePreview: (token: string) => ["invite-preview", token] as const,
 };
