@@ -9,7 +9,7 @@ export type Env = {
   RL_5: RateLimit;
   RL_10: RateLimit;
   RL_30: RateLimit;
-  ENVIRONMENT: "development" | "production";
+  ENVIRONMENT: "development" | "preview" | "production";
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
   ADVISOR_KEK: string;

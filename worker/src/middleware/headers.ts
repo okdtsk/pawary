@@ -1,5 +1,6 @@
 import { createMiddleware } from "hono/factory";
 import type { Env } from "../env";
+import { isProdLike } from "../lib/environment";
 
 export const securityHeaders = createMiddleware<{ Bindings: Env }>(
   async (c, next) => {
@@ -11,7 +12,7 @@ export const securityHeaders = createMiddleware<{ Bindings: Env }>(
       "Content-Security-Policy",
       "default-src 'self'; img-src 'self' data: https://lh3.googleusercontent.com; style-src 'self' 'unsafe-inline'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'",
     );
-    if (c.env.ENVIRONMENT === "production") {
+    if (isProdLike(c.env)) {
       c.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
     }
   },
