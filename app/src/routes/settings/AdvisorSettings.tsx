@@ -141,7 +141,7 @@ function AdvisorForm({
               ? t.advisor.settings.apiKeyConfigured
               : (
                 <span>
-                  {t.advisor.settings.apiKeyHintPrefix}{" "}
+                  {t.advisor.settings.apiKeyHintPrefix}
                   <a
                     href={PROVIDER_LINKS[provider]}
                     target="_blank"

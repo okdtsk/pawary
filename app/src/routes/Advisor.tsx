@@ -106,6 +106,7 @@ function ChatView({
   onStreamError,
   onReconciled,
   canEdit,
+  hasSettings,
 }: {
   petId: string;
   /** "new" = no persisted conversation yet; otherwise a real conversation id */
@@ -121,9 +122,11 @@ function ChatView({
   onStreamError: (gotStream: boolean, convIdAtSend: string | null) => void;
   onReconciled: () => void;
   canEdit: boolean;
+  hasSettings: boolean;
 }) {
   const t = useT();
   const locale = useLocaleTag();
+  const navigate = useNavigate();
   const toast = useToast();
   const qc = useQueryClient();
 
@@ -263,7 +266,16 @@ function ChatView({
       {/* Disclaimer + composer — pinned above bottom */}
       <div className="flex flex-col gap-2 pt-3">
         <DisclaimerBanner />
-        {canEdit ? (
+        {canEdit && !hasSettings ? (
+          <Card className="p-4">
+            <p className="mb-3 text-sm text-ink-soft">
+              {t.advisor.errors.advisor_not_configured}
+            </p>
+            <Button onClick={() => navigate("/settings/advisor")}>
+              {t.advisor.setupCta}
+            </Button>
+          </Card>
+        ) : canEdit ? (
           <div className="flex items-end gap-2">
             <Textarea
               className="flex-1 resize-none"
@@ -538,6 +550,7 @@ export function Advisor() {
         onStreamError={handleStreamError}
         onReconciled={handleReconciled}
         canEdit={canEdit}
+        hasSettings={hasSettings}
       />
     );
   }
