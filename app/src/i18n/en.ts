@@ -376,4 +376,47 @@ export const en: Messages = {
     iosInstallHint: "To receive push notifications on iOS, install Pawary to your Home Screen first",
     error: "Something went wrong with notifications — please try again",
   },
+  audit: {
+    title: "Activity History",
+    formerMember: "Former member",
+    empty: "No history yet.",
+    history: "History",
+    lines: {
+      activity: {
+        create: "logged an activity",
+        update: "updated an activity",
+        delete: "deleted an activity",
+      },
+      pet: {
+        create: "created the pet profile",
+        update: "updated the pet profile",
+        delete: "deleted the pet profile",
+      },
+      schedule: {
+        create: "added a care schedule",
+        update: "updated a care schedule",
+        delete: "removed a care schedule",
+      },
+      preset: {
+        create: "added a quick-add shortcut",
+        update: "updated a quick-add shortcut",
+        delete: "removed a quick-add shortcut",
+      },
+      member: {
+        create: "added a member",
+        update: "changed a member role",
+        delete: "removed a member",
+      },
+      invite: {
+        create: "created an invite",
+        update: "updated an invite",
+        delete: "revoked an invite",
+      },
+      advisor: {
+        create: "started an AI conversation",
+        update: "updated AI settings",
+        delete: "deleted an AI conversation",
+      },
+    },
+  },
 };

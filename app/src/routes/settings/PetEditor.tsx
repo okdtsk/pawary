@@ -153,6 +153,17 @@ function EditExisting({ pet }: { pet: PetResponse }) {
 
       <MembersSection pet={pet} />
 
+      {pet.role === "owner" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="self-start"
+          onClick={() => navigate(`/settings/pets/${pet.id}/audit`)}
+        >
+          {t.audit.history}
+        </Button>
+      )}
+
       {canEdit && (
         <Button
           variant="ghost"

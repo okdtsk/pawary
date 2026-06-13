@@ -375,4 +375,47 @@ export const ja: Messages = {
     iosInstallHint: "iOSでプッシュ通知を受け取るには、まずPawaryをホーム画面に追加してください",
     error: "通知の処理中にエラーが発生しました — もう一度お試しください",
   },
+  audit: {
+    title: "変更履歴",
+    formerMember: "元メンバー",
+    empty: "履歴はありません。",
+    history: "履歴",
+    lines: {
+      activity: {
+        create: "記録を追加",
+        update: "記録を更新",
+        delete: "記録を削除",
+      },
+      pet: {
+        create: "ペットプロフィールを作成",
+        update: "ペットプロフィールを更新",
+        delete: "ペットプロフィールを削除",
+      },
+      schedule: {
+        create: "ケア予定を追加",
+        update: "ケア予定を更新",
+        delete: "ケア予定を削除",
+      },
+      preset: {
+        create: "クイック追加を作成",
+        update: "クイック追加を更新",
+        delete: "クイック追加を削除",
+      },
+      member: {
+        create: "メンバーを追加",
+        update: "メンバーの権限を変更",
+        delete: "メンバーを削除",
+      },
+      invite: {
+        create: "招待を作成",
+        update: "招待を更新",
+        delete: "招待を取り消し",
+      },
+      advisor: {
+        create: "AI会話を開始",
+        update: "AI設定を更新",
+        delete: "AI会話を削除",
+      },
+    },
+  },
 };

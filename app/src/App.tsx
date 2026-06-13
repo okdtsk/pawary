@@ -17,6 +17,7 @@ import { LogTab } from "./routes/LogTab";
 import { Shell } from "./routes/Shell";
 import { AccountSettings } from "./routes/settings/AccountSettings";
 import { AdvisorSettings } from "./routes/settings/AdvisorSettings";
+import { AuditHistory } from "./routes/settings/AuditHistory";
 import { PetEditor } from "./routes/settings/PetEditor";
 import { PetsSettings } from "./routes/settings/PetsSettings";
 import { PresetsSettings } from "./routes/settings/PresetsSettings";
@@ -84,6 +85,7 @@ export function App() {
                 <Route path="/settings/pets" element={<PetsSettings />} />
                 <Route path="/settings/pets/new" element={<PetEditor />} />
                 <Route path="/settings/pets/:petId" element={<PetEditor />} />
+                <Route path="/settings/pets/:petId/audit" element={<AuditHistory />} />
                 <Route
                   path="/pets/:petId/activities/:id"
                   element={<ActivityDetail />}
