@@ -1,11 +1,18 @@
 name: Preview
 
 on:
+  # Manual fallback: Actions -> Preview -> Run workflow -> pick a branch.
   workflow_dispatch:
+  # QA signal: add the `preview` label to a PR to deploy its branch to preview.
+  pull_request:
+    types: [labeled]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Only deploy on a manual run, or when the label added is exactly `preview`
+    # (other labels must not trigger a deploy).
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'preview'
     # the CLOUDFLARE_API_TOKEN secret lives in this environment; unlike
     # `production` it is NOT branch-restricted, so any feature branch can deploy
     environment: preview
@@ -15,6 +22,10 @@ jobs:
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          # For a `preview`-labeled PR, deploy the PR's head commit; for a
+          # manual run, checkout defaults to the selected branch.
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.ref }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 22
