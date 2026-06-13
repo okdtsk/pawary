@@ -153,6 +153,8 @@ export const ja: Messages = {
     viewerNote: "閲覧者は相談の閲覧のみ可能です。",
     errors: {
       provider_auth: "APIキーがプロバイダに拒否されました。設定を確認してください。",
+      provider_rate_limited:
+        "AIプロバイダのレート制限またはクォータを超過しました。少し待つか、モデルを変更するか、プランや課金設定を確認してください。",
       provider_overloaded: "AIプロバイダが混雑しています。少し待って再試行してください。",
       provider_error: "AIプロバイダでエラーが発生しました。再試行してください。",
       advisor_not_configured: "まず設定でAIプロバイダのキーを設定してください。",

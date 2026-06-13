@@ -153,6 +153,8 @@ export const en: Messages = {
     viewerNote: "Viewers can read conversations but not send messages.",
     errors: {
       provider_auth: "Your API key was rejected by the provider — check it in Settings.",
+      provider_rate_limited:
+        "The AI provider's rate limit or quota was exceeded — wait a moment, switch model, or check your plan/billing.",
       provider_overloaded: "The AI provider is overloaded. Try again in a moment.",
       provider_error: "The AI provider returned an error. Try again.",
       advisor_not_configured: "Set up your AI provider key in Settings first.",

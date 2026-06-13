@@ -140,6 +140,7 @@ export interface Messages {
     viewerNote: string;
     errors: {
       provider_auth: string;
+      provider_rate_limited: string;
       provider_overloaded: string;
       provider_model: string;
       provider_error: string;

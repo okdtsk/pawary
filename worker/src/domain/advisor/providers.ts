@@ -13,6 +13,7 @@ export type ProviderCall = {
 
 export type AdvisorErrorCode =
   | "provider_auth"
+  | "provider_rate_limited"
   | "provider_overloaded"
   | "provider_model"
   | "provider_error";
@@ -27,18 +28,42 @@ export class AdvisorProviderError extends Error {
   }
 }
 
-function httpError(status: number): AdvisorProviderError {
+/** Trims an upstream error body to a readable, bounded snippet for surfacing. */
+function detailSuffix(body: string | undefined): string {
+  const trimmed = body?.trim();
+  return trimmed ? `: ${trimmed.slice(0, 600)}` : "";
+}
+
+/**
+ * Maps an upstream HTTP status to an advisor error. `body` is the provider's
+ * raw error payload — the only thing that explains *why* a request failed
+ * (e.g. which quota a 429 hit) — so it is appended to the message rather than
+ * discarded.
+ */
+function httpError(status: number, body?: string): AdvisorProviderError {
+  const suffix = detailSuffix(body);
   if (status === 401 || status === 403) {
-    return new AdvisorProviderError("provider_auth", "The provider rejected the API key");
+    return new AdvisorProviderError("provider_auth", `The provider rejected the API key${suffix}`);
   }
-  if (status === 429 || status === 529) {
-    return new AdvisorProviderError("provider_overloaded", "The provider is overloaded");
+  if (status === 429) {
+    // 429 is a rate-limit / quota exhaustion (Gemini: RESOURCE_EXHAUSTED) —
+    // distinct from a genuine server overload, and actionable by the user.
+    return new AdvisorProviderError(
+      "provider_rate_limited",
+      `The provider rate limit or quota was exceeded${suffix}`,
+    );
+  }
+  if (status === 529) {
+    return new AdvisorProviderError("provider_overloaded", `The provider is overloaded${suffix}`);
   }
   if (status === 404) {
     // all three providers 404 on an unknown model name
-    return new AdvisorProviderError("provider_model", "The provider does not recognize the model");
+    return new AdvisorProviderError(
+      "provider_model",
+      `The provider does not recognize the model${suffix}`,
+    );
   }
-  return new AdvisorProviderError("provider_error", `Provider returned HTTP ${status}`);
+  return new AdvisorProviderError("provider_error", `Provider returned HTTP ${status}${suffix}`);
 }
 
 const MAX_TOKENS = 2048;
@@ -86,7 +111,8 @@ async function* streamAnthropic(call: ProviderCall): AsyncGenerator<string> {
       messages: call.messages,
     }),
   });
-  if (!res.ok || !res.body) throw httpError(res.status);
+  if (!res.ok) throw httpError(res.status, await res.text().catch(() => undefined));
+  if (!res.body) throw httpError(res.status);
   for await (const data of sseData(res.body)) {
     let evt: { type?: string; delta?: { type?: string; text?: string } };
     try {
@@ -117,7 +143,8 @@ async function* streamOpenAi(call: ProviderCall): AsyncGenerator<string> {
       ],
     }),
   });
-  if (!res.ok || !res.body) throw httpError(res.status);
+  if (!res.ok) throw httpError(res.status, await res.text().catch(() => undefined));
+  if (!res.body) throw httpError(res.status);
   for await (const data of sseData(res.body)) {
     if (data === "[DONE]") return;
     let evt: { choices?: Array<{ delta?: { content?: string } }> };
@@ -148,7 +175,8 @@ async function* streamGemini(call: ProviderCall): AsyncGenerator<string> {
       generationConfig: { maxOutputTokens: call.maxTokens ?? MAX_TOKENS },
     }),
   });
-  if (!res.ok || !res.body) throw httpError(res.status);
+  if (!res.ok) throw httpError(res.status, await res.text().catch(() => undefined));
+  if (!res.body) throw httpError(res.status);
   for await (const data of sseData(res.body)) {
     let evt: { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
     try {

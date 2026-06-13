@@ -49,13 +49,15 @@ describe("anthropic adapter", () => {
     expect((e as AdvisorProviderError).code).toBe("provider_auth");
   });
 
-  it("maps 429 to provider_overloaded and ignores malformed data lines", async () => {
+  it("maps 429 to provider_rate_limited, surfaces the body, and ignores malformed data lines", async () => {
     fetchMock
       .get("https://api.anthropic.com")
       .intercept({ path: "/v1/messages", method: "POST" })
       .reply(429, "rate limited");
     const e = await collect(streamProvider("anthropic", OPTS)).catch((x) => x);
-    expect((e as AdvisorProviderError).code).toBe("provider_overloaded");
+    expect((e as AdvisorProviderError).code).toBe("provider_rate_limited");
+    // the upstream body is the only thing that explains *why* — it must survive
+    expect((e as AdvisorProviderError).message).toContain("rate limited");
 
     fetchMock
       .get("https://api.anthropic.com")
@@ -100,5 +102,28 @@ describe("gemini adapter", () => {
       })
       .reply(200, sse, { headers: { "content-type": "text/event-stream" } });
     expect(await collect(streamProvider("gemini", OPTS))).toEqual(["Né", "ko!"]);
+  });
+
+  it("maps a 429 quota error to provider_rate_limited and surfaces Google's reason", async () => {
+    const body = JSON.stringify({
+      error: {
+        code: 429,
+        status: "RESOURCE_EXHAUSTED",
+        message:
+          "You exceeded your current quota. Limit: GenerateRequestsPerDayPerProjectPerModel-FreeTier",
+      },
+    });
+    fetchMock
+      .get("https://generativelanguage.googleapis.com")
+      .intercept({
+        path: "/v1beta/models/test-model:streamGenerateContent",
+        query: { alt: "sse" },
+        method: "POST",
+      })
+      .reply(429, body);
+    const e = await collect(streamProvider("gemini", OPTS)).catch((x) => x);
+    expect(e).toBeInstanceOf(AdvisorProviderError);
+    expect((e as AdvisorProviderError).code).toBe("provider_rate_limited");
+    expect((e as AdvisorProviderError).message).toContain("RESOURCE_EXHAUSTED");
   });
 });
