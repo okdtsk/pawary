@@ -338,4 +338,11 @@ export interface Messages {
     iosInstallHint: string;
     error: string;
   };
+  audit: {
+    title: string;
+    formerMember: string;
+    empty: string;
+    history: string;
+    lines: Record<string, Record<string, string>>;
+  };
 }

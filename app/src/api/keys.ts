@@ -46,4 +46,5 @@ export const keys = {
   advisorSettings: ["advisor-settings"] as const,
   advisorConversations: (petId: string) => ["advisor", petId] as const,
   advisorConversation: (petId: string, id: string) => ["advisor", petId, "one", id] as const,
+  audit: (petId: string) => ["audit", petId] as const,
 };
