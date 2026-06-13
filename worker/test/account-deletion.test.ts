@@ -1,19 +1,16 @@
 import { env, SELF } from "cloudflare:test";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { afterEach, beforeEach, expect, it } from "vitest";
+import { expect, it } from "vitest";
 import { auditLog, petMembers, pets, sessions, users } from "../src/db/schema";
-import { resetRateLimits } from "../src/lib/rate-limit";
 import {
   authHeaders,
+  avoidRateLimitWindowBoundary,
   seedActivity,
   seedPet,
   seedUserWithSession,
   withMember,
 } from "./helpers";
-
-beforeEach(() => resetRateLimits());
-afterEach(() => resetRateLimits());
 
 function deleteMe(cookie: string, csrfToken: string, confirmEmail: string) {
   return SELF.fetch("https://app.local/api/me", {
@@ -111,12 +108,17 @@ it("shared pets with another owner survive, with a member-delete audit row", asy
   }
 });
 
-it("is rate limited to 3 attempts per hour per user", async () => {
-  const { cookie, csrfToken } = await seedUserWithSession();
-  for (let i = 0; i < 3; i++) {
-    const res = await deleteMe(cookie, csrfToken, "wrong@example.com");
-    expect(res.status).toBe(400); // wrong email, but counted
-  }
-  const blocked = await deleteMe(cookie, csrfToken, "wrong@example.com");
-  expect(blocked.status).toBe(429);
-});
+it(
+  "is rate limited to 5 attempts per minute per user",
+  { timeout: 15_000 },
+  async () => {
+    await avoidRateLimitWindowBoundary();
+    const { cookie, csrfToken } = await seedUserWithSession();
+    for (let i = 0; i < 5; i++) {
+      const res = await deleteMe(cookie, csrfToken, "wrong@example.com");
+      expect(res.status).toBe(400); // wrong email, but counted
+    }
+    const blocked = await deleteMe(cookie, csrfToken, "wrong@example.com");
+    expect(blocked.status).toBe(429);
+  },
+);

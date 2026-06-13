@@ -77,7 +77,7 @@ meRoutes.delete(
   "/",
   requireSession,
   requireCsrf,
-  rateLimit("me-delete", 3, 60 * 60 * 1000, "user"),
+  rateLimit("me-delete", 5, 60_000, "user"),
   async (c) => {
     const body = await c.req.json().catch(() => null);
     const parsed = deleteMeSchema.safeParse(body);

@@ -133,7 +133,7 @@ async function chatAndStream(
 
 export const advisorRoutes = new Hono<AppEnv>();
 
-const chatRateLimit = rateLimit("advisor-chat", 20, 300_000, "user");
+const chatRateLimit = rateLimit("advisor-chat", 5, 60_000, "user");
 
 // POST /api/pets/:petId/advisor/conversations
 // Creates a new conversation and streams the first assistant reply.

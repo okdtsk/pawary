@@ -81,7 +81,7 @@ memberRoutes.post(
   requireSession,
   requireCsrf,
   requirePetRole("owner"),
-  rateLimit("invite-create", 20, 3_600_000, "user"),
+  rateLimit("invite-create", 5, 60_000, "user"),
   async (c) => {
     const body = await c.req.json().catch(() => null);
     const parsed = createInviteSchema.safeParse(body);
