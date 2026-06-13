@@ -338,6 +338,9 @@ export interface Messages {
     offlineWrite: string;
     iosInstallTitle: string;
     iosInstallBody: string;
+    pullToRefresh: string;
+    releaseToRefresh: string;
+    refreshing: string;
   };
   push: {
     title: string;

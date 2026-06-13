@@ -364,6 +364,9 @@ export const en: Messages = {
     iosInstallTitle: "Add Pawary to your Home Screen",
     iosInstallBody:
       'Tap the Share button in Safari, then choose "Add to Home Screen" to use Pawary like an app.',
+    pullToRefresh: "Pull to refresh",
+    releaseToRefresh: "Release to refresh",
+    refreshing: "Refreshing…",
   },
   push: {
     title: "Notifications",
