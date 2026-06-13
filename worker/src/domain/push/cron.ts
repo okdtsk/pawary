@@ -14,6 +14,12 @@ import { sendPush } from "../../lib/webpush";
 const MAX_DUE_SCHEDULES = 200;
 const MAX_SENDS = 500;
 
+/** Overridable caps for testing — passed as the optional third arg to runPushCron. */
+export type PushCronCaps = {
+  maxDueSchedules?: number;
+  maxSends?: number;
+};
+
 /** Digest fires when the subscription's local time-of-day is in [08:00, 08:15). */
 const DIGEST_WINDOW_START_MIN = 480;
 const DIGEST_WINDOW_END_MIN = 495;
@@ -83,8 +89,14 @@ type SendableSubscription = {
  * member's subscriptions, and a per-pet overdue digest to subscriptions whose
  * local time is in the [08:00, 08:15) window.
  */
-export async function runPushCron(env: Env, now: number): Promise<PushCronResult> {
+export async function runPushCron(
+  env: Env,
+  now: number,
+  caps?: PushCronCaps,
+): Promise<PushCronResult> {
   const db = drizzle(env.DB);
+  const capMaxSends = caps?.maxSends ?? MAX_SENDS;
+  const capMaxDueSchedules = caps?.maxDueSchedules ?? MAX_DUE_SCHEDULES;
   let sends = 0;
   let dueSent = 0;
   let digestSent = 0;
@@ -92,11 +104,13 @@ export async function runPushCron(env: Env, now: number): Promise<PushCronResult
   let capped = false;
   const deletedIds = new Set<string>();
 
-  /** Send one push; returns true on 2xx. 404/410 delete the subscription;
-   *  other failures (429/5xx/network) are left for the next cron run. */
+  /** Send one push; returns true on 2xx.
+   *  404/410 delete the subscription (endpoint gone).
+   *  403 also deletes — indicates VAPID key mismatch; self-healing after key rotation.
+   *  Other failures (429/5xx/network) are left for the next cron run. */
   async function trySend(sub: SendableSubscription, payload: string): Promise<boolean> {
     if (deletedIds.has(sub.id)) return false;
-    if (sends >= MAX_SENDS) {
+    if (sends >= capMaxSends) {
       capped = true;
       return false;
     }
@@ -111,7 +125,8 @@ export async function runPushCron(env: Env, now: number): Promise<PushCronResult
     } catch {
       return false;
     }
-    if (status === 404 || status === 410) {
+    // A8: 403 = VAPID key mismatch (post-rotation stale sub) — treat like 404/410.
+    if (status === 403 || status === 404 || status === 410) {
       deletedIds.add(sub.id);
       await db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, sub.id));
       deleted++;
@@ -146,9 +161,21 @@ export async function runPushCron(env: Env, now: number): Promise<PushCronResult
       ),
     )
     .orderBy(asc(careSchedules.nextDueAt))
-    .limit(MAX_DUE_SCHEDULES);
+    .limit(capMaxDueSchedules);
 
   for (const due of dueRows) {
+    // A6: Check the cap BEFORE processing this schedule. If we are already at
+    // the cap, skip it — do NOT set notifiedDueAt so the schedule retries on
+    // the next cron tick. (A partially-sent schedule whose fanout hit the cap
+    // mid-loop still gets marked because trySend sets `capped` only from the
+    // second call that exceeds the limit; the first exceeded call returns false
+    // but increments `sends`, so at least one send was attempted — marking it
+    // prevents double-notify for the recipients who did receive it.)
+    if (sends >= capMaxSends) {
+      capped = true;
+      break;
+    }
+
     const memberSubs = await db
       .select({
         id: pushSubscriptions.id,
@@ -170,6 +197,8 @@ export async function runPushCron(env: Env, now: number): Promise<PushCronResult
       if (ok) dueSent++;
     }
 
+    // Mark notifiedDueAt after attempting sends for this schedule (one attempt
+    // per due occurrence, regardless of per-endpoint failures).
     await db
       .update(careSchedules)
       .set({ notifiedDueAt: due.nextDueAt })

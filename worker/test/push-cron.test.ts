@@ -432,3 +432,60 @@ describe("runPushCron digest", () => {
     expect(await getSubscription(subId)).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// A6: send cap — skipped schedules must not get notifiedDueAt written
+// ---------------------------------------------------------------------------
+
+describe("runPushCron cap semantics (A6)", () => {
+  it("schedule #2 keeps notifiedDueAt null and is sent on the next run", async () => {
+    const owner = await seedUserWithSession();
+    const { petId } = await seedPet(owner.userId);
+
+    // Two due schedules. With maxSends=1 cap, only schedule #1 (earlier) is
+    // processed; schedule #2 is skipped before its fanout — notifiedDueAt stays
+    // null so it retries on the next cron tick.
+    const dueAt1 = NOW - 120_000;
+    const dueAt2 = NOW - 60_000;
+    const { scheduleId: s1 } = await seedSchedule(petId, { nextDueAt: dueAt1 });
+    const { scheduleId: s2 } = await seedSchedule(petId, { nextDueAt: dueAt2 });
+
+    await seedSubscription(owner.userId, "/cap-sub");
+    interceptPush("/cap-sub"); // only schedule #1's send is attempted
+
+    const result = await runPushCron(env, NOW, { maxSends: 1 });
+    expect(result.dueSent).toBe(1);
+
+    // Schedule #1 was processed: notifiedDueAt set.
+    expect((await getSchedule(s1))!.notifiedDueAt).toBe(dueAt1);
+    // Schedule #2 was skipped: notifiedDueAt must remain null.
+    expect((await getSchedule(s2))!.notifiedDueAt).toBeNull();
+
+    // Second run (no cap override) — schedule #2 is now sent.
+    interceptPush("/cap-sub");
+    const result2 = await runPushCron(env, NOW);
+    expect(result2.dueSent).toBe(1);
+    expect((await getSchedule(s2))!.notifiedDueAt).toBe(dueAt2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// A8: 403 from push service deletes the subscription
+// ---------------------------------------------------------------------------
+
+describe("runPushCron 403 handling (A8)", () => {
+  it("deletes the subscription on 403 (VAPID key mismatch)", async () => {
+    const owner = await seedUserWithSession();
+    const { petId } = await seedPet(owner.userId);
+    const dueAt = NOW - 60_000;
+    await seedSchedule(petId, { nextDueAt: dueAt });
+    const subId = await seedSubscription(owner.userId, "/forbidden");
+
+    interceptPush("/forbidden", 403);
+
+    const result = await runPushCron(env, NOW);
+    expect(result.dueSent).toBe(0);
+    expect(result.deleted).toBe(1);
+    expect(await getSubscription(subId)).toBeUndefined();
+  });
+});

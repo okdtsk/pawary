@@ -1,8 +1,9 @@
 import { env, SELF } from "cloudflare:test";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { expect, it } from "vitest";
 import { pushSubscriptions } from "../src/db/schema";
+import { pushRoutes } from "../src/routes/push";
 import { authHeaders, seedUserWithSession } from "./helpers";
 
 // The VAPID public key wired into vitest bindings
@@ -61,6 +62,22 @@ it("GET /api/push/public-key returns the VAPID test constant", async () => {
 it("GET /api/push/public-key returns 401 without session", async () => {
   const res = await SELF.fetch("https://app.local/api/push/public-key");
   expect(res.status).toBe(401);
+});
+
+// A7: 503 when VAPID_PUBLIC_KEY is not configured.
+// We dispatch directly against the pushRoutes Hono sub-app with the real env
+// overridden to clear the key, so requireSession still has a DB to work with.
+it("GET /api/push/public-key returns 503 push_unconfigured when VAPID key is absent", async () => {
+  const auth = await seedUserWithSession();
+  const stubEnv = { ...env, VAPID_PUBLIC_KEY: "" };
+  const res = await pushRoutes.request(
+    "https://app.local/api/push/public-key",
+    { headers: { Cookie: auth.cookie } },
+    stubEnv,
+  );
+  expect(res.status).toBe(503);
+  const body = (await res.json()) as { error: { code: string } };
+  expect(body.error.code).toBe("push_unconfigured");
 });
 
 // ---------------------------------------------------------------------------
@@ -129,6 +146,42 @@ it("POST subscriptions re-subscribing same endpoint from different user reassign
   expect(afterRow!.auth).toBe("newAuthBBBBBBBBB");
   expect(afterRow!.tzOffsetMin).toBe(-300);
   expect(afterRow!.lastDigestDay).toBeNull();
+});
+
+// A5: same user re-subscribing the same endpoint must preserve lastDigestDay.
+it("POST subscriptions same-user re-subscribe preserves lastDigestDay", async () => {
+  const ENDPOINT_C = "https://push.example/sub/cccc";
+  const auth = await seedUserWithSession({ email: "c@example.com" });
+
+  // Initial subscription
+  await postSubscribe(auth, subscribeBody(ENDPOINT_C));
+
+  // Manually set lastDigestDay to simulate a day when the digest was sent
+  const db = drizzle(env.DB);
+  await db
+    .update(pushSubscriptions)
+    .set({ lastDigestDay: "2026-06-13" })
+    .where(eq(pushSubscriptions.endpoint, ENDPOINT_C));
+
+  // Same user re-subscribes (e.g. after a page reload / key refresh)
+  const res = await postSubscribe(auth, {
+    ...subscribeBody(ENDPOINT_C),
+    p256dh: "updatedP256dh_CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+    auth: "updatedAuthCCCCC",
+    tz: 0,
+  });
+  expect(res.status).toBe(201);
+
+  const row = await db
+    .select()
+    .from(pushSubscriptions)
+    .where(eq(pushSubscriptions.endpoint, ENDPOINT_C))
+    .get();
+  // lastDigestDay must be preserved — avoids duplicate digest on the same day
+  expect(row!.lastDigestDay).toBe("2026-06-13");
+  // Other fields are updated
+  expect(row!.p256dh).toBe("updatedP256dh_CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
+  expect(row!.tzOffsetMin).toBe(0);
 });
 
 it("POST subscriptions returns 401 without session", async () => {
