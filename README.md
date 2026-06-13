@@ -69,6 +69,27 @@ client; create a non-branch-restricted `preview` GitHub environment holding
 `CLOUDFLARE_API_TOKEN`. Reset preview data anytime with
 `wrangler d1 execute pawary-preview --remote --env preview --command "<sql>"`.
 
+#### Testing the current branch on preview
+
+Normal way (GitHub button — no local wrangler needed):
+
+1. Push the branch: `git push`.
+2. GitHub → Actions → **Preview** → **Run workflow** → select your branch → **Run**.
+3. When the run is green, open https://pawary-preview.okdtsk.workers.dev and check it.
+
+Fast way (local deploy, ~30s, skips CI):
+
+```sh
+npm run build                                                     # repo root
+cd worker
+npx wrangler d1 migrations apply pawary-preview --remote --env preview   # only if the branch added migrations
+npx wrangler deploy --env preview
+```
+
+Re-run whenever you push new commits — preview always serves the latest deploy. It is a
+single shared env (latest deploy wins), so only one branch is live at a time; production
+(separate D1/R2) is never touched.
+
 ## Testing
 
 ```bash
