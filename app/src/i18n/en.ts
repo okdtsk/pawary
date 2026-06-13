@@ -261,6 +261,13 @@ export const en: Messages = {
     previous: "Previous",
     next: "Next",
     dayEmpty: "Nothing logged this day",
+    settings: {
+      title: "Calendar",
+      weekendColor: "Highlight weekends",
+      startHour: "Day start hour",
+      timezone: "Timezone",
+      timezoneSystem: "Match device",
+    },
   },
   log: {
     searchPlaceholder: "Search memos…",
