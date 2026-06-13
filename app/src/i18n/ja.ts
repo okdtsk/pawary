@@ -160,6 +160,7 @@ export const ja: Messages = {
       offline: "オフラインです。アドバイザーには接続が必要です。",
       network: "接続が切れました。返答が途中までの可能性があります。",
       provider_model: "モデル名がプロバイダに認識されません。モデル欄を確認してください。",
+      fallback: "エラーが発生しました。もう一度お試しください。",
     },
     settings: {
       title: "AIアドバイザー",
@@ -168,6 +169,8 @@ export const ja: Messages = {
       model: "モデル",
       apiKey: "APIキー",
       apiKeyHint: "各プロバイダのコンソールで作成したキーです。そのプロバイダにのみ送信されます。",
+      apiKeyHintPrefix: "各プロバイダのコンソールで作成します；",
+      apiKeyHintLink: "キーを作成 ↗",
       apiKeyConfigured: "キーは設定済みです。新しいキーを入力すると置き換えられます。",
       saved: "アドバイザー設定を保存しました！",
       remove: "キーを削除",

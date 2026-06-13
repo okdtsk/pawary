@@ -22,6 +22,12 @@ const PROVIDER_LABELS: Record<AiProvider, string> = {
   gemini: "Gemini (Google)",
 };
 
+const PROVIDER_LINKS: Record<AiProvider, string> = {
+  anthropic: "https://console.anthropic.com/settings/keys",
+  openai: "https://platform.openai.com/api-keys",
+  gemini: "https://aistudio.google.com/apikey",
+};
+
 function AdvisorForm({
   saved,
 }: {
@@ -133,7 +139,19 @@ function AdvisorForm({
           hint={
             saved != null
               ? t.advisor.settings.apiKeyConfigured
-              : t.advisor.settings.apiKeyHint
+              : (
+                <span>
+                  {t.advisor.settings.apiKeyHintPrefix}{" "}
+                  <a
+                    href={PROVIDER_LINKS[provider]}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline"
+                  >
+                    {t.advisor.settings.apiKeyHintLink}
+                  </a>
+                </span>
+              )
           }
         >
           <TextInput

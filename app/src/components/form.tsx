@@ -19,7 +19,7 @@ export function Field({
 }: {
   label: string;
   error?: string | null;
-  hint?: string;
+  hint?: ReactNode;
   children: ReactNode;
 }) {
   return (
