@@ -228,6 +228,7 @@ export function ThreeDayTimeline({
         <div
           ref={scrollRef}
           onScroll={onScroll}
+          data-pull-ignore
           className="relative max-h-[min(60dvh,560px)] overflow-auto"
           style={{ scrollSnapType: "x mandatory" }}
         >
@@ -250,7 +251,7 @@ export function ThreeDayTimeline({
           </div>
           {/* hour grid + day columns */}
           <div className="relative flex" style={{ height: DAY_HEIGHT }}>
-            <HourAxis hourLabel={hourLabel} className="sticky left-0 z-10 bg-paper" />
+            <HourAxis hourLabel={hourLabel} />
             {windowDays.map((day) => (
               <div
                 key={day}

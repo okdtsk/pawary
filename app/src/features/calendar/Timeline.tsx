@@ -67,7 +67,11 @@ export function Timeline({
           <Spinner />
         </div>
       ) : (
-        <div ref={scrollRef} className="relative h-[min(60dvh,560px)] overflow-y-auto">
+        <div
+          ref={scrollRef}
+          data-pull-ignore
+          className="relative h-[min(60dvh,560px)] overflow-y-auto"
+        >
           <div className="relative flex" style={{ height: DAY_HEIGHT }}>
             <HourAxis hourLabel={hourLabel} />
             {days.map((day) => (
