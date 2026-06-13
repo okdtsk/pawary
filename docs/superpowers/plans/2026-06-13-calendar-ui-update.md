@@ -1004,6 +1004,7 @@ import { useLocaleTag, useT } from "../i18n";
 import { householdTzOffsetMin, useCalendarPrefs } from "../lib/calendarPrefs";
 import { cn } from "../lib/cn";
 import {
+  addDays,
   formatDayHeading,
   formatDayShort,
   formatMonthTitle,
@@ -1049,7 +1050,8 @@ export function CalendarTab() {
   // 3-day view tracks its visible leftmost day locally (for the title) without
   // rewriting the URL on every scroll (which would reset the scroll window).
   const threeDayControls = useRef<ThreeDayControls | null>(null);
-  const [threeDayLeft, setThreeDayLeft] = useState<DayKey>(date);
+  // threeDayLeft = leftmost visible day; the anchor `date` is the rightmost on mount.
+  const [threeDayLeft, setThreeDayLeft] = useState<DayKey>(() => addDays(date, -2));
 
   const shift = (delta: number) => {
     if (view === "month") {
@@ -1063,18 +1065,15 @@ export function CalendarTab() {
   const goToday = () => {
     if (view === "3day") {
       threeDayControls.current?.toToday(today);
-      setThreeDayLeft(today);
+      setThreeDayLeft(addDays(today, -2));
     } else {
       setParams(view, today);
     }
   };
   const swipe = useSwipe({ onLeft: () => shift(1), onRight: () => shift(-1) });
 
-  const threeDayTitle = (() => {
-    const last = threeDayLeft;
-    const first = viewDays("3day", last)[0] ?? last;
-    return `${formatDayShort(first, tag)} – ${formatDayShort(last, tag)}`;
-  })();
+  // The 3 visible days are [threeDayLeft, +1, +2] (threeDayLeft is the leftmost).
+  const threeDayTitle = `${formatDayShort(threeDayLeft, tag)} – ${formatDayShort(addDays(threeDayLeft, 2), tag)}`;
 
   const title =
     view === "month"
