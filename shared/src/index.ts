@@ -665,3 +665,22 @@ export const pushUnsubscribeSchema = z
 export type PushUnsubscribeInput = z.infer<typeof pushUnsubscribeSchema>;
 
 export type PushPublicKeyResponse = { publicKey: string };
+
+// ---------------------------------------------------------------------------
+// Plan 12: Audit log
+// ---------------------------------------------------------------------------
+
+export type AuditEntryView = {
+  id: string;
+  actorName: string | null;
+  action: "create" | "update" | "delete";
+  entity: string;
+  entityId: string;
+  summary: string | null;
+  createdAt: number;
+};
+
+export type AuditPageResponse = {
+  entries: AuditEntryView[];
+  cursor: string | null;
+};

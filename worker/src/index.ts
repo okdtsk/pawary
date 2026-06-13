@@ -16,6 +16,7 @@ import { scheduleRoutes } from "./routes/schedules";
 import { advisorSettingsRoutes } from "./routes/advisor-settings";
 import { advisorRoutes } from "./routes/advisor";
 import { pushRoutes } from "./routes/push";
+import { auditRoutes } from "./routes/audit";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -35,6 +36,7 @@ app.route("/", memberRoutes);
 app.route("/", advisorSettingsRoutes);
 app.route("/", advisorRoutes);
 app.route("/", pushRoutes);
+app.route("/", auditRoutes);
 
 app.notFound((c) => err(c, 404, "not_found", "Not found"));
 app.onError((e, c) => {
