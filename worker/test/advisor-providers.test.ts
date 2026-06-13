@@ -126,4 +126,36 @@ describe("gemini adapter", () => {
     expect((e as AdvisorProviderError).code).toBe("provider_rate_limited");
     expect((e as AdvisorProviderError).message).toContain("RESOURCE_EXHAUSTED");
   });
+
+  it("reports finishReason when the stream produces no text", async () => {
+    // a "thinking" model can burn the whole output budget before emitting text
+    const sse =
+      'data: {"candidates":[{"content":{"role":"model"},"finishReason":"MAX_TOKENS"}]}\n\n';
+    fetchMock
+      .get("https://generativelanguage.googleapis.com")
+      .intercept({
+        path: "/v1beta/models/test-model:streamGenerateContent",
+        query: { alt: "sse" },
+        method: "POST",
+      })
+      .reply(200, sse, { headers: { "content-type": "text/event-stream" } });
+    const e = await collect(streamProvider("gemini", OPTS)).catch((x) => x);
+    expect(e).toBeInstanceOf(AdvisorProviderError);
+    expect((e as AdvisorProviderError).message).toContain("MAX_TOKENS");
+  });
+
+  it("reports a prompt-level block reason when the stream produces no text", async () => {
+    const sse = 'data: {"promptFeedback":{"blockReason":"SAFETY"}}\n\n';
+    fetchMock
+      .get("https://generativelanguage.googleapis.com")
+      .intercept({
+        path: "/v1beta/models/test-model:streamGenerateContent",
+        query: { alt: "sse" },
+        method: "POST",
+      })
+      .reply(200, sse, { headers: { "content-type": "text/event-stream" } });
+    const e = await collect(streamProvider("gemini", OPTS)).catch((x) => x);
+    expect(e).toBeInstanceOf(AdvisorProviderError);
+    expect((e as AdvisorProviderError).message).toContain("SAFETY");
+  });
 });

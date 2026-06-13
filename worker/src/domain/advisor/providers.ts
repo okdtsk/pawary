@@ -177,15 +177,47 @@ async function* streamGemini(call: ProviderCall): AsyncGenerator<string> {
   });
   if (!res.ok) throw httpError(res.status, await res.text().catch(() => undefined));
   if (!res.body) throw httpError(res.status);
+  let produced = false;
+  let finishReason: string | undefined;
+  let blockReason: string | undefined;
   for await (const data of sseData(res.body)) {
-    let evt: { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+    let evt: {
+      candidates?: Array<{
+        content?: { parts?: Array<{ text?: string }> };
+        finishReason?: string;
+      }>;
+      promptFeedback?: { blockReason?: string };
+    };
     try {
       evt = JSON.parse(data) as typeof evt;
     } catch {
       continue;
     }
-    for (const part of evt.candidates?.[0]?.content?.parts ?? []) {
-      if (part.text) yield part.text;
+    if (evt.promptFeedback?.blockReason) blockReason = evt.promptFeedback.blockReason;
+    const candidate = evt.candidates?.[0];
+    if (candidate?.finishReason) finishReason = candidate.finishReason;
+    for (const part of candidate?.content?.parts ?? []) {
+      if (part.text) {
+        produced = true;
+        yield part.text;
+      }
+    }
+  }
+  // Gemini can finish a stream with zero text — a blocked prompt, a safety
+  // stop, or the output-token budget spent before any text (common with
+  // "thinking" models). Surface *why* instead of a generic empty reply.
+  if (!produced) {
+    if (blockReason) {
+      throw new AdvisorProviderError(
+        "provider_error",
+        `Gemini blocked the prompt (blockReason: ${blockReason})`,
+      );
+    }
+    if (finishReason && finishReason !== "STOP") {
+      throw new AdvisorProviderError(
+        "provider_error",
+        `Gemini produced no text (finishReason: ${finishReason})`,
+      );
     }
   }
 }
