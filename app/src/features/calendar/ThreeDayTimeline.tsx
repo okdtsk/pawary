@@ -52,8 +52,17 @@ export function ThreeDayTimeline({
   const tag = useLocaleTag();
   const hourLabel = useHourLabel();
   const scrollRef = useRef<HTMLDivElement>(null);
+  // False while a programmatic (re)position is in flight; gates onScroll so the
+  // initial scroll + scroll-snap settle can't trigger edge-extension.
+  const readyRef = useRef(false);
   const [windowDays, setWindowDays] = useState<DayKey[]>(() => makeWindow(anchor));
   const [colWidth, setColWidth] = useState(0);
+  // Latest window/colWidth for the once-attached scrollend listener, so a
+  // post-extension scroll correction can't be read against a stale window.
+  const windowRef = useRef(windowDays);
+  windowRef.current = windowDays;
+  const colWidthRef = useRef(colWidth);
+  colWidthRef.current = colWidth;
 
   const { from, to } = rangeMs(windowDays, hhOffset);
   const activities = useActivitiesRange(petId, from, to);
@@ -77,11 +86,18 @@ export function ThreeDayTimeline({
       if (!el || colWidth === 0) return;
       const idx = days.indexOf(targetAnchor);
       if (idx < 0) return;
+      // Suppress edge-extension until this scroll (and any snap re-settle) lands.
+      readyRef.current = false;
       el.scrollTo({
         left: (idx - 2) * colWidth,
         top: startHour * HOUR_PX,
         behavior: smooth ? "smooth" : "auto",
       });
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          readyRef.current = true;
+        }),
+      );
     },
     [colWidth, startHour],
   );
@@ -113,58 +129,94 @@ export function ThreeDayTimeline({
     };
   }, [colWidth, scrollAnchorRight, controlsRef]);
 
-  // Horizontal scroll: report visible day + extend/trim at the edges.
+  // Horizontal scroll: extend/trim the window at the edges. (The visible-day
+  // title is reported separately on `scrollend`, off the snapped position, so
+  // it can never disagree with the rendered columns.)
   const onScroll = useCallback(() => {
+    // Ignore scroll events fired by programmatic positioning OR while a prior
+    // extension's scroll correction is still settling — otherwise a continuous
+    // wheel/touch scroll stacks prepends and overshoots.
+    if (!readyRef.current) return;
     const el = scrollRef.current;
     if (!el || colWidth === 0) return;
     const leftIdx = Math.round(el.scrollLeft / colWidth);
-    const leftmost = windowDays[Math.max(0, Math.min(leftIdx, windowDays.length - 1))];
-    if (leftmost) onVisibleChange(leftmost);
+
+    // Re-enable extension only after the DOM has grown and the scroll
+    // correction has been applied (one extension per settle).
+    const settle = () =>
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          readyRef.current = true;
+        }),
+      );
 
     // Near left edge: prepend, preserving scroll position.
     if (leftIdx <= EDGE_COLS) {
-      setWindowDays((prev) => {
-        const head = prev[0];
-        if (!head) return prev;
-        const added = Array.from({ length: EXTEND_BY }, (_, i) =>
-          addDays(head, -(EXTEND_BY - i)),
-        );
-        let next = [...added, ...prev];
-        if (next.length > MAX_DAYS) {
-          next = next.slice(0, MAX_DAYS);
-        }
-        requestAnimationFrame(() => {
-          if (scrollRef.current) {
-            scrollRef.current.scrollLeft += EXTEND_BY * colWidth;
-          }
-        });
-        return next;
+      const head = windowDays[0];
+      if (!head) return;
+      readyRef.current = false;
+      const added = Array.from({ length: EXTEND_BY }, (_, i) =>
+        addDays(head, -(EXTEND_BY - i)),
+      );
+      let next = [...added, ...windowDays];
+      if (next.length > MAX_DAYS) next = next.slice(0, MAX_DAYS);
+      setWindowDays(next);
+      requestAnimationFrame(() => {
+        if (scrollRef.current) scrollRef.current.scrollLeft += EXTEND_BY * colWidth;
+        settle();
       });
       return;
     }
 
     // Near right edge: append, trimming the far-left if needed.
     if (leftIdx >= windowDays.length - 3 - EDGE_COLS) {
-      setWindowDays((prev) => {
-        const tail = prev[prev.length - 1];
-        if (!tail) return prev;
-        const added = Array.from({ length: EXTEND_BY }, (_, i) =>
-          addDays(tail, i + 1),
-        );
-        let next = [...prev, ...added];
-        if (next.length > MAX_DAYS) {
-          const trim = next.length - MAX_DAYS;
-          next = next.slice(trim);
-          requestAnimationFrame(() => {
-            if (scrollRef.current) {
-              scrollRef.current.scrollLeft -= trim * colWidth;
-            }
-          });
-        }
-        return next;
+      const tail = windowDays[windowDays.length - 1];
+      if (!tail) return;
+      readyRef.current = false;
+      const added = Array.from({ length: EXTEND_BY }, (_, i) => addDays(tail, i + 1));
+      let next = [...windowDays, ...added];
+      let trim = 0;
+      if (next.length > MAX_DAYS) {
+        trim = next.length - MAX_DAYS;
+        next = next.slice(trim);
+      }
+      setWindowDays(next);
+      requestAnimationFrame(() => {
+        if (trim > 0 && scrollRef.current) scrollRef.current.scrollLeft -= trim * colWidth;
+        settle();
       });
     }
-  }, [colWidth, windowDays, onVisibleChange]);
+  }, [colWidth, windowDays]);
+
+  // Report the leftmost visible day once scrolling settles (snap complete), so
+  // the header title always matches the rendered columns. `scrollend` fires
+  // after the snap animation; a short fallback covers engines without it.
+  // Attached once; reads the latest window/colWidth via refs to stay correct
+  // across extensions (which mutate the window right before the correction).
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let fallback = 0;
+    const reportSettled = () => {
+      const cw = colWidthRef.current;
+      if (cw === 0) return;
+      const arr = windowRef.current;
+      const li = Math.round(el.scrollLeft / cw);
+      const lm = arr[Math.max(0, Math.min(li, arr.length - 1))];
+      if (lm) onVisibleChange(lm);
+    };
+    const onScrollFallback = () => {
+      window.clearTimeout(fallback);
+      fallback = window.setTimeout(reportSettled, 120);
+    };
+    el.addEventListener("scrollend", reportSettled);
+    el.addEventListener("scroll", onScrollFallback);
+    return () => {
+      el.removeEventListener("scrollend", reportSettled);
+      el.removeEventListener("scroll", onScrollFallback);
+      window.clearTimeout(fallback);
+    };
+  }, [onVisibleChange]);
 
   return (
     <div className="overflow-hidden rounded-card bg-paper shadow-card">
