@@ -64,7 +64,7 @@
         {
           "binding": "DB",
           "database_name": "pawary-preview",
-          "database_id": "PASTE_PREVIEW_D1_ID_FROM_TASK_2",
+          "database_id": "8d52d15f-7234-4d76-879d-134c6db080ff",
           "migrations_dir": "drizzle"
         }
       ],
