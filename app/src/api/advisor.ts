@@ -5,7 +5,7 @@ import type {
   PutAdvisorSettingsInput,
 } from "@pawary/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deviceTzOffsetMin } from "../lib/dates";
+import { householdTzOffsetMin } from "../lib/calendarPrefs";
 import { createSSEParser } from "../lib/sse";
 import { api, getCsrfToken } from "./client";
 import { keys } from "./keys";
@@ -106,7 +106,7 @@ export async function sendAdvisorMessage(
     res = await fetch(path, {
       method: "POST",
       headers,
-      body: JSON.stringify({ message, tz: deviceTzOffsetMin(), locale }),
+      body: JSON.stringify({ message, tz: householdTzOffsetMin(), locale }),
     });
   } catch {
     handlers.onError("network", "");

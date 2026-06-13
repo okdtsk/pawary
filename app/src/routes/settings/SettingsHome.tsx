@@ -11,8 +11,16 @@ import { ChevronRightIcon, DownloadIcon } from "../../components/icons";
 import { useToast } from "../../components/Toast";
 import { useT } from "../../i18n";
 import { NotificationsCard } from "../../features/pwa/NotificationsCard";
+import { useCalendarPrefs } from "../../lib/calendarPrefs";
 import { useRequiredPet } from "../../state/pets";
 import { SettingsPage } from "./SettingsPage";
+
+const ALL_TIMEZONES: string[] = (() => {
+  const sv = (
+    Intl as unknown as { supportedValuesOf?: (k: string) => string[] }
+  ).supportedValuesOf;
+  return sv ? sv("timeZone") : [];
+})();
 
 export function SettingsHome() {
   const t = useT();
@@ -24,6 +32,10 @@ export function SettingsHome() {
   const user = me.data?.user;
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [locale, setLocale] = useState<Locale>(user?.locale ?? "system");
+  const { prefs, setPref } = useCalendarPrefs();
+  const timeZones = ALL_TIMEZONES.includes(prefs.timeZone)
+    ? ALL_TIMEZONES
+    : [prefs.timeZone, ...ALL_TIMEZONES];
 
   const saveProfile = () => {
     if (displayName.trim() === "") return;
@@ -72,6 +84,46 @@ export function SettingsHome() {
           </Button>
         </Card>
       )}
+
+      {/* calendar preferences */}
+      <Card className="flex flex-col gap-4 p-5">
+        <h2 className="font-display text-lg text-ink">{t.calendar.settings.title}</h2>
+        <label className="flex items-center justify-between gap-3">
+          <span className="font-semibold text-ink">
+            {t.calendar.settings.weekendColor}
+          </span>
+          <input
+            type="checkbox"
+            className="h-5 w-5 accent-clay-500"
+            checked={prefs.weekendColor}
+            onChange={(e) => setPref("weekendColor", e.target.checked)}
+          />
+        </label>
+        <Field label={t.calendar.settings.startHour}>
+          <Select
+            value={String(prefs.startHour)}
+            onChange={(e) => setPref("startHour", Number(e.target.value))}
+          >
+            {Array.from({ length: 24 }, (_, h) => (
+              <option key={h} value={h}>
+                {String(h).padStart(2, "0")}:00
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label={t.calendar.settings.timezone}>
+          <Select
+            value={prefs.timeZone}
+            onChange={(e) => setPref("timeZone", e.target.value)}
+          >
+            {timeZones.map((tz) => (
+              <option key={tz} value={tz}>
+                {tz}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      </Card>
 
       {/* sections */}
       <Card className="divide-y divide-cream-200 p-0">

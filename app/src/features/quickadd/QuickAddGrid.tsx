@@ -8,7 +8,7 @@ import { Spinner } from "../../components/Spinner";
 import { useToast } from "../../components/Toast";
 import { useT } from "../../i18n";
 import { cn } from "../../lib/cn";
-import { deviceTzOffsetMin } from "../../lib/dates";
+import { householdTzOffsetMin } from "../../lib/calendarPrefs";
 import { friendlyError } from "../../lib/errors";
 
 export function QuickAddGrid({
@@ -55,7 +55,7 @@ export function QuickAddGrid({
       {
         category: preset.category,
         occurredAt: Date.now(),
-        tzOffsetMin: deviceTzOffsetMin(),
+        tzOffsetMin: householdTzOffsetMin(),
         details: preset.details ?? {},
       },
       {

@@ -1,6 +1,6 @@
 import type { AnomaliesResponse, InsightsPeriod, InsightsResponse } from "@pawary/shared";
 import { useQuery } from "@tanstack/react-query";
-import { deviceTzOffsetMin } from "../lib/dates";
+import { householdTzOffsetMin } from "../lib/calendarPrefs";
 import { api } from "./client";
 import { keys } from "./keys";
 
@@ -9,7 +9,7 @@ export function useInsights(petId: string, period: InsightsPeriod) {
     queryKey: keys.insights(petId, period),
     queryFn: () =>
       api<InsightsResponse>(
-        `/api/pets/${petId}/insights?period=${period}&tz=${deviceTzOffsetMin()}`,
+        `/api/pets/${petId}/insights?period=${period}&tz=${householdTzOffsetMin()}`,
       ),
     staleTime: 5 * 60_000,
   });
@@ -20,7 +20,7 @@ export function useAnomalies(petId: string) {
   return useQuery({
     queryKey: keys.anomalies(petId),
     queryFn: () =>
-      api<AnomaliesResponse>(`/api/pets/${petId}/anomalies?tz=${deviceTzOffsetMin()}`),
+      api<AnomaliesResponse>(`/api/pets/${petId}/anomalies?tz=${householdTzOffsetMin()}`),
     staleTime: 60_000,
   });
 }

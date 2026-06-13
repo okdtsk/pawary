@@ -4,8 +4,8 @@ import { useLocaleTag } from "../../i18n";
 import { cn } from "../../lib/cn";
 import {
   dayKeyToParts,
+  isWeekend,
   monthGrid,
-  todayKey,
   type DayKey,
   type MonthKey,
 } from "../../lib/dates";
@@ -23,15 +23,18 @@ function weekdayLabels(tag: string, firstWeek: DayKey[]): string[] {
 export function MonthGrid({
   monthKey,
   days,
+  today,
+  weekendColor,
   onSelectDay,
 }: {
   monthKey: MonthKey;
   days: DaySummaryResponse["days"] | undefined;
+  today: DayKey;
+  weekendColor: boolean;
   onSelectDay: (key: DayKey) => void;
 }) {
   const tag = useLocaleTag();
   const cells = monthGrid(monthKey);
-  const today = todayKey();
   const headers = weekdayLabels(tag, cells.slice(0, 7).map((c) => c.key));
 
   return (
@@ -64,6 +67,7 @@ export function MonthGrid({
               className={cn(
                 "flex min-h-16 flex-col items-center gap-1 border-b border-r border-cream-100 py-1.5 transition hover:bg-cream-50 active:bg-cream-100",
                 !cell.inMonth && "opacity-35",
+                weekendColor && isWeekend(cell.key) && "bg-clay-50",
               )}
             >
               <span

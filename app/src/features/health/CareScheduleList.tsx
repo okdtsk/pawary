@@ -9,7 +9,8 @@ import { Spinner } from "../../components/Spinner";
 import { useLocaleTag, useT } from "../../i18n";
 import type { Messages } from "../../i18n/messages";
 import { cn } from "../../lib/cn";
-import { dayKeyOf, dayStartMs, deviceTzOffsetMin, formatTime, todayKey } from "../../lib/dates";
+import { householdTzOffsetMin } from "../../lib/calendarPrefs";
+import { dayKeyOf, dayStartMs, formatTime, todayKey } from "../../lib/dates";
 import { ScheduleSheet } from "./ScheduleSheet";
 import { useCompleteWithUndo } from "./useCompleteWithUndo";
 
@@ -37,7 +38,7 @@ export function DueBadge({ schedule }: { schedule: ScheduleResponse }) {
     return <span className={cn(pill, "bg-cream-200 text-ink-faint")}>{t.care.finishedBadge}</span>;
   }
   const now = Date.now();
-  const tz = deviceTzOffsetMin();
+  const tz = householdTzOffsetMin();
   if (schedule.nextDueAt < now) {
     return <span className={cn(pill, "bg-berry-100 text-berry-700")}>{t.care.overdue}</span>;
   }

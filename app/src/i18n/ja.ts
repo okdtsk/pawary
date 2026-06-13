@@ -261,6 +261,13 @@ export const ja: Messages = {
     previous: "前へ",
     next: "次へ",
     dayEmpty: "この日の記録はありません",
+    settings: {
+      title: "カレンダー",
+      weekendColor: "週末を色分け",
+      startHour: "1日の開始時刻",
+      timezone: "タイムゾーン",
+      timezoneSystem: "端末に合わせる",
+    },
   },
   log: {
     searchPlaceholder: "メモを検索…",

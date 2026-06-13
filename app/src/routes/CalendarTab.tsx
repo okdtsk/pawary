@@ -1,14 +1,21 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useDaySummary } from "../api/activities";
+import { Button } from "../components/Button";
 import { IconButton } from "../components/IconButton";
-import { Timeline } from "../features/calendar/Timeline";
 import { ChevronLeftIcon, ChevronRightIcon } from "../components/icons";
 import { DaySheet } from "../features/calendar/DaySheet";
 import { MonthGrid } from "../features/calendar/MonthGrid";
+import { Timeline } from "../features/calendar/Timeline";
+import {
+  ThreeDayTimeline,
+  type ThreeDayControls,
+} from "../features/calendar/ThreeDayTimeline";
 import { useLocaleTag, useT } from "../i18n";
+import { householdTzOffsetMin, useCalendarPrefs } from "../lib/calendarPrefs";
 import { cn } from "../lib/cn";
 import {
+  addDays,
   formatDayHeading,
   formatDayShort,
   formatMonthTitle,
@@ -29,8 +36,12 @@ export function CalendarTab() {
   const t = useT();
   const tag = useLocaleTag();
   const pet = useRequiredPet();
+  const { prefs } = useCalendarPrefs();
   const [searchParams, setSearchParams] = useSearchParams();
   const [sheetDay, setSheetDay] = useState<DayKey | null>(null);
+
+  const hhOffset = householdTzOffsetMin();
+  const today = todayKey(Date.now(), hhOffset);
 
   const viewParam = searchParams.get("view");
   const view: CalendarView = VIEWS.includes(viewParam as CalendarView)
@@ -39,7 +50,7 @@ export function CalendarTab() {
   const dateParam = searchParams.get("date");
   const date: DayKey = /^\d{4}-\d{2}-\d{2}$/.test(dateParam ?? "")
     ? (dateParam as DayKey)
-    : todayKey();
+    : today;
 
   const setParams = (nextView: CalendarView, nextDate: DayKey) =>
     setSearchParams({ view: nextView, date: nextDate }, { replace: true });
@@ -47,25 +58,46 @@ export function CalendarTab() {
   const monthKey = monthKeyOf(date);
   const summary = useDaySummary(pet.id, monthKey);
 
+  // 3-day view tracks its visible leftmost day locally (for the title) without
+  // rewriting the URL on every scroll (which would reset the scroll window).
+  const threeDayControls = useRef<ThreeDayControls | null>(null);
+  const [threeDayLeft, setThreeDayLeft] = useState<DayKey>(() =>
+    addDays(date, -2),
+  );
+
   const shift = (delta: number) => {
     if (view === "month") {
       setParams(view, `${shiftMonth(monthKey, delta)}-01`);
+    } else if (view === "3day") {
+      threeDayControls.current?.step(delta);
     } else {
       setParams(view, shiftAnchor(view, date, delta));
     }
   };
+  const goToday = () => {
+    if (view === "3day") {
+      threeDayControls.current?.toToday(today);
+      setThreeDayLeft(addDays(today, -2));
+    } else {
+      setParams(view, today);
+    }
+  };
   const swipe = useSwipe({ onLeft: () => shift(1), onRight: () => shift(-1) });
+
+  const threeDayTitle = `${formatDayShort(threeDayLeft, tag)} – ${formatDayShort(addDays(threeDayLeft, 2), tag)}`;
 
   const title =
     view === "month"
       ? formatMonthTitle(monthKey, tag)
       : view === "day"
         ? formatDayHeading(date, tag)
-        : (() => {
-            const days = viewDays(view, date);
-            const last = days[days.length - 1] ?? date;
-            return `${formatDayShort(days[0] ?? date, tag)} – ${formatDayShort(last, tag)}`;
-          })();
+        : view === "3day"
+          ? threeDayTitle
+          : (() => {
+              const days = viewDays(view, date);
+              const last = days[days.length - 1] ?? date;
+              return `${formatDayShort(days[0] ?? date, tag)} – ${formatDayShort(last, tag)}`;
+            })();
 
   return (
     <div className="animate-pop flex flex-col gap-3">
@@ -94,18 +126,16 @@ export function CalendarTab() {
       </div>
 
       {/* range header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <IconButton label={t.calendar.previous} onClick={() => shift(-1)}>
           <ChevronLeftIcon className="h-5 w-5" />
         </IconButton>
-        <button
-          type="button"
-          className="font-display text-lg text-ink"
-          onClick={() => setParams(view, todayKey())}
-          title={t.common.today}
-        >
+        <span className="min-w-0 flex-1 truncate text-center font-display text-lg text-ink">
           {title}
-        </button>
+        </span>
+        <Button variant="ghost" size="sm" className="shrink-0" onClick={goToday}>
+          {t.common.today}
+        </Button>
         <IconButton label={t.calendar.next} onClick={() => shift(1)}>
           <ChevronRightIcon className="h-5 w-5" />
         </IconButton>
@@ -116,13 +146,30 @@ export function CalendarTab() {
           <MonthGrid
             monthKey={monthKey}
             days={summary.data?.days}
+            today={today}
+            weekendColor={prefs.weekendColor}
             onSelectDay={setSheetDay}
           />
         </div>
+      ) : view === "3day" ? (
+        <ThreeDayTimeline
+          petId={pet.id}
+          anchor={date}
+          today={today}
+          startHour={prefs.startHour}
+          weekendColor={prefs.weekendColor}
+          hhOffset={hhOffset}
+          controlsRef={threeDayControls}
+          onVisibleChange={setThreeDayLeft}
+        />
       ) : (
         <Timeline
           petId={pet.id}
           days={viewDays(view, date)}
+          today={today}
+          startHour={prefs.startHour}
+          weekendColor={prefs.weekendColor}
+          hhOffset={hhOffset}
           onShift={(delta) => setParams(view, shiftAnchor(view, date, delta))}
         />
       )}

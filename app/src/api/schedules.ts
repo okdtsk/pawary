@@ -7,7 +7,7 @@ import type {
   UpdateScheduleInput,
 } from "@pawary/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deviceTzOffsetMin } from "../lib/dates";
+import { householdTzOffsetMin } from "../lib/calendarPrefs";
 import { api } from "./client";
 import { keys } from "./keys";
 
@@ -22,7 +22,7 @@ export function useCareStatus(petId: string) {
   return useQuery({
     queryKey: keys.careStatus(petId),
     queryFn: () =>
-      api<CareStatusResponse>(`/api/pets/${petId}/care-status?tz=${deviceTzOffsetMin()}`),
+      api<CareStatusResponse>(`/api/pets/${petId}/care-status?tz=${householdTzOffsetMin()}`),
     staleTime: 60_000,
   });
 }

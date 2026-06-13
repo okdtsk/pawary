@@ -6,7 +6,8 @@ import { Card } from "../../components/Card";
 import { EmptyState } from "../../components/EmptyState";
 import { Spinner } from "../../components/Spinner";
 import { useLocaleTag, useT } from "../../i18n";
-import { deviceTzOffsetMin, dayKeyOf, relativeDayKind, todayKey } from "../../lib/dates";
+import { householdTzOffsetMin } from "../../lib/calendarPrefs";
+import { dayKeyOf, relativeDayKind, todayKey } from "../../lib/dates";
 import { useParams } from "react-router";
 import { SettingsPage } from "./SettingsPage";
 
@@ -18,7 +19,7 @@ function shortDate(ms: number, locale: string): string {
 }
 
 function entryDate(ms: number, locale: string, t: ReturnType<typeof useT>): string {
-  const kind = relativeDayKind(dayKeyOf(ms, deviceTzOffsetMin()), todayKey());
+  const kind = relativeDayKind(dayKeyOf(ms, householdTzOffsetMin(ms)), todayKey());
   if (kind === "today") return t.common.today;
   if (kind === "yesterday") return t.common.yesterday;
   return shortDate(ms, locale);

@@ -22,7 +22,7 @@ import { CameraIcon, XIcon } from "../../components/icons";
 import { Spinner } from "../../components/Spinner";
 import { useToast } from "../../components/Toast";
 import { useT } from "../../i18n";
-import { deviceTzOffsetMin } from "../../lib/dates";
+import { householdTzOffsetMin } from "../../lib/calendarPrefs";
 import { buildDetails, initialValues, type FormValues } from "./categoryFields";
 import { DetailsFields } from "./DetailsFields";
 
@@ -116,7 +116,7 @@ export function ActivityForm({
         // edit mode — or resuming after create succeeded but a photo failed
         saved = await update.mutateAsync({
           occurredAt: occurredAtMs,
-          tzOffsetMin: deviceTzOffsetMin(),
+          tzOffsetMin: householdTzOffsetMin(occurredAtMs),
           memo: trimmedMemo === "" ? null : trimmedMemo,
           details: built.details,
         });
@@ -124,7 +124,7 @@ export function ActivityForm({
         saved = await create.mutateAsync({
           category,
           occurredAt: occurredAtMs,
-          tzOffsetMin: deviceTzOffsetMin(),
+          tzOffsetMin: householdTzOffsetMin(occurredAtMs),
           ...(trimmedMemo !== "" ? { memo: trimmedMemo } : {}),
           details: built.details,
         });

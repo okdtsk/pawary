@@ -245,6 +245,13 @@ export interface Messages {
     previous: string;
     next: string;
     dayEmpty: string;
+    settings: {
+      title: string;
+      weekendColor: string;
+      startHour: string;
+      timezone: string;
+      timezoneSystem: string;
+    };
   };
   log: {
     searchPlaceholder: string;

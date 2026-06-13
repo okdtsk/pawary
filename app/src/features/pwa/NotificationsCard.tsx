@@ -4,7 +4,7 @@ import { Card } from "../../components/Card";
 import { Spinner } from "../../components/Spinner";
 import { useToast } from "../../components/Toast";
 import { useT } from "../../i18n";
-import { deviceTzOffsetMin } from "../../lib/dates";
+import { householdTzOffsetMin } from "../../lib/calendarPrefs";
 import {
   disablePush,
   enablePush,
@@ -61,7 +61,7 @@ export function NotificationsCard() {
 
   const handleEnable = async () => {
     setActionPending(true);
-    const result = await enablePush(deviceTzOffsetMin());
+    const result = await enablePush(householdTzOffsetMin());
     setActionPending(false);
     if (result.ok) {
       setStatus("enabled");
