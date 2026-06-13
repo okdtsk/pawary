@@ -1,7 +1,9 @@
 import { useRef, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import { useOnline } from "../lib/useOnline";
 import { AddSheet } from "../features/add/AddSheet";
+import { PullToRefresh } from "../features/pwa/PullToRefresh";
 import { Sheet } from "../components/Sheet";
 import { QuickAddGrid } from "../features/quickadd/QuickAddGrid";
 import { PetAvatar } from "../components/Avatar";
@@ -81,6 +83,7 @@ function SideLink({
 export function Shell() {
   const t = useT();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { pets, selectedPet, selectPet } = usePets();
   const online = useOnline();
   const [addOpen, setAddOpen] = useState(false);
@@ -200,9 +203,13 @@ export function Shell() {
           )}
         </header>
 
-        <main className="mx-auto w-full max-w-3xl px-4 pb-28 pt-4 md:pb-12">
-          <Outlet context={outletContext} />
-        </main>
+        <PullToRefresh
+          onRefresh={() => queryClient.refetchQueries({ type: "active" })}
+        >
+          <main className="mx-auto w-full max-w-3xl px-4 pb-28 pt-4 md:pb-12">
+            <Outlet context={outletContext} />
+          </main>
+        </PullToRefresh>
       </div>
 
       {/* mobile tab bar + overlapping FAB */}

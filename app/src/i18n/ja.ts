@@ -363,6 +363,9 @@ export const ja: Messages = {
     iosInstallTitle: "ホーム画面にPawaryを追加",
     iosInstallBody:
       "Safariの共有ボタンから「ホーム画面に追加」を選ぶと、アプリのように使えます。",
+    pullToRefresh: "引っ張って更新",
+    releaseToRefresh: "離して更新",
+    refreshing: "更新中…",
   },
   push: {
     title: "通知",
