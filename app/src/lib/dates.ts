@@ -38,9 +38,39 @@ export function minutesIntoDay(occurredAt: number, tzOffsetMin: number): number 
   return d.getUTCHours() * 60 + d.getUTCMinutes();
 }
 
-/** Today's day-key on the device clock. */
-export function todayKey(now: number = Date.now()): DayKey {
-  return dayKeyOf(now, deviceTzOffsetMin());
+/** Minutes east of UTC for an IANA zone at a given instant (DST-correct). */
+export function tzOffsetMinFor(timeZone: string, atMs: number): number {
+  const dtf = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  const p = Object.fromEntries(
+    dtf.formatToParts(new Date(atMs)).map((x) => [x.type, x.value]),
+  );
+  // The wall-clock the zone shows for `atMs`, read back as if it were UTC.
+  const asUTC = Date.UTC(
+    Number(p.year),
+    Number(p.month) - 1,
+    Number(p.day),
+    Number(p.hour === "24" ? "0" : p.hour),
+    Number(p.minute),
+    Number(p.second),
+  );
+  return Math.round((asUTC - atMs) / MIN_MS);
+}
+
+/** Today's day-key. Pass a household offset to bucket in a chosen zone. */
+export function todayKey(
+  now: number = Date.now(),
+  tzOffsetMin: number = deviceTzOffsetMin(),
+): DayKey {
+  return dayKeyOf(now, tzOffsetMin);
 }
 
 export function dayKeyToParts(key: DayKey): {
@@ -73,29 +103,45 @@ export function shiftMonth(monthKey: MonthKey, delta: number): MonthKey {
   return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}`;
 }
 
-/** Device-local start of a day in epoch ms (query range building). */
-export function dayStartMs(key: DayKey): number {
+/** Start of a day in epoch ms. With a household offset, brackets that zone's day. */
+export function dayStartMs(key: DayKey, tzOffsetMin?: number): number {
   const { year, month, day } = dayKeyToParts(key);
+  if (tzOffsetMin !== undefined) {
+    return Date.UTC(year, month - 1, day) - tzOffsetMin * MIN_MS;
+  }
   return new Date(year, month - 1, day).getTime();
 }
 
-/** Device-local inclusive end of a day (the API's `to` is `lte`). */
-export function dayEndMs(key: DayKey): number {
+/** Inclusive end of a day (the API's `to` is `lte`). */
+export function dayEndMs(key: DayKey, tzOffsetMin?: number): number {
+  if (tzOffsetMin !== undefined) {
+    return dayStartMs(key, tzOffsetMin) + 86_400_000 - 1;
+  }
   const { year, month, day } = dayKeyToParts(key);
   return new Date(year, month - 1, day + 1).getTime() - 1;
 }
 
 /** Inclusive epoch-ms range covering a consecutive day-key span. */
-export function rangeMs(days: DayKey[]): { from: number; to: number } {
+export function rangeMs(
+  days: DayKey[],
+  tzOffsetMin?: number,
+): { from: number; to: number } {
   const first = days[0] ?? todayKey();
   const last = days[days.length - 1] ?? first;
-  return { from: dayStartMs(first), to: dayEndMs(last) };
+  return { from: dayStartMs(first, tzOffsetMin), to: dayEndMs(last, tzOffsetMin) };
 }
 
 /** ISO weekday 0=Monday .. 6=Sunday for a day-key. */
 function mondayIndex(key: DayKey): number {
   const { year, month, day } = dayKeyToParts(key);
   return (new Date(Date.UTC(year, month - 1, day)).getUTCDay() + 6) % 7;
+}
+
+/** True when a day-key falls on Saturday or Sunday. */
+export function isWeekend(key: DayKey): boolean {
+  const { year, month, day } = dayKeyToParts(key);
+  const dow = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  return dow === 0 || dow === 6;
 }
 
 export type MonthGridCell = { key: DayKey; inMonth: boolean };
@@ -125,7 +171,7 @@ export function viewDays(
   anchor: DayKey,
 ): DayKey[] {
   if (view === "day") return [anchor];
-  if (view === "3day") return [anchor, addDays(anchor, 1), addDays(anchor, 2)];
+  if (view === "3day") return [addDays(anchor, -2), addDays(anchor, -1), anchor];
   const monday = addDays(anchor, -mondayIndex(anchor));
   return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
 }

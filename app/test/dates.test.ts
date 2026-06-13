@@ -2,9 +2,12 @@ import { isoWeekKey, isoWeekStartDay } from "@pawary/shared";
 import { describe, expect, it } from "vitest";
 import {
   addDays,
+  dayEndMs,
   dayKeyOf,
+  dayStartMs,
   formatMonthDay,
   formatTime,
+  isWeekend,
   localComposeMs,
   localDayKey,
   minutesIntoDay,
@@ -13,6 +16,7 @@ import {
   relativeDayKind,
   shiftAnchor,
   shiftMonth,
+  tzOffsetMinFor,
   viewDays,
 } from "../src/lib/dates";
 
@@ -72,8 +76,8 @@ describe("viewDays / shiftAnchor", () => {
     expect(days[0]).toBe("2026-06-08");
     expect(days[6]).toBe("2026-06-14");
   });
-  it("3day starts at the anchor; day is just the anchor", () => {
-    expect(viewDays("3day", "2026-06-11")).toEqual([
+  it("3day puts anchor last (today on right); day is just the anchor", () => {
+    expect(viewDays("3day", "2026-06-13")).toEqual([
       "2026-06-11",
       "2026-06-12",
       "2026-06-13",
@@ -127,5 +131,40 @@ describe("wheel-picker local helpers", () => {
     expect(localComposeMs("2026-03-01", 0, 0)).toBe(
       new Date(2026, 2, 1).getTime(),
     );
+  });
+});
+
+describe("isWeekend", () => {
+  it("is true for Saturday and Sunday", () => {
+    expect(isWeekend("2026-06-13")).toBe(true); // Sat
+    expect(isWeekend("2026-06-14")).toBe(true); // Sun
+  });
+  it("is false on weekdays", () => {
+    expect(isWeekend("2026-06-12")).toBe(false); // Fri
+    expect(isWeekend("2026-06-15")).toBe(false); // Mon
+  });
+});
+
+describe("tzOffsetMinFor", () => {
+  it("returns 0 for UTC", () => {
+    expect(tzOffsetMinFor("UTC", Date.UTC(2026, 5, 13))).toBe(0);
+  });
+  it("returns +540 for Asia/Tokyo (no DST)", () => {
+    expect(tzOffsetMinFor("Asia/Tokyo", Date.UTC(2026, 0, 1))).toBe(540);
+    expect(tzOffsetMinFor("Asia/Tokyo", Date.UTC(2026, 6, 1))).toBe(540);
+  });
+  it("tracks DST for America/New_York", () => {
+    // 2026-01-01 = EST (-300), 2026-07-01 = EDT (-240)
+    expect(tzOffsetMinFor("America/New_York", Date.UTC(2026, 0, 1, 12))).toBe(-300);
+    expect(tzOffsetMinFor("America/New_York", Date.UTC(2026, 6, 1, 12))).toBe(-240);
+  });
+});
+
+describe("day range with explicit household offset", () => {
+  it("brackets a UTC+540 day in epoch ms", () => {
+    // Household midnight 2026-06-13 in JST = 2026-06-12T15:00:00Z
+    const start = Date.UTC(2026, 5, 12, 15, 0, 0);
+    expect(dayStartMs("2026-06-13", 540)).toBe(start);
+    expect(dayEndMs("2026-06-13", 540)).toBe(start + 86_400_000 - 1);
   });
 });
