@@ -13,6 +13,9 @@ import { requireSession } from "../middleware/session";
 export const pushRoutes = new Hono<AppEnv>();
 
 pushRoutes.get("/api/push/public-key", requireSession, (c) => {
+  if (!c.env.VAPID_PUBLIC_KEY) {
+    return err(c, 503, "push_unconfigured", "Push notifications are not configured");
+  }
   return c.json({ data: { publicKey: c.env.VAPID_PUBLIC_KEY } satisfies PushPublicKeyResponse });
 });
 
@@ -25,6 +28,18 @@ pushRoutes.post("/api/push/subscriptions", requireSession, requireCsrf, async (c
   const user = c.get("user");
   const db = drizzle(c.env.DB);
   const now = Date.now();
+
+  // A5: Preserve lastDigestDay when the same user re-subscribes the same
+  // endpoint (e.g. after a page reload). Only reset it when the endpoint is
+  // claimed by a different user (device hand-off / re-login).
+  const existing = await db
+    .select({ userId: pushSubscriptions.userId, lastDigestDay: pushSubscriptions.lastDigestDay })
+    .from(pushSubscriptions)
+    .where(eq(pushSubscriptions.endpoint, parsed.data.endpoint))
+    .get();
+  const preservedDigestDay =
+    existing?.userId === user.id ? existing.lastDigestDay : null;
+
   await db
     .insert(pushSubscriptions)
     .values({
@@ -34,7 +49,7 @@ pushRoutes.post("/api/push/subscriptions", requireSession, requireCsrf, async (c
       p256dh: parsed.data.p256dh,
       auth: parsed.data.auth,
       tzOffsetMin: parsed.data.tz,
-      lastDigestDay: null,
+      lastDigestDay: preservedDigestDay,
       createdAt: now,
     })
     .onConflictDoUpdate({
@@ -44,7 +59,7 @@ pushRoutes.post("/api/push/subscriptions", requireSession, requireCsrf, async (c
         p256dh: parsed.data.p256dh,
         auth: parsed.data.auth,
         tzOffsetMin: parsed.data.tz,
-        lastDigestDay: null,
+        lastDigestDay: preservedDigestDay,
       },
     });
   return c.json({ data: { ok: true } }, 201);
