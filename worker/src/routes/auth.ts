@@ -10,6 +10,7 @@ import {
   setSessionCookie,
 } from "../lib/cookies";
 import { constantTimeEqual, generateToken } from "../lib/crypto";
+import { isProdLike } from "../lib/environment";
 import {
   buildAuthUrl,
   exchangeCode,
@@ -35,7 +36,7 @@ authRoutes.get("/google", rateLimit("auth-google", 10, 60_000), async (c) => {
   const { verifier, challenge } = await generatePkce();
   setCookie(c, STATE_COOKIE, JSON.stringify({ state, verifier }), {
     httpOnly: true,
-    secure: c.env.ENVIRONMENT === "production",
+    secure: isProdLike(c.env),
     sameSite: "Lax",
     path: "/api/auth",
     maxAge: 600,
