@@ -4,6 +4,11 @@ import type { Pet, Session, User } from "./db/schema";
 export type Env = {
   DB: D1Database;
   PHOTOS: R2Bucket;
+  // Workers rate-limiting bindings (wrangler.jsonc `ratelimits`); the suffix
+  // is the per-60s limit. See worker/src/lib/rate-limit.ts for the prefix map.
+  RL_5: RateLimit;
+  RL_10: RateLimit;
+  RL_30: RateLimit;
   ENVIRONMENT: "development" | "production";
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;

@@ -26,7 +26,7 @@ export const photoRoutes = new Hono<AppEnv>();
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 const MAX_PHOTOS_PER_ACTIVITY = 6;
-const uploadLimit = rateLimit("upload", 20, 60_000, "user");
+const uploadLimit = rateLimit("upload", 30, 60_000, "user");
 
 type Upload = {
   bytes: Uint8Array;

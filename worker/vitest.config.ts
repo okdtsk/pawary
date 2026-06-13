@@ -13,6 +13,15 @@ export default defineWorkersConfig(async () => {
         workers: {
           wrangler: { configPath: "./wrangler.jsonc" },
           miniflare: {
+            // vitest-pool-workers bundles wrangler 4.35.0, which predates the
+            // GA `ratelimits` wrangler config key, so the bindings declared in
+            // wrangler.jsonc are dropped (with a warning) when the pool parses
+            // the config. Mirror them here as raw miniflare worker options.
+            ratelimits: {
+              RL_5: { simple: { limit: 5, period: 60 } },
+              RL_10: { simple: { limit: 10, period: 60 } },
+              RL_30: { simple: { limit: 30, period: 60 } },
+            },
             bindings: {
               TEST_MIGRATIONS: migrations,
               GOOGLE_CLIENT_ID: "test-client-id",

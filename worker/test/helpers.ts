@@ -54,6 +54,22 @@ export async function withMember(
     .values({ petId, userId, role, createdAt: Date.now() });
 }
 
+/**
+ * The Workers ratelimit binding (and miniflare's local implementation) uses
+ * epoch-aligned 60s fixed windows whose counters reset at the boundary.
+ * Tests that assert "limit+1th request is 429" would flake when a boundary
+ * crosses mid-loop, so wait the boundary out when one is imminent.
+ */
+export async function avoidRateLimitWindowBoundary(
+  marginMs = 5_000,
+): Promise<void> {
+  const periodMs = 60_000;
+  const remainingMs = periodMs - (Date.now() % periodMs);
+  if (remainingMs < marginMs) {
+    await new Promise((resolve) => setTimeout(resolve, remainingMs + 100));
+  }
+}
+
 export function authHeaders(
   cookie: string,
   csrfToken?: string,
