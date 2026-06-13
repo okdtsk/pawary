@@ -18,6 +18,7 @@ const FUTURE = 7; // days rendered after the anchor
 const EXTEND_BY = 14; // days added when nearing an edge
 const EDGE_COLS = 4; // trigger extend within this many columns of an edge
 const MAX_DAYS = 84; // cap window size; trim the far edge beyond this
+const GUTTER_PX = 48; // hour-axis gutter width (matches HourAxis/header `w-12`)
 
 /** Imperative controls the parent's arrow buttons / Today button drive. */
 export type ThreeDayControls = {
@@ -68,11 +69,12 @@ export function ThreeDayTimeline({
   const activities = useActivitiesRange(petId, from, to);
   const byDay = usePlacedByDay(activities.data, windowDays);
 
-  // Measure a column = 1/3 of the scroll viewport.
+  // Measure a column = 1/3 of the viewport remaining AFTER the hour-axis
+  // gutter, so three full day columns sit beside it (not under it).
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const measure = () => setColWidth(el.clientWidth / 3);
+    const measure = () => setColWidth((el.clientWidth - GUTTER_PX) / 3);
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -230,7 +232,7 @@ export function ThreeDayTimeline({
           onScroll={onScroll}
           data-pull-ignore
           className="relative max-h-[min(60dvh,560px)] overflow-auto"
-          style={{ scrollSnapType: "x mandatory" }}
+          style={{ scrollSnapType: "x mandatory", scrollPaddingLeft: GUTTER_PX }}
         >
           {/* sticky header row — w-max so the sticky-left gutter's containing
               block spans the full scroll width and stays pinned throughout */}
