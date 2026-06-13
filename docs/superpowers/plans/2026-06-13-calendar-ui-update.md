@@ -874,14 +874,14 @@ export function ThreeDayTimeline({
           addDays(head, -(EXTEND_BY - i)),
         );
         let next = [...added, ...prev];
-        let dropped = 0;
+        // Trimming the TAIL does not move the front-side visible day, so the
+        // scroll correction is always +EXTEND_BY columns (independent of trim).
         if (next.length > MAX_DAYS) {
-          dropped = next.length - MAX_DAYS;
           next = next.slice(0, MAX_DAYS);
         }
         requestAnimationFrame(() => {
           if (scrollRef.current) {
-            scrollRef.current.scrollLeft += (EXTEND_BY - dropped) * colWidth;
+            scrollRef.current.scrollLeft += EXTEND_BY * colWidth;
           }
         });
         return next;
