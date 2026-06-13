@@ -166,11 +166,10 @@ export async function runPushCron(
   for (const due of dueRows) {
     // A6: Check the cap BEFORE processing this schedule. If we are already at
     // the cap, skip it — do NOT set notifiedDueAt so the schedule retries on
-    // the next cron tick. (A partially-sent schedule whose fanout hit the cap
-    // mid-loop still gets marked because trySend sets `capped` only from the
-    // second call that exceeds the limit; the first exceeded call returns false
-    // but increments `sends`, so at least one send was attempted — marking it
-    // prevents double-notify for the recipients who did receive it.)
+    // the next cron tick. (A schedule whose fanout hits the cap MID-loop still
+    // gets marked: trySend refuses over-cap sends without counting them, but
+    // some recipients already received their push — marking the occurrence
+    // prevents double-notifying them on the next tick.)
     if (sends >= capMaxSends) {
       capped = true;
       break;
@@ -274,7 +273,7 @@ export async function runPushCron(
   }
 
   if (capped) {
-    console.log(`push cron send cap reached (${MAX_SENDS})`);
+    console.log(`push cron send cap reached (${capMaxSends})`);
   }
   return { dueSent, digestSent, deleted };
 }
