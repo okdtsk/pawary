@@ -52,7 +52,7 @@ npx wrangler secret put VAPID_PRIVATE_KEY --env production  # paste the private 
 ### Preview environment
 
 A shared, production-faithful preview env (Worker `pawary-preview`, D1 `pawary-preview`,
-R2 `pawary-photos-preview`) at `https://pawary-preview.<acct>.workers.dev`, configured via
+R2 `pawary-photos-preview`) at `https://pawary-preview.okdtsk.workers.dev`, configured via
 the `preview` wrangler environment. Use it to verify a branch before merging to `main`;
 it never touches production data.
 
@@ -64,7 +64,7 @@ One-time setup: create the D1 (`wrangler d1 create pawary-preview`) and R2
 (`wrangler r2 bucket create pawary-photos-preview`); set secrets with
 `wrangler secret put <NAME> --env preview` (reuse prod `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`;
 generate fresh `ADVISOR_KEK` and a new VAPID keypair); add the preview callback
-`https://pawary-preview.<acct>.workers.dev/api/auth/google/callback` to the Google OAuth
+`https://pawary-preview.okdtsk.workers.dev/api/auth/google/callback` to the Google OAuth
 client; create a non-branch-restricted `preview` GitHub environment holding
 `CLOUDFLARE_API_TOKEN`. Reset preview data anytime with
 `wrangler d1 execute pawary-preview --remote --env preview --command "<sql>"`.
