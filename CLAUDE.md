@@ -47,11 +47,12 @@ If a user can set an AI service API settings (like OpenAI API, Gemini API, Claud
 
 # Development Workflow
 
-All changes ship via GitHub pull request — never push directly to `main`
-(branch protection blocks it). Full process in `docs/development-workflow.md`.
+All changes ship via GitHub pull request — never push directly to `main`.
+(Enforcement via branch protection needs GitHub Pro on a private repo, so this
+is currently by convention.) Full process in `docs/development-workflow.md`.
 
 - Branch off `main`, open a PR; CI runs `typecheck` + `test` on every PR.
-- The `test` check must be green to merge; self-merge is allowed (no approval required).
+- Wait for the `test` check to be green before merging; self-merge is allowed (no approval required).
 - Merging to `main` auto-deploys to production.
 - For QA, add the **`preview`** label to a PR to deploy its branch to the shared
   preview environment (manual fallback: Actions → Preview → Run workflow).

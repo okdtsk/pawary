@@ -1,9 +1,15 @@
 # Development Workflow
 
-All changes to Pawary ship through GitHub pull requests. Direct pushes to `main`
-are blocked by branch protection. This keeps `main` always-deployable and gives
-every change a reviewable history and a QA opportunity before it reaches
-production.
+All changes to Pawary ship through GitHub pull requests. This keeps `main`
+always-deployable and gives every change a reviewable history and a QA
+opportunity before it reaches production.
+
+> **Enforcement note:** technical enforcement (blocking direct pushes, requiring
+> a green CI check before merge) needs GitHub branch protection or rulesets,
+> which require **GitHub Pro** for a private repo (or making the repo public).
+> Neither is enabled yet, so for now the PR-only rule is **by convention** — the
+> tooling does not block a direct push to `main`. See "Enabling enforcement"
+> below.
 
 ## Branch → PR → QA → merge
 
@@ -14,20 +20,48 @@ production.
 3. **QA on preview when ready** (see below). Optional for trivial changes,
    expected for anything user-facing.
 4. **Merge.** Once the `test` check is green, squash-merge into `main`.
-   - A green CI run is **required** before merging.
+   - Wait for the `test` check to be green before merging (convention).
    - No separate approval is required — you can merge your own PR.
    - Merging to `main` auto-deploys to **production** (`pawary.okdtsk.dev`) via
      the `deploy` job, which also applies pending D1 migrations.
 
-### Branch protection on `main` (enforced)
+### Enabling enforcement (optional, requires GitHub Pro or public repo)
 
-- Pull request required; direct pushes are rejected.
+The intended rule once enforceable:
+
+- Pull request required; direct pushes to `main` rejected.
 - The `test` status check must pass before merging.
 - Required approving reviews: 0 (self-merge allowed for solo/family dev).
 
-To tighten later (e.g. require 1 approval once there are more collaborators),
-update the rule under repo **Settings → Branches → `main`**, or via
-`gh api`.
+This needs GitHub branch protection or a repository ruleset, which on a
+**private** repo require a paid plan (GitHub Pro). To turn it on after upgrading
+(or after making the repo public), create a ruleset targeting the default branch
+with a `pull_request` rule (0 approvals) and a `required_status_checks` rule for
+the `test` check — repo **Settings → Rules → Rulesets**, or via `gh api`:
+
+```bash
+gh api -X POST repos/okdtsk/pawary/rulesets --input - <<'JSON'
+{
+  "name": "main: PR + CI required",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
+  "rules": [
+    { "type": "deletion" },
+    { "type": "non_fast_forward" },
+    { "type": "pull_request", "parameters": {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": false,
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": false } },
+    { "type": "required_status_checks", "parameters": {
+        "strict_required_status_checks_policy": false,
+        "required_status_checks": [ { "context": "test" } ] } }
+  ]
+}
+JSON
+```
 
 ## Preview / QA process
 
@@ -57,9 +91,9 @@ anytime with
 
 ## Hotfixes
 
-Same flow — branch, PR, green CI, merge. The branch protection has no admin
-bypass configured by default; if an emergency requires it, temporarily relax the
-rule in repo settings rather than pushing around it.
+Same flow — branch, PR, green CI, merge. If enforcement is later enabled and an
+emergency requires bypassing it, temporarily relax the ruleset in repo settings
+rather than normalizing direct pushes to `main`.
 
 ## Related docs
 
