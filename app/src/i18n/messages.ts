@@ -1,5 +1,16 @@
 import type { Category, InsightsPeriod, Role, ScheduleType } from "@pawary/shared";
 
+/** Audited entities/actions the catalogs must label — a missing combo fails typecheck. */
+export type AuditEntity =
+  | "activity"
+  | "pet"
+  | "schedule"
+  | "preset"
+  | "member"
+  | "invite"
+  | "advisor";
+export type AuditAction = "create" | "update" | "delete";
+
 export interface Messages {
   appName: string;
   tagline: string;
@@ -156,7 +167,6 @@ export interface Messages {
       provider: string;
       model: string;
       apiKey: string;
-      apiKeyHint: string;
       apiKeyHintPrefix: string;
       apiKeyHintLink: string;
       apiKeyConfigured: string;
@@ -344,6 +354,6 @@ export interface Messages {
     formerMember: string;
     empty: string;
     history: string;
-    lines: Record<string, Record<string, string>>;
+    lines: Record<AuditEntity, Record<AuditAction, string>>;
   };
 }
