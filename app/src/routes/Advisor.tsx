@@ -19,6 +19,7 @@ import { ArrowLeftIcon } from "../components/icons";
 import { Spinner } from "../components/Spinner";
 import { useToast } from "../components/Toast";
 import { useLocaleTag, useT } from "../i18n";
+import { relativeDayKind, dayKeyOf, todayKey, deviceTzOffsetMin } from "../lib/dates";
 import { useRequiredPet } from "../state/pets";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -32,7 +33,7 @@ function shortDate(ms: number, locale: string): string {
 
 function advisorErrorText(code: string, t: ReturnType<typeof useT>): string {
   const map = t.advisor.errors as Record<string, string | undefined>;
-  return map[code] ?? t.advisor.errors.provider_error;
+  return map[code] ?? t.advisor.errors.fallback;
 }
 
 // ─── DisclaimerBanner ─────────────────────────────────────────────────────────
@@ -267,6 +268,7 @@ function ChatView({
             <Textarea
               className="flex-1 resize-none"
               rows={2}
+              maxLength={4000}
               placeholder={t.advisor.inputPlaceholder}
               value={text}
               disabled={streaming}
@@ -314,7 +316,10 @@ function ConversationRow({
         <p className="truncate text-sm font-semibold text-ink">{conv.title}</p>
         <p className="text-xs text-ink-faint">
           {conv.createdByName ? `${conv.createdByName} · ` : ""}
-          {shortDate(conv.updatedAt, locale)}
+          {(() => {
+            const kind = relativeDayKind(dayKeyOf(conv.updatedAt, deviceTzOffsetMin()), todayKey());
+            return kind === "today" ? t.common.today : kind === "yesterday" ? t.common.yesterday : shortDate(conv.updatedAt, locale);
+          })()}
         </p>
       </button>
       {canEdit && (
@@ -369,61 +374,54 @@ function ListView({
         <p className="mt-0.5 text-xs text-ink-faint">{t.advisor.disclaimer}</p>
       </div>
 
-      {/* Setup CTA: no settings + editor */}
-      {!hasSettings && canEdit ? (
+      {/* New conversation / setup CTA */}
+      {canEdit && hasSettings && (
+        <Button onClick={onNew}>{t.advisor.newConversation}</Button>
+      )}
+      {canEdit && !hasSettings && (
+        <Card className="p-4">
+          <p className="mb-3 text-sm text-ink-soft">{t.advisor.errors.advisor_not_configured}</p>
+          <Button onClick={() => navigate("/settings/advisor")}>
+            {t.advisor.setupCta}
+          </Button>
+        </Card>
+      )}
+      {!canEdit && (
+        <p className="text-sm text-ink-faint">{t.advisor.viewerNote}</p>
+      )}
+
+      {/* Conversation list always rendered */}
+      {conversations.isLoading ? (
+        <div className="flex justify-center py-8">
+          <Spinner />
+        </div>
+      ) : items.length === 0 ? (
         <Card>
           <EmptyState
-            title={t.advisor.emptyTitle}
-            hint={t.advisor.errors.advisor_not_configured}
-            action={
-              <Button onClick={() => navigate("/settings/advisor")}>
-                {t.advisor.setupCta}
-              </Button>
-            }
+            title={t.advisor.listEmptyTitle}
+            hint={t.advisor.listEmptyHint}
           />
         </Card>
       ) : (
-        <>
-          {canEdit && hasSettings && (
-            <Button onClick={onNew}>{t.advisor.newConversation}</Button>
-          )}
-          {!canEdit && (
-            <p className="text-sm text-ink-faint">{t.advisor.viewerNote}</p>
-          )}
-
-          {conversations.isLoading ? (
-            <div className="flex justify-center py-8">
-              <Spinner />
-            </div>
-          ) : items.length === 0 ? (
-            <Card>
-              <EmptyState
-                title={t.advisor.listEmptyTitle}
-                hint={t.advisor.listEmptyHint}
+        <Card className="p-0">
+          <ul className="divide-y divide-cream-200">
+            {items.map((conv) => (
+              <ConversationRow
+                key={conv.id}
+                conv={conv}
+                locale={locale}
+                canEdit={canEdit}
+                onSelect={() => onSelect(conv.id)}
+                onDelete={() =>
+                  deleteConversation.mutate(conv.id, {
+                    onError: () =>
+                      toast.show(t.errors.title, { tone: "danger" }),
+                  })
+                }
               />
-            </Card>
-          ) : (
-            <Card className="p-0">
-              <ul className="divide-y divide-cream-200">
-                {items.map((conv) => (
-                  <ConversationRow
-                    key={conv.id}
-                    conv={conv}
-                    locale={locale}
-                    canEdit={canEdit}
-                    onSelect={() => onSelect(conv.id)}
-                    onDelete={() =>
-                      deleteConversation.mutate(conv.id, {
-                        onError: () =>
-                          toast.show(t.errors.title, { tone: "danger" }),
-                      })
-                    }
-                  />
-                ))}
-              </ul>
-            </Card>
-          )}
-        </>
+            ))}
+          </ul>
+        </Card>
       )}
     </div>
   );

@@ -162,6 +162,7 @@ export const en: Messages = {
       offline: "You're offline — the advisor needs a connection.",
       network: "Connection lost. The reply may be incomplete.",
       provider_model: "The provider doesn't recognize that model name — check the Model field.",
+      fallback: "Something went wrong — try again.",
     },
     settings: {
       title: "AI Advisor",
@@ -170,6 +171,8 @@ export const en: Messages = {
       model: "Model",
       apiKey: "API key",
       apiKeyHint: "Created in your provider's console; sent only to that provider.",
+      apiKeyHintPrefix: "Created in your provider's console;",
+      apiKeyHintLink: "create a key ↗",
       apiKeyConfigured: "A key is configured — enter a new one to replace it.",
       saved: "Advisor settings saved!",
       remove: "Remove key",

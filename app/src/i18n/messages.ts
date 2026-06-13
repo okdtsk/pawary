@@ -148,6 +148,7 @@ export interface Messages {
       rate_limited: string;
       offline: string;
       network: string;
+      fallback: string;
     };
     settings: {
       title: string;
@@ -156,6 +157,8 @@ export interface Messages {
       model: string;
       apiKey: string;
       apiKeyHint: string;
+      apiKeyHintPrefix: string;
+      apiKeyHintLink: string;
       apiKeyConfigured: string;
       saved: string;
       remove: string;
