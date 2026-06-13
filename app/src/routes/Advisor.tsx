@@ -19,7 +19,8 @@ import { ArrowLeftIcon } from "../components/icons";
 import { Spinner } from "../components/Spinner";
 import { useToast } from "../components/Toast";
 import { useLocaleTag, useT } from "../i18n";
-import { relativeDayKind, dayKeyOf, todayKey, deviceTzOffsetMin } from "../lib/dates";
+import { householdTzOffsetMin } from "../lib/calendarPrefs";
+import { relativeDayKind, dayKeyOf, todayKey } from "../lib/dates";
 import { useRequiredPet } from "../state/pets";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -329,7 +330,7 @@ function ConversationRow({
         <p className="text-xs text-ink-faint">
           {conv.createdByName ? `${conv.createdByName} · ` : ""}
           {(() => {
-            const kind = relativeDayKind(dayKeyOf(conv.updatedAt, deviceTzOffsetMin()), todayKey());
+            const kind = relativeDayKind(dayKeyOf(conv.updatedAt, householdTzOffsetMin(conv.updatedAt)), todayKey());
             return kind === "today" ? t.common.today : kind === "yesterday" ? t.common.yesterday : shortDate(conv.updatedAt, locale);
           })()}
         </p>

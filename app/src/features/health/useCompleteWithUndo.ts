@@ -3,7 +3,7 @@ import { useDeleteActivity } from "../../api/activities";
 import { useCompleteSchedule, useUpdateSchedule } from "../../api/schedules";
 import { useToast } from "../../components/Toast";
 import { useT } from "../../i18n";
-import { deviceTzOffsetMin } from "../../lib/dates";
+import { householdTzOffsetMin } from "../../lib/calendarPrefs";
 import { friendlyError } from "../../lib/errors";
 
 /**
@@ -25,7 +25,7 @@ export function useCompleteWithUndo(petId: string): {
 
   const complete = (schedule: ScheduleResponse) => {
     completeMut.mutate(
-      { id: schedule.id, input: { tzOffsetMin: deviceTzOffsetMin() } },
+      { id: schedule.id, input: { tzOffsetMin: householdTzOffsetMin() } },
       {
         onSuccess: (res) => {
           toast.show(t.care.completed(schedule.name), {
