@@ -384,6 +384,7 @@ export const en: Messages = {
     denied: "Notification permission was denied — enable it in your browser settings",
     iosInstallHint: "To receive push notifications on iOS, install Pawary to your Home Screen first",
     error: "Something went wrong with notifications — please try again",
+    careteamLogsLabel: "Notify me when a careteam member adds a log",
   },
   audit: {
     title: "Activity History",
