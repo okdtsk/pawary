@@ -90,6 +90,18 @@ preview. They are independent at the URL/code layer — but all preview versions
 ever run migrations against the shared DB; if two labeled PRs apply divergent
 migrations, they still share that database. Coordinate schema-changing PRs.
 
+> **One-time setup (already done):** preview URLs require the worker setting
+> `previews_enabled = true`. That setting is applied on `wrangler deploy`, NOT on
+> the `wrangler versions upload` the preview workflow runs — so it was enabled
+> once out of band via the Workers script-subdomain API
+> (`POST /accounts/<acct>/workers/scripts/pawary-preview/subdomain` with
+> `{"enabled": true, "previews_enabled": true}`). `wrangler.jsonc` also declares
+> `preview_urls: true` for consistency. If `pawary-preview` is ever recreated,
+> re-run that POST (or do a single `wrangler deploy --env preview`) or aliases
+> will serve Cloudflare's "There is nothing here yet" placeholder.
+> Also: the `pawary` worker must implement **no Durable Object**, or Cloudflare
+> won't generate preview URLs for it at all.
+
 QA at the per-PR URL above. Only real Google sign-in is available there (no dev
 sign-in), and changes never touch production data. Reset preview data anytime
 with
