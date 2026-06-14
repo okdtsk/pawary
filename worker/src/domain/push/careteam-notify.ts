@@ -11,9 +11,8 @@ const MAX_SENDS = 500;
 
 /**
  * Immediately notify a pet's other careteam members about one new activity.
- * Stateless replacement for the former CareteamNotifier Durable Object: no
- * coalescing — each create sends its own push. Called fire-and-forget from the
- * activity POST handler via `waitUntil`.
+ * Stateless: no coalescing — each create sends its own push. Called
+ * fire-and-forget from the activity POST handler via `waitUntil`.
  */
 export async function notifyCareteamNewLog(
   env: Env,
