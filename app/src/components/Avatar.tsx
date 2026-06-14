@@ -44,7 +44,7 @@ export function PetAvatar({
   if (pet.avatarR2Key) {
     return (
       <img
-        src={`/api/pets/${pet.id}/avatar`}
+        src={`/api/pets/${pet.id}/avatar?v=${encodeURIComponent(pet.avatarR2Key)}`}
         alt={pet.name}
         className={cn("blob object-cover", sizeClasses[size], className)}
       />

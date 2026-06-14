@@ -205,12 +205,18 @@ photoRoutes.post(
     const upload = await readImageUpload(c);
     if (upload instanceof Response) return upload;
     const pet = c.get("pet");
-    const r2Key = `pets/${pet.id}/avatar`;
+    const previousKey = pet.avatarR2Key;
+    // Version the key per upload so the served URL changes and browser caches
+    // (Cache-Control: max-age) don't pin the previous image.
+    const r2Key = `pets/${pet.id}/avatar/${newId()}`;
     await c.env.PHOTOS.put(r2Key, upload.bytes, {
       httpMetadata: { contentType: upload.contentType },
     });
     const db = drizzle(c.env.DB);
     await db.update(pets).set({ avatarR2Key: r2Key }).where(eq(pets.id, pet.id));
+    if (previousKey && previousKey !== r2Key) {
+      await c.env.PHOTOS.delete(previousKey);
+    }
     await writeAudit(db, {
       petId: pet.id,
       userId: c.get("user").id,
@@ -220,6 +226,29 @@ photoRoutes.post(
       diff: { avatarUpdated: true },
     });
     return c.json({ data: { avatarR2Key: r2Key } });
+  },
+);
+
+photoRoutes.delete(
+  "/api/pets/:petId/avatar",
+  requireSession,
+  requireCsrf,
+  requirePetRole("editor"),
+  async (c) => {
+    const pet = c.get("pet");
+    if (!pet.avatarR2Key) return err(c, 404, "not_found", "Not found");
+    await c.env.PHOTOS.delete(pet.avatarR2Key);
+    const db = drizzle(c.env.DB);
+    await db.update(pets).set({ avatarR2Key: null }).where(eq(pets.id, pet.id));
+    await writeAudit(db, {
+      petId: pet.id,
+      userId: c.get("user").id,
+      action: "update",
+      entity: "pet",
+      entityId: pet.id,
+      diff: { avatarRemoved: true },
+    });
+    return c.json({ data: { ok: true } });
   },
 );
 

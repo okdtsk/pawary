@@ -98,6 +98,7 @@ export const en: Messages = {
     sexUnknown: "Unknown",
     birthday: "Birthday",
     changePhoto: "Change photo",
+    removePhoto: "Remove photo",
     photoTooLarge: "That photo is over 10 MB — please pick a smaller one.",
     archive: "Archive this pet",
     unarchive: "Restore this pet",
