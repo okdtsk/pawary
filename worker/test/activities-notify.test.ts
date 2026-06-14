@@ -1,6 +1,6 @@
-import { env, fetchMock, runDurableObjectAlarm, SELF } from "cloudflare:test";
+import { env, fetchMock, SELF } from "cloudflare:test";
 import { drizzle } from "drizzle-orm/d1";
-import { afterEach, beforeAll, expect, it } from "vitest";
+import { afterEach, beforeAll, expect, it, vi } from "vitest";
 import { pushSubscriptions } from "../src/db/schema";
 import { newId } from "../src/lib/id";
 import { seedPet, seedUserWithSession, withMember } from "./helpers";
@@ -15,7 +15,7 @@ beforeAll(() => {
 });
 afterEach(() => fetchMock.assertNoPendingInterceptors());
 
-it("creating an activity pushes other careteam members", async () => {
+it("creating an activity immediately pushes other careteam members", async () => {
   const author = await seedUserWithSession({ email: "auth@x.com", displayName: "Alice" });
   const other = await seedUserWithSession({ email: "other@x.com", displayName: "Bob" });
   const { petId } = await seedPet(author.userId, "owner", { name: "Rex" });
@@ -31,6 +31,13 @@ it("creating an activity pushes other careteam members", async () => {
     createdAt: Date.now(),
   });
 
+  // The push fires from the request's waitUntil; register the interceptor
+  // BEFORE the POST and poll until it is consumed.
+  fetchMock
+    .get("https://push.example")
+    .intercept({ path: "/bob-create", method: "POST" })
+    .reply(201, "");
+
   const res = await SELF.fetch(`https://app.local/api/pets/${petId}/activities`, {
     method: "POST",
     headers: {
@@ -42,11 +49,5 @@ it("creating an activity pushes other careteam members", async () => {
   });
   expect(res.status).toBe(201);
 
-  // The POST armed the DO via waitUntil; fire its alarm and assert one push.
-  fetchMock
-    .get("https://push.example")
-    .intercept({ path: "/bob-create", method: "POST" })
-    .reply(201, "");
-  const stub = env.CARETEAM_NOTIFIER.get(env.CARETEAM_NOTIFIER.idFromName(petId));
-  expect(await runDurableObjectAlarm(stub)).toBe(true);
+  await vi.waitFor(() => fetchMock.assertNoPendingInterceptors());
 });
