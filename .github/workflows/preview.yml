@@ -46,9 +46,11 @@ jobs:
       - run: npm test
       - run: npm run build
         # surface the deployed commit in the app UI (Settings → Version); on a
-        # PR event github.sha is a synthetic merge commit, so use the head sha
+        # PR event github.sha is a synthetic merge commit, so use the head sha.
+        # APP_ENVIRONMENT=preview enables the preview test-login UI.
         env:
           APP_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          APP_ENVIRONMENT: preview
       # Derive a workers.dev-safe alias from the branch name: lowercase,
       # non-alphanumeric -> '-', trim hyphens, cap at 40 chars. The full DNS
       # label '<alias>-pawary-preview' must stay <= 63 chars.
