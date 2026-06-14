@@ -8,7 +8,7 @@ import {
   users,
 } from "../../db/schema";
 import type { Env } from "../../env";
-import { sendPush } from "../../lib/webpush";
+import { sendOneAndCleanup, type SendableSubscription } from "./send";
 
 /** Batch safety caps (plan locked decisions). */
 const MAX_DUE_SCHEDULES = 200;
@@ -77,12 +77,6 @@ function localDayKey(now: number, tzOffsetMin: number): string {
   return new Date(now + tzOffsetMin * MINUTE_MS).toISOString().slice(0, 10);
 }
 
-type SendableSubscription = {
-  id: string;
-  endpoint: string;
-  p256dh: string;
-  auth: string;
-};
 
 /**
  * The 15-minute push cron: pushes schedules that just became due to every
@@ -115,24 +109,12 @@ export async function runPushCron(
       return false;
     }
     sends++;
-    let status: number;
-    try {
-      status = await sendPush(
-        { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
-        payload,
-        env,
-      );
-    } catch {
-      return false;
-    }
-    // A8: 403 = VAPID key mismatch (post-rotation stale sub) — treat like 404/410.
-    if (status === 403 || status === 404 || status === 410) {
+    const outcome = await sendOneAndCleanup(db, env, sub, payload);
+    if (outcome === "deleted") {
       deletedIds.add(sub.id);
-      await db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, sub.id));
       deleted++;
-      return false;
     }
-    return status >= 200 && status < 300;
+    return outcome === "sent";
   }
 
   // -------------------------------------------------------------------------
