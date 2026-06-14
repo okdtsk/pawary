@@ -34,6 +34,10 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+        # surface the deployed commit in the app UI (Settings → Version); on a
+        # PR event github.sha is a synthetic merge commit, so use the head sha
+        env:
+          APP_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       # npm ci and the build above run WITHOUT the API token in env, so
       # dependency (post)install scripts never see deploy credentials
       - name: Apply pending D1 migrations

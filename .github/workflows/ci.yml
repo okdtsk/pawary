@@ -40,6 +40,9 @@ jobs:
       # (post)install scripts must never see deploy credentials
       - run: npm ci
       - run: npm run build
+        # surface the deployed commit in the app UI (Settings → Version)
+        env:
+          APP_COMMIT_SHA: ${{ github.sha }}
       - name: Apply pending D1 migrations
         working-directory: worker
         env:

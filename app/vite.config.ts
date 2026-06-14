@@ -4,10 +4,11 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
-// Short commit hash of the deployed build. CI exposes the full SHA via
-// GITHUB_SHA; locally we fall back to git, then to "dev" if git is unavailable.
+// Short commit hash of the deployed build. CI passes the real source commit
+// via APP_COMMIT_SHA (NOT GITHUB_SHA, which is a synthetic merge commit on
+// pull_request events); locally we fall back to git, then to "dev".
 function resolveCommitHash(): string {
-  const ciSha = process.env.GITHUB_SHA;
+  const ciSha = process.env.APP_COMMIT_SHA;
   if (ciSha) return ciSha.slice(0, 7);
   try {
     return execSync("git rev-parse --short HEAD").toString().trim();
