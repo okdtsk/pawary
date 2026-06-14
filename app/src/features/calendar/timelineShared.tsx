@@ -67,7 +67,15 @@ export function useHourLabel(): (hour: number) => string {
   }, [tag]);
 }
 
-/** Left hour-axis gutter (24 labels). */
+/**
+ * Left hour-axis gutter (24 labels). `sticky left-0` keeps it pinned and
+ * visible when the parent scrolls horizontally (the 3-day view); in a
+ * vertical-only timeline it simply sits at the left. It must NOT also carry
+ * `relative` — `cn` is a plain join, so a second `position` class would
+ * conflict and (per Tailwind's cascade) cancel the stickiness, scrolling the
+ * gutter off-screen. `sticky` already establishes the containing block its
+ * absolutely-positioned labels need.
+ */
 export function HourAxis({
   hourLabel,
   className,
@@ -76,7 +84,12 @@ export function HourAxis({
   className?: string;
 }) {
   return (
-    <div className={cn("relative w-12 shrink-0", className)}>
+    <div
+      className={cn(
+        "sticky left-0 z-10 w-12 shrink-0 bg-paper",
+        className,
+      )}
+    >
       {Array.from({ length: 24 }, (_, hour) => (
         <span
           key={hour}

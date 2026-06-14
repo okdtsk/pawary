@@ -18,6 +18,7 @@ const FUTURE = 7; // days rendered after the anchor
 const EXTEND_BY = 14; // days added when nearing an edge
 const EDGE_COLS = 4; // trigger extend within this many columns of an edge
 const MAX_DAYS = 84; // cap window size; trim the far edge beyond this
+const GUTTER_PX = 48; // hour-axis gutter width (matches HourAxis/header `w-12`)
 
 /** Imperative controls the parent's arrow buttons / Today button drive. */
 export type ThreeDayControls = {
@@ -68,11 +69,12 @@ export function ThreeDayTimeline({
   const activities = useActivitiesRange(petId, from, to);
   const byDay = usePlacedByDay(activities.data, windowDays);
 
-  // Measure a column = 1/3 of the scroll viewport.
+  // Measure a column = 1/3 of the viewport remaining AFTER the hour-axis
+  // gutter, so three full day columns sit beside it (not under it).
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const measure = () => setColWidth(el.clientWidth / 3);
+    const measure = () => setColWidth((el.clientWidth - GUTTER_PX) / 3);
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -228,11 +230,13 @@ export function ThreeDayTimeline({
         <div
           ref={scrollRef}
           onScroll={onScroll}
+          data-pull-ignore
           className="relative max-h-[min(60dvh,560px)] overflow-auto"
-          style={{ scrollSnapType: "x mandatory" }}
+          style={{ scrollSnapType: "x mandatory", scrollPaddingLeft: GUTTER_PX }}
         >
-          {/* sticky header row */}
-          <div className="sticky top-0 z-20 flex bg-paper">
+          {/* sticky header row — w-max so the sticky-left gutter's containing
+              block spans the full scroll width and stays pinned throughout */}
+          <div className="sticky top-0 z-20 flex w-max bg-paper">
             <div className="sticky left-0 z-10 w-12 shrink-0 bg-paper" />
             {windowDays.map((day) => (
               <div
@@ -248,9 +252,10 @@ export function ThreeDayTimeline({
               </div>
             ))}
           </div>
-          {/* hour grid + day columns */}
-          <div className="relative flex" style={{ height: DAY_HEIGHT }}>
-            <HourAxis hourLabel={hourLabel} className="sticky left-0 z-10 bg-paper" />
+          {/* hour grid + day columns — w-max so the sticky-left hour axis stays
+              pinned across the full horizontal scroll (not just one viewport) */}
+          <div className="relative flex w-max" style={{ height: DAY_HEIGHT }}>
+            <HourAxis hourLabel={hourLabel} />
             {windowDays.map((day) => (
               <div
                 key={day}
