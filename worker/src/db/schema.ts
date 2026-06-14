@@ -17,6 +17,9 @@ export const users = sqliteTable("users", {
   locale: text("locale", { enum: ["system", "en", "ja"] })
     .notNull()
     .default("system"),
+  notifyCareteamLogs: integer("notify_careteam_logs", { mode: "boolean" })
+    .notNull()
+    .default(true),
   createdAt: integer("created_at").notNull(),
 });
 

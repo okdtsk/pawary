@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `notify_careteam_logs` integer DEFAULT true NOT NULL;
