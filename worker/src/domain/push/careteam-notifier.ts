@@ -1,6 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import type { Category } from "@pawary/shared";
-import { and, asc, eq, gt, isNull } from "drizzle-orm";
+import { and, asc, eq, gt, isNull, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import {
   activities,
@@ -34,6 +34,7 @@ export class CareteamNotifier extends DurableObject<Env> {
       // First arm on a fresh DO: look back one window so we notify only recent
       // activity (including the add that triggered this ping), never history.
       await this.ctx.storage.put("lastNotifiedAt", now - WINDOW_MS);
+      await this.ctx.storage.put("lastNotifiedId", "");
     }
     await this.ctx.storage.setAlarm(now + WINDOW_MS);
   }
@@ -42,10 +43,12 @@ export class CareteamNotifier extends DurableObject<Env> {
     const petId = await this.ctx.storage.get<string>("petId");
     if (!petId) return;
     const db = drizzle(this.env.DB);
-    const watermark = (await this.ctx.storage.get<number>("lastNotifiedAt")) ?? 0;
+    const wmTime = (await this.ctx.storage.get<number>("lastNotifiedAt")) ?? 0;
+    const wmId = (await this.ctx.storage.get<string>("lastNotifiedId")) ?? "";
 
     const rows = await db
       .select({
+        id: activities.id,
         createdAt: activities.createdAt,
         createdBy: activities.createdBy,
         category: activities.category,
@@ -56,16 +59,19 @@ export class CareteamNotifier extends DurableObject<Env> {
       .where(
         and(
           eq(activities.petId, petId),
-          gt(activities.createdAt, watermark),
           isNull(activities.deletedAt),
+          or(
+            gt(activities.createdAt, wmTime),
+            and(eq(activities.createdAt, wmTime), gt(activities.id, wmId)),
+          ),
         ),
       )
-      .orderBy(asc(activities.createdAt))
+      .orderBy(asc(activities.createdAt), asc(activities.id))
       .all();
 
     if (rows.length === 0) return; // nothing new; watermark unchanged
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const maxCreatedAt = rows[rows.length - 1]!.createdAt;
+    const lastRow = rows[rows.length - 1]!;
 
     const pet = await db
       .select({ name: pets.name })
@@ -73,7 +79,8 @@ export class CareteamNotifier extends DurableObject<Env> {
       .where(eq(pets.id, petId))
       .get();
     if (!pet) {
-      await this.ctx.storage.put("lastNotifiedAt", maxCreatedAt);
+      await this.ctx.storage.put("lastNotifiedAt", lastRow.createdAt);
+      await this.ctx.storage.put("lastNotifiedId", lastRow.id);
       return;
     }
 
@@ -96,8 +103,9 @@ export class CareteamNotifier extends DurableObject<Env> {
 
     const payloadByUser = new Map<string, string | null>();
     let sends = 0;
+    let capped = false;
     for (const r of recipients) {
-      if (sends >= MAX_SENDS) break;
+      if (sends >= MAX_SENDS) { capped = true; break; }
       let payload = payloadByUser.get(r.userId);
       if (payload === undefined) {
         const items = rows.filter((row) => row.createdBy !== r.userId);
@@ -132,8 +140,11 @@ export class CareteamNotifier extends DurableObject<Env> {
       );
     }
 
+    if (capped) console.log(`careteam notifier send cap reached (${MAX_SENDS}) for pet ${petId}`);
+
     // Advance after the send attempt (idempotent on alarm retry).
-    await this.ctx.storage.put("lastNotifiedAt", maxCreatedAt);
+    await this.ctx.storage.put("lastNotifiedAt", lastRow.createdAt);
+    await this.ctx.storage.put("lastNotifiedId", lastRow.id);
   }
 }
 

@@ -2,7 +2,7 @@ import { env, fetchMock, runDurableObjectAlarm } from "cloudflare:test";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { pushSubscriptions, users } from "../src/db/schema";
+import { activities, pushSubscriptions, users } from "../src/db/schema";
 import { newId } from "../src/lib/id";
 import { seedActivity, seedPet, seedUserWithSession, withMember } from "./helpers";
 
@@ -87,6 +87,34 @@ describe("CareteamNotifier", () => {
     await stub.ping(petId);
     expect(await runDurableObjectAlarm(stub)).toBe(true);
     expect(await runDurableObjectAlarm(stub)).toBe(false);
+  });
+
+  it("does not drop a same-millisecond activity across an alarm boundary", async () => {
+    const author = await seedUserWithSession({ email: "ms@x.com", displayName: "Alice" });
+    const other = await seedUserWithSession({ email: "msb@x.com", displayName: "Bob" });
+    const { petId } = await seedPet(author.userId, "owner", { name: "Rex" });
+    await withMember(petId, other.userId, "editor");
+    await seedSubscription(other.userId, "/bob-ms");
+
+    const t = Date.now();
+    await db().insert(activities).values({
+      id: "act-aaa", petId, category: "note", occurredAt: t, tzOffsetMin: 0,
+      memo: null, details: {}, createdBy: author.userId, createdAt: t, updatedAt: t, deletedAt: null,
+    });
+
+    // First alarm notifies about act-aaa, advancing the cursor to (t, "act-aaa").
+    fetchMock.get(PUSH_ORIGIN).intercept({ path: "/bob-ms", method: "POST" }).reply(201, "");
+    await pingAndFire(petId);
+
+    // A second activity in the SAME millisecond, with a higher id.
+    await db().insert(activities).values({
+      id: "act-bbb", petId, category: "note", occurredAt: t, tzOffsetMin: 0,
+      memo: null, details: {}, createdBy: author.userId, createdAt: t, updatedAt: t, deletedAt: null,
+    });
+
+    // Second alarm must still notify about act-bbb (id "act-bbb" > "act-aaa" at equal createdAt).
+    fetchMock.get(PUSH_ORIGIN).intercept({ path: "/bob-ms", method: "POST" }).reply(201, "");
+    await pingAndFire(petId);
   });
 
   it("advances the watermark so a re-fired alarm does not re-notify", async () => {
