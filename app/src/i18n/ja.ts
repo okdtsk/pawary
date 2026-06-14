@@ -98,6 +98,7 @@ export const ja: Messages = {
     sexUnknown: "不明",
     birthday: "誕生日",
     changePhoto: "写真を変更",
+    removePhoto: "写真を削除",
     photoTooLarge: "写真が10MBを超えています。小さいものを選んでください。",
     archive: "このペットをアーカイブ",
     unarchive: "このペットを元に戻す",

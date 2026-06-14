@@ -205,12 +205,18 @@ photoRoutes.post(
     const upload = await readImageUpload(c);
     if (upload instanceof Response) return upload;
     const pet = c.get("pet");
-    const r2Key = `pets/${pet.id}/avatar`;
+    const previousKey = pet.avatarR2Key;
+    // Version the key per upload so the served URL changes and browser caches
+    // (Cache-Control: max-age) don't pin the previous image.
+    const r2Key = `pets/${pet.id}/avatar/${newId()}`;
     await c.env.PHOTOS.put(r2Key, upload.bytes, {
       httpMetadata: { contentType: upload.contentType },
     });
     const db = drizzle(c.env.DB);
     await db.update(pets).set({ avatarR2Key: r2Key }).where(eq(pets.id, pet.id));
+    if (previousKey && previousKey !== r2Key) {
+      await c.env.PHOTOS.delete(previousKey);
+    }
     await writeAudit(db, {
       petId: pet.id,
       userId: c.get("user").id,
@@ -223,6 +229,29 @@ photoRoutes.post(
   },
 );
 
+photoRoutes.delete(
+  "/api/pets/:petId/avatar",
+  requireSession,
+  requireCsrf,
+  requirePetRole("editor"),
+  async (c) => {
+    const pet = c.get("pet");
+    if (!pet.avatarR2Key) return err(c, 404, "not_found", "Not found");
+    await c.env.PHOTOS.delete(pet.avatarR2Key);
+    const db = drizzle(c.env.DB);
+    await db.update(pets).set({ avatarR2Key: null }).where(eq(pets.id, pet.id));
+    await writeAudit(db, {
+      petId: pet.id,
+      userId: c.get("user").id,
+      action: "update",
+      entity: "pet",
+      entityId: pet.id,
+      diff: { avatarRemoved: true },
+    });
+    return c.json({ data: { ok: true } });
+  },
+);
+
 photoRoutes.get(
   "/api/pets/:petId/avatar",
   requireSession,
@@ -230,12 +259,22 @@ photoRoutes.get(
   async (c) => {
     const pet = c.get("pet");
     if (!pet.avatarR2Key) return err(c, 404, "not_found", "Not found");
+    // The avatar is mutable but served at a near-stable URL, so it must
+    // revalidate — a long max-age let the browser's HTTP cache mask a new
+    // upload for hours. The versioned key doubles as a strong ETag, so an
+    // unchanged avatar still costs only a 304.
+    const etag = `"${pet.avatarR2Key}"`;
+    const cacheControl = "private, no-cache";
+    if (c.req.header("If-None-Match") === etag) {
+      return c.body(null, 304, { ETag: etag, "Cache-Control": cacheControl });
+    }
     const obj = await c.env.PHOTOS.get(pet.avatarR2Key);
     if (!obj) return err(c, 404, "not_found", "Not found");
     const body = await obj.arrayBuffer();
     return c.body(body, 200, {
       "Content-Type": obj.httpMetadata?.contentType ?? "application/octet-stream",
-      "Cache-Control": "private, max-age=86400",
+      "Cache-Control": cacheControl,
+      ETag: etag,
     });
   },
 );

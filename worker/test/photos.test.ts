@@ -241,10 +241,91 @@ it("avatar upload + serve round-trip; GET 404 when unset", async () => {
   });
   expect(res.status).toBe(200);
   expect(res.headers.get("Content-Type")).toBe("image/png");
+  // mutable resource: must revalidate so a new upload is never masked by an
+  // HTTP-cached image (the original bug), with an ETag for cheap 304s.
+  expect(res.headers.get("Cache-Control")).toBe("private, no-cache");
+  const etag = res.headers.get("ETag");
+  expect(etag).toBeTruthy();
+
+  // matching If-None-Match → 304 (no body re-sent)
+  const revalidated = await SELF.fetch(
+    `https://app.local/api/pets/${petId}/avatar`,
+    { headers: { Cookie: cookie, "If-None-Match": etag! } },
+  );
+  expect(revalidated.status).toBe(304);
 
   const db = drizzle(env.DB);
   const pet = await db.select().from(pets).where(eq(pets.id, petId)).get();
-  expect(pet?.avatarR2Key).toBe(`pets/${petId}/avatar`);
+  // key is versioned per upload so the ETag changes and caches can't pin it
+  expect(pet?.avatarR2Key).toMatch(new RegExp(`^pets/${petId}/avatar/`));
+});
+
+it("avatar re-upload rotates the key and deletes the previous object", async () => {
+  const { userId, cookie, csrfToken } = await seedUserWithSession();
+  const { petId } = await seedPet(userId);
+  const url = `https://app.local/api/pets/${petId}/avatar`;
+  const db = drizzle(env.DB);
+
+  const first = await upload(url, cookie, csrfToken, buildPng(), "a.png");
+  expect(first.status).toBe(200);
+  const firstKey = (
+    await db.select().from(pets).where(eq(pets.id, petId)).get()
+  )?.avatarR2Key;
+  expect(firstKey).toBeTruthy();
+  expect(await env.PHOTOS.head(firstKey!)).not.toBeNull();
+
+  const second = await upload(url, cookie, csrfToken, buildJpeg(), "b.jpg");
+  expect(second.status).toBe(200);
+  const secondKey = (
+    await db.select().from(pets).where(eq(pets.id, petId)).get()
+  )?.avatarR2Key;
+  expect(secondKey).toBeTruthy();
+  expect(secondKey).not.toBe(firstKey);
+  // old object removed, new one present
+  expect(await env.PHOTOS.head(firstKey!)).toBeNull();
+  expect(await env.PHOTOS.head(secondKey!)).not.toBeNull();
+});
+
+it("DELETE avatar: editor ok, viewer 403, clears key + object", async () => {
+  const { userId, cookie, csrfToken } = await seedUserWithSession();
+  const { petId } = await seedPet(userId);
+  const url = `https://app.local/api/pets/${petId}/avatar`;
+  const db = drizzle(env.DB);
+
+  await upload(url, cookie, csrfToken, buildPng(), "a.png");
+  const key = (
+    await db.select().from(pets).where(eq(pets.id, petId)).get()
+  )?.avatarR2Key;
+  expect(key).toBeTruthy();
+
+  const viewer = await seedUserWithSession({ email: "v@example.com" });
+  await withMember(petId, viewer.userId, "viewer");
+  const denied = await SELF.fetch(url, {
+    method: "DELETE",
+    headers: authHeaders(viewer.cookie, viewer.csrfToken),
+  });
+  expect(denied.status).toBe(403);
+
+  const res = await SELF.fetch(url, {
+    method: "DELETE",
+    headers: authHeaders(cookie, csrfToken),
+  });
+  expect(res.status).toBe(200);
+  expect(await env.PHOTOS.head(key!)).toBeNull();
+  const pet = await db.select().from(pets).where(eq(pets.id, petId)).get();
+  expect(pet?.avatarR2Key).toBeNull();
+
+  // GET now 404s
+  const gone = await SELF.fetch(url, { headers: { Cookie: cookie } });
+  expect(gone.status).toBe(404);
+
+  // audit recorded
+  const audits = await db
+    .select()
+    .from(auditLog)
+    .where(eq(auditLog.petId, petId))
+    .all();
+  expect(audits.some((a) => a.entity === "pet")).toBe(true);
 });
 
 it("DELETE pet: owner only; cascades rows and wipes the R2 prefix", async () => {

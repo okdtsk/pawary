@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router";
 import { MAX_PHOTO_BYTES } from "../../api/photos";
 import {
   useCreatePet,
+  useDeletePetAvatar,
   usePet,
   useSetPetTargets,
   useUpdatePet,
@@ -14,6 +15,7 @@ import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { Field, NumberInput } from "../../components/form";
 import { Spinner } from "../../components/Spinner";
+import { normalizeImageForUpload } from "../../lib/image";
 import { MembersSection } from "../../features/pets/MembersSection";
 import { PetForm, type PetFormValues } from "../../features/pets/PetForm";
 import { useT } from "../../i18n";
@@ -25,6 +27,7 @@ function EditExisting({ pet }: { pet: PetResponse }) {
   const updatePet = useUpdatePet(pet.id);
   const setTargets = useSetPetTargets(pet.id);
   const uploadAvatar = useUploadPetAvatar(pet.id);
+  const deleteAvatar = useDeletePetAvatar(pet.id);
   const fileRef = useRef<HTMLInputElement>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [food, setFood] = useState(
@@ -36,14 +39,25 @@ function EditExisting({ pet }: { pet: PetResponse }) {
   const [saved, setSaved] = useState(false);
   const canEdit = pet.role !== "viewer";
 
-  const onPickAvatar = (file: File | undefined) => {
+  const onPickAvatar = async (file: File | undefined) => {
+    // Reset the input so re-picking the same file fires onChange again.
+    if (fileRef.current) fileRef.current.value = "";
     if (!file) return;
     if (file.size > MAX_PHOTO_BYTES) {
       setAvatarError(t.pets.photoTooLarge);
       return;
     }
     setAvatarError(null);
-    uploadAvatar.mutate(file, {
+    // Normalize orientation (iPhone portrait photos) and downscale before upload.
+    const normalized = await normalizeImageForUpload(file);
+    uploadAvatar.mutate(normalized, {
+      onError: () => setAvatarError(t.errors.title),
+    });
+  };
+
+  const onRemoveAvatar = () => {
+    setAvatarError(null);
+    deleteAvatar.mutate(undefined, {
       onError: () => setAvatarError(t.errors.title),
     });
   };
@@ -84,19 +98,35 @@ function EditExisting({ pet }: { pet: PetResponse }) {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => onPickAvatar(e.target.files?.[0])}
+                onChange={(e) => void onPickAvatar(e.target.files?.[0])}
               />
-              <Button
-                variant="soft"
-                size="sm"
-                disabled={uploadAvatar.isPending}
-                onClick={() => fileRef.current?.click()}
-              >
-                {uploadAvatar.isPending ? (
-                  <Spinner className="h-4 w-4" />
-                ) : null}
-                {t.pets.changePhoto}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="soft"
+                  size="sm"
+                  disabled={uploadAvatar.isPending || deleteAvatar.isPending}
+                  onClick={() => fileRef.current?.click()}
+                >
+                  {uploadAvatar.isPending ? (
+                    <Spinner className="h-4 w-4" />
+                  ) : null}
+                  {t.pets.changePhoto}
+                </Button>
+                {pet.avatarR2Key && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-ink-faint"
+                    disabled={uploadAvatar.isPending || deleteAvatar.isPending}
+                    onClick={onRemoveAvatar}
+                  >
+                    {deleteAvatar.isPending ? (
+                      <Spinner className="h-4 w-4" />
+                    ) : null}
+                    {t.pets.removePhoto}
+                  </Button>
+                )}
+              </div>
             </>
           )}
           {avatarError && (

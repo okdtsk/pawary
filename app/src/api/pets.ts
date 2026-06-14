@@ -76,3 +76,17 @@ export function useUploadPetAvatar(petId: string) {
     },
   });
 }
+
+export function useDeletePetAvatar(petId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      api<{ ok: true }>(`/api/pets/${petId}/avatar`, { method: "DELETE" }),
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: keys.me }),
+        qc.invalidateQueries({ queryKey: keys.pet(petId) }),
+      ]);
+    },
+  });
+}

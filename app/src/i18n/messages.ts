@@ -96,6 +96,7 @@ export interface Messages {
     sexUnknown: string;
     birthday: string;
     changePhoto: string;
+    removePhoto: string;
     photoTooLarge: string;
     archive: string;
     unarchive: string;
