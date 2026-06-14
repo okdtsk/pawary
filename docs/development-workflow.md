@@ -65,28 +65,34 @@ JSON
 
 ## Preview / QA process
 
-There is one shared, production-faithful **preview** environment — Worker
-`pawary-preview`, its own D1 (`pawary-preview`) and R2 (`pawary-photos-preview`),
-fully isolated from production data. It runs with production-grade security
-(secure `__Host-session` cookies, HSTS), so it mirrors prod behavior.
+There is one production-faithful **preview** Worker — `pawary-preview`, with its
+own D1 (`pawary-preview`) and R2 (`pawary-photos-preview`), fully isolated from
+production data. It runs with production-grade security (secure `__Host-session`
+cookies, HSTS), so it mirrors prod behavior.
 
 ### Deploy a feature to preview for QA
 
 **Primary — the `preview` label:** add the **`preview`** label to the PR. This
 triggers `.github/workflows/preview.yml`, which tests, builds, applies pending
-D1 migrations to `pawary-preview`, and deploys the PR's head commit to preview.
+D1 migrations to `pawary-preview`, and uploads the PR's head commit as a new
+Worker *version* served at a **per-PR preview URL**:
+`https://<branch>-pawary-preview.okdtsk.workers.dev`. The URL is posted as a
+sticky comment on the PR. Pushing more commits to a labeled PR refreshes the
+same comment and the same URL. Unlabeled PRs never deploy.
 
 **Fallback — manual:** GitHub → **Actions → Preview → Run workflow** → pick the
-branch.
+branch. (No PR comment is posted for manual runs; the URL is
+`https://<branch>-pawary-preview.okdtsk.workers.dev`.)
 
-Because preview is a **single shared environment**, the latest deploy wins —
-only one branch can be under QA at a time. Re-adding the label (remove then add)
-re-deploys after new commits. Coordinate if more than one feature needs QA.
+Each PR gets its **own** URL, so labeling one PR no longer overwrites another's
+preview. They are independent at the URL/code layer — but all preview versions
+**share the one `pawary-preview` D1 + R2**. Because of that, only labeled PRs
+ever run migrations against the shared DB; if two labeled PRs apply divergent
+migrations, they still share that database. Coordinate schema-changing PRs.
 
-QA at: `https://pawary-preview.<acct>.workers.dev` (the `Deploy worker` step in
-the run logs prints the exact URL). Only real Google sign-in is available there
-(no dev sign-in), and changes never touch production data. Reset preview data
-anytime with
+QA at the per-PR URL above. Only real Google sign-in is available there (no dev
+sign-in), and changes never touch production data. Reset preview data anytime
+with
 `wrangler d1 execute pawary-preview --remote --env preview --command "<sql>"`.
 
 ## Hotfixes
