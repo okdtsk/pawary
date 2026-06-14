@@ -65,7 +65,7 @@
     "preview": {
       "name": "pawary-preview",
       "workers_dev": true,
-      "preview_urls": false,
+      "preview_urls": true,
       "vars": { "ENVIRONMENT": "preview" },
       "triggers": { "crons": ["*/15 * * * *"] },
       "migrations": [
