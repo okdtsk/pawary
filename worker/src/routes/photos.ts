@@ -259,12 +259,22 @@ photoRoutes.get(
   async (c) => {
     const pet = c.get("pet");
     if (!pet.avatarR2Key) return err(c, 404, "not_found", "Not found");
+    // The avatar is mutable but served at a near-stable URL, so it must
+    // revalidate — a long max-age let the browser's HTTP cache mask a new
+    // upload for hours. The versioned key doubles as a strong ETag, so an
+    // unchanged avatar still costs only a 304.
+    const etag = `"${pet.avatarR2Key}"`;
+    const cacheControl = "private, no-cache";
+    if (c.req.header("If-None-Match") === etag) {
+      return c.body(null, 304, { ETag: etag, "Cache-Control": cacheControl });
+    }
     const obj = await c.env.PHOTOS.get(pet.avatarR2Key);
     if (!obj) return err(c, 404, "not_found", "Not found");
     const body = await obj.arrayBuffer();
     return c.body(body, 200, {
       "Content-Type": obj.httpMetadata?.contentType ?? "application/octet-stream",
-      "Cache-Control": "private, max-age=86400",
+      "Cache-Control": cacheControl,
+      ETag: etag,
     });
   },
 );

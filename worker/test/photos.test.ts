@@ -241,10 +241,22 @@ it("avatar upload + serve round-trip; GET 404 when unset", async () => {
   });
   expect(res.status).toBe(200);
   expect(res.headers.get("Content-Type")).toBe("image/png");
+  // mutable resource: must revalidate so a new upload is never masked by an
+  // HTTP-cached image (the original bug), with an ETag for cheap 304s.
+  expect(res.headers.get("Cache-Control")).toBe("private, no-cache");
+  const etag = res.headers.get("ETag");
+  expect(etag).toBeTruthy();
+
+  // matching If-None-Match → 304 (no body re-sent)
+  const revalidated = await SELF.fetch(
+    `https://app.local/api/pets/${petId}/avatar`,
+    { headers: { Cookie: cookie, "If-None-Match": etag! } },
+  );
+  expect(revalidated.status).toBe(304);
 
   const db = drizzle(env.DB);
   const pet = await db.select().from(pets).where(eq(pets.id, petId)).get();
-  // key is versioned per upload so the served URL can be cache-busted
+  // key is versioned per upload so the ETag changes and caches can't pin it
   expect(pet?.avatarR2Key).toMatch(new RegExp(`^pets/${petId}/avatar/`));
 });
 
