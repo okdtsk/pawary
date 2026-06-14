@@ -20,6 +20,7 @@ function resolveCommitHash(): string {
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(resolveCommitHash()),
+    __APP_ENVIRONMENT__: JSON.stringify(process.env.APP_ENVIRONMENT ?? "development"),
   },
   plugins: [
     react(),

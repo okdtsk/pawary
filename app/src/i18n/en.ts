@@ -75,6 +75,9 @@ export const en: Messages = {
   },
   login: {
     authError: "Sign-in didn't complete. Please try again.",
+    testEmailPlaceholder: "Email (any test user)",
+    testSecretPlaceholder: "Preview passphrase",
+    testSubmit: "Test sign-in",
   },
   onboarding: {
     title: "Who's the lucky pet?",

@@ -108,14 +108,25 @@ authRoutes.post("/logout", requireSession, requireCsrf, async (c) => {
 authRoutes.post("/dev-login", rateLimit("auth-dev-login", 10, 60_000), async (c) => {
   const host = new URL(c.req.url).hostname;
   const isLocalhost = host === "localhost" || host === "127.0.0.1";
-  if (c.env.ENVIRONMENT !== "development" || !isLocalhost) {
-    return err(c, 404, "not_found", "Not found");
-  }
 
   const body = (await c.req.json().catch(() => ({}))) as {
     email?: string;
     name?: string;
+    secret?: string;
   };
+
+  // Test login is allowed only on local development (localhost) or on the
+  // preview environment with the shared PREVIEW_LOGIN_SECRET. Never production.
+  // Fail closed (404, not 403) so the endpoint stays invisible elsewhere.
+  const devOk = c.env.ENVIRONMENT === "development" && isLocalhost;
+  const previewOk =
+    c.env.ENVIRONMENT === "preview" &&
+    !!c.env.PREVIEW_LOGIN_SECRET &&
+    typeof body.secret === "string" &&
+    constantTimeEqual(body.secret, c.env.PREVIEW_LOGIN_SECRET);
+  if (!devOk && !previewOk) {
+    return err(c, 404, "not_found", "Not found");
+  }
   const email = body.email ?? "dev@example.com";
   const name = body.name ?? "Dev User";
 

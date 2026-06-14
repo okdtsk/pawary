@@ -74,6 +74,9 @@ export interface Messages {
   };
   login: {
     authError: string;
+    testEmailPlaceholder: string;
+    testSecretPlaceholder: string;
+    testSubmit: string;
   };
   onboarding: {
     title: string;
