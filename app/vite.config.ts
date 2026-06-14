@@ -1,9 +1,25 @@
+import { execSync } from "node:child_process";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
+// Short commit hash of the deployed build. CI exposes the full SHA via
+// GITHUB_SHA; locally we fall back to git, then to "dev" if git is unavailable.
+function resolveCommitHash(): string {
+  const ciSha = process.env.GITHUB_SHA;
+  if (ciSha) return ciSha.slice(0, 7);
+  try {
+    return execSync("git rev-parse --short HEAD").toString().trim();
+  } catch {
+    return "dev";
+  }
+}
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(resolveCommitHash()),
+  },
   plugins: [
     react(),
     tailwindcss(),

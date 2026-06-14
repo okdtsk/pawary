@@ -304,6 +304,7 @@ export const ja: Messages = {
       "アカウント、セッション、あなただけがオーナーのペット（写真を含む）をすべて削除します。ほかのオーナーがいる共有ペットは残ります。この操作は取り消せません。",
     confirmEmailLabel: (email) => `確認のため ${email} と入力してください`,
     deleteAccount: "アカウントを完全に削除する",
+    version: "バージョン",
   },
   care: {
     title: "ケア予定",

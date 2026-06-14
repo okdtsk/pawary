@@ -305,6 +305,7 @@ export const en: Messages = {
       "Deletes your account, sessions, and every pet only you own — including photos. Pets shared with other owners survive. This cannot be undone.",
     confirmEmailLabel: (email) => `Type ${email} to confirm`,
     deleteAccount: "Delete my account forever",
+    version: "Version",
   },
   care: {
     title: "Care schedule",
