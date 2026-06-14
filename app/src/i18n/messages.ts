@@ -288,6 +288,7 @@ export interface Messages {
     dangerBody: string;
     confirmEmailLabel: (email: string) => string;
     deleteAccount: string;
+    version: string;
   };
   care: {
     title: string;

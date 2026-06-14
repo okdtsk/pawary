@@ -181,6 +181,10 @@ export function SettingsHome() {
       >
         {t.logout}
       </Button>
+
+      <p className="px-1 text-center text-xs text-ink-faint">
+        {t.settings.version} {__APP_VERSION__}
+      </p>
     </SettingsPage>
   );
 }
