@@ -20,13 +20,9 @@
   ],
   "vars": { "ENVIRONMENT": "development" },
   "triggers": { "crons": ["*/15 * * * *"] },
-  "durable_objects": {
-    "bindings": [
-      { "name": "CARETEAM_NOTIFIER", "class_name": "CareteamNotifier" }
-    ]
-  },
   "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["CareteamNotifier"] }
+    { "tag": "v1", "new_sqlite_classes": ["CareteamNotifier"] },
+    { "tag": "v2", "deleted_classes": ["CareteamNotifier"] }
   ],
   "observability": { "enabled": true },
   "assets": {
@@ -41,13 +37,9 @@
       "preview_urls": false,
       "vars": { "ENVIRONMENT": "production" },
       "triggers": { "crons": ["*/15 * * * *"] },
-      "durable_objects": {
-        "bindings": [
-          { "name": "CARETEAM_NOTIFIER", "class_name": "CareteamNotifier" }
-        ]
-      },
       "migrations": [
-        { "tag": "v1", "new_sqlite_classes": ["CareteamNotifier"] }
+        { "tag": "v1", "new_sqlite_classes": ["CareteamNotifier"] },
+        { "tag": "v2", "deleted_classes": ["CareteamNotifier"] }
       ],
       "d1_databases": [
         {
@@ -76,13 +68,9 @@
       "preview_urls": false,
       "vars": { "ENVIRONMENT": "preview" },
       "triggers": { "crons": ["*/15 * * * *"] },
-      "durable_objects": {
-        "bindings": [
-          { "name": "CARETEAM_NOTIFIER", "class_name": "CareteamNotifier" }
-        ]
-      },
       "migrations": [
-        { "tag": "v1", "new_sqlite_classes": ["CareteamNotifier"] }
+        { "tag": "v1", "new_sqlite_classes": ["CareteamNotifier"] },
+        { "tag": "v2", "deleted_classes": ["CareteamNotifier"] }
       ],
       "d1_databases": [
         {
