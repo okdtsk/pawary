@@ -14,6 +14,7 @@ export type Env = {
   ADVISOR_KEK: string;
   VAPID_PUBLIC_KEY: string;
   VAPID_PRIVATE_KEY: string;
+  PREVIEW_LOGIN_SECRET: string;
 };
 
 export type AppEnv = {
