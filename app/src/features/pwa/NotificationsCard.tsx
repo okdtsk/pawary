@@ -136,16 +136,19 @@ export function NotificationsCard() {
         </>
       )}
 
-      {(status === "enabled" || status === "disabled") && (
+      {me.isSuccess && (status === "enabled" || status === "disabled") && (
         <label className="flex items-center justify-between gap-3">
           <span className="text-sm text-ink">{t.push.careteamLogsLabel}</span>
           <input
             type="checkbox"
             className="h-5 w-5 accent-clay-500"
-            checked={me.data?.user.notifyCareteamLogs ?? true}
+            checked={me.data.user.notifyCareteamLogs}
             disabled={updateMe.isPending}
             onChange={(e) =>
-              updateMe.mutate({ notifyCareteamLogs: e.target.checked })
+              updateMe.mutate(
+                { notifyCareteamLogs: e.target.checked },
+                { onError: () => toast.show(t.push.error) },
+              )
             }
           />
         </label>
