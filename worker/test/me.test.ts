@@ -131,3 +131,33 @@ it("GET /api/me does NOT re-issue session cookie when no refresh is due", async 
   const sessionSet = setCookies.find((v) => v.startsWith("session="));
   expect(sessionSet).toBeUndefined();
 });
+
+it("GET /api/me returns notifyCareteamLogs defaulting to true", async () => {
+  const { cookie } = await seedUserWithSession();
+  const res = await SELF.fetch("https://app.local/api/me", {
+    headers: { Cookie: cookie },
+  });
+  expect(res.status).toBe(200);
+  const body = (await res.json()) as {
+    data: { user: { notifyCareteamLogs: boolean } };
+  };
+  expect(body.data.user.notifyCareteamLogs).toBe(true);
+});
+
+it("PATCH /api/me toggles notifyCareteamLogs", async () => {
+  const { cookie, csrfToken } = await seedUserWithSession();
+  const res = await SELF.fetch("https://app.local/api/me", {
+    method: "PATCH",
+    headers: {
+      Cookie: cookie,
+      "Content-Type": "application/json",
+      "X-CSRF-Token": csrfToken,
+    },
+    body: JSON.stringify({ notifyCareteamLogs: false }),
+  });
+  expect(res.status).toBe(200);
+  const body = (await res.json()) as {
+    data: { user: { notifyCareteamLogs: boolean } };
+  };
+  expect(body.data.user.notifyCareteamLogs).toBe(false);
+});

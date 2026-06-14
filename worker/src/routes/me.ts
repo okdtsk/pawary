@@ -40,6 +40,7 @@ meRoutes.get("/", requireSession, async (c) => {
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
       locale: user.locale,
+      notifyCareteamLogs: user.notifyCareteamLogs,
     },
     pets: memberships,
     csrfToken: session.csrfToken,
@@ -68,6 +69,7 @@ meRoutes.patch("/", requireSession, requireCsrf, async (c) => {
         displayName: updated.displayName,
         avatarUrl: updated.avatarUrl,
         locale: updated.locale,
+        notifyCareteamLogs: updated.notifyCareteamLogs,
       },
     },
   });
