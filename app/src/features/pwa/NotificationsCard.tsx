@@ -4,6 +4,7 @@ import { Card } from "../../components/Card";
 import { Spinner } from "../../components/Spinner";
 import { useToast } from "../../components/Toast";
 import { useT } from "../../i18n";
+import { useMe, useUpdateMe } from "../../api/me";
 import { householdTzOffsetMin } from "../../lib/calendarPrefs";
 import {
   disablePush,
@@ -34,6 +35,8 @@ function isStandalone(): boolean {
 export function NotificationsCard() {
   const t = useT();
   const toast = useToast();
+  const me = useMe();
+  const updateMe = useUpdateMe();
   const [status, setStatus] = useState<Status>("loading");
   const [actionPending, setActionPending] = useState(false);
 
@@ -131,6 +134,24 @@ export function NotificationsCard() {
             {t.push.disable}
           </Button>
         </>
+      )}
+
+      {me.isSuccess && (status === "enabled" || status === "disabled") && (
+        <label className="flex items-center justify-between gap-3">
+          <span className="text-sm text-ink">{t.push.careteamLogsLabel}</span>
+          <input
+            type="checkbox"
+            className="h-5 w-5 accent-clay-500"
+            checked={me.data.user.notifyCareteamLogs}
+            disabled={updateMe.isPending}
+            onChange={(e) =>
+              updateMe.mutate(
+                { notifyCareteamLogs: e.target.checked },
+                { onError: () => toast.show(t.push.error) },
+              )
+            }
+          />
+        </label>
       )}
     </Card>
   );

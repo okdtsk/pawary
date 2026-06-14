@@ -17,6 +17,7 @@ import { advisorSettingsRoutes } from "./routes/advisor-settings";
 import { advisorRoutes } from "./routes/advisor";
 import { pushRoutes } from "./routes/push";
 import { auditRoutes } from "./routes/audit";
+export { CareteamNotifier } from "./domain/push/careteam-notifier";
 
 const app = new Hono<{ Bindings: Env }>();
 

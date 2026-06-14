@@ -16,9 +16,21 @@ import {
   todayKey,
   type DayKey,
 } from "../lib/dates";
-import { useRequiredPet } from "../state/pets";
+import { useSearchParams } from "react-router";
+import { usePets, useRequiredPet } from "../state/pets";
 
 export function LogTab() {
+  const { selectPet, pets } = usePets();
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const petParam = searchParams.get("pet");
+    if (petParam && pets.some((p) => p.id === petParam)) {
+      selectPet(petParam);
+      searchParams.delete("pet");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, pets, selectPet, setSearchParams]);
+
   const t = useT();
   const tag = useLocaleTag();
   const pet = useRequiredPet();

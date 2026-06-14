@@ -20,6 +20,14 @@
   ],
   "vars": { "ENVIRONMENT": "development" },
   "triggers": { "crons": ["*/15 * * * *"] },
+  "durable_objects": {
+    "bindings": [
+      { "name": "CARETEAM_NOTIFIER", "class_name": "CareteamNotifier" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["CareteamNotifier"] }
+  ],
   "observability": { "enabled": true },
   "assets": {
     "directory": "../app/dist",
@@ -33,6 +41,14 @@
       "preview_urls": false,
       "vars": { "ENVIRONMENT": "production" },
       "triggers": { "crons": ["*/15 * * * *"] },
+      "durable_objects": {
+        "bindings": [
+          { "name": "CARETEAM_NOTIFIER", "class_name": "CareteamNotifier" }
+        ]
+      },
+      "migrations": [
+        { "tag": "v1", "new_sqlite_classes": ["CareteamNotifier"] }
+      ],
       "d1_databases": [
         {
           "binding": "DB",
@@ -60,6 +76,14 @@
       "preview_urls": false,
       "vars": { "ENVIRONMENT": "preview" },
       "triggers": { "crons": ["*/15 * * * *"] },
+      "durable_objects": {
+        "bindings": [
+          { "name": "CARETEAM_NOTIFIER", "class_name": "CareteamNotifier" }
+        ]
+      },
+      "migrations": [
+        { "tag": "v1", "new_sqlite_classes": ["CareteamNotifier"] }
+      ],
       "d1_databases": [
         {
           "binding": "DB",

@@ -5,6 +5,7 @@ import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { activities, activityPhotos, type Activity } from "../db/schema";
 import { writeAudit } from "../domain/audit";
+import { pingCareteamNotifier } from "../domain/push/careteam-notifier";
 import type { AppEnv } from "../env";
 import { newId } from "../lib/id";
 import { decodeCursor, encodeCursor } from "../lib/cursor";
@@ -109,6 +110,11 @@ activityRoutes.post(
       entityId: activity.id,
       diff: { category: activity.category },
     });
+    c.executionCtx.waitUntil(
+      pingCareteamNotifier(c.env, petId).catch((e) =>
+        console.error("careteam notify ping failed", e),
+      ),
+    );
     return c.json({ data: activityToResponse(activity, []) }, 201);
   },
 );

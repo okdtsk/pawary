@@ -385,6 +385,7 @@ export const ja: Messages = {
     denied: "通知の許可が拒否されています — ブラウザの設定から許可してください",
     iosInstallHint: "iOSでプッシュ通知を受け取るには、まずPawaryをホーム画面に追加してください",
     error: "通知の処理中にエラーが発生しました — もう一度お試しください",
+    careteamLogsLabel: "ケアチームのメンバーが記録を追加したら通知する",
   },
   audit: {
     title: "変更履歴",

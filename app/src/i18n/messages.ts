@@ -360,6 +360,7 @@ export interface Messages {
     denied: string;
     iosInstallHint: string;
     error: string;
+    careteamLogsLabel: string;
   };
   audit: {
     title: string;

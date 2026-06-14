@@ -1,5 +1,6 @@
 import type { Role } from "@pawary/shared";
 import type { Pet, Session, User } from "./db/schema";
+import type { CareteamNotifier } from "./domain/push/careteam-notifier";
 
 export type Env = {
   DB: D1Database;
@@ -15,6 +16,7 @@ export type Env = {
   ADVISOR_KEK: string;
   VAPID_PUBLIC_KEY: string;
   VAPID_PRIVATE_KEY: string;
+  CARETEAM_NOTIFIER: DurableObjectNamespace<CareteamNotifier>;
 };
 
 export type AppEnv = {

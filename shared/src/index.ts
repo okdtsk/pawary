@@ -41,6 +41,7 @@ export const updateMeSchema = z
   .object({
     displayName: z.string().trim().min(1).max(100).optional(),
     locale: z.enum(LOCALES).optional(),
+    notifyCareteamLogs: z.boolean().optional(),
   })
   .strict();
 export type UpdateMeInput = z.infer<typeof updateMeSchema>;
@@ -52,6 +53,7 @@ export type MeResponse = {
     displayName: string;
     avatarUrl: string | null;
     locale: Locale;
+    notifyCareteamLogs: boolean;
   };
   pets: Array<{
     id: string;
