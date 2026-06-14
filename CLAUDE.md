@@ -54,6 +54,8 @@ is currently by convention.) Full process in `docs/development-workflow.md`.
 - Branch off `main`, open a PR; CI runs `typecheck` + `test` on every PR.
 - Wait for the `test` check to be green before merging; self-merge is allowed (no approval required).
 - Merging to `main` auto-deploys to production.
-- For QA, add the **`preview`** label to a PR to deploy its branch to the shared
-  preview environment (manual fallback: Actions → Preview → Run workflow).
+- For QA, add the **`preview`** label to a PR to deploy it to a per-PR preview
+  URL (`https://<branch>-pawary-preview.okdtsk.workers.dev`), posted as a PR
+  comment (manual fallback: Actions → Preview → Run workflow). All previews
+  share one `pawary-preview` D1/R2.
 

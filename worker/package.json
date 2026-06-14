@@ -23,6 +23,6 @@
     "@types/node": "^25.9.2",
     "drizzle-kit": "^0.31.0",
     "vitest": "~3.2.0",
-    "wrangler": "^4.20.0"
+    "wrangler": "^4.21.0"
   }
 }
