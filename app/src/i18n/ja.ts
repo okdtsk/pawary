@@ -75,6 +75,9 @@ export const ja: Messages = {
   },
   login: {
     authError: "サインインが完了しませんでした。もう一度お試しください。",
+    testEmailPlaceholder: "メール（任意のテストユーザー）",
+    testSecretPlaceholder: "プレビュー用パスフレーズ",
+    testSubmit: "テストサインイン",
   },
   onboarding: {
     title: "どんな子と暮らしていますか？",

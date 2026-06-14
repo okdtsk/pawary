@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { Button } from "../components/Button";
@@ -10,11 +11,23 @@ export function Login() {
   const authError = new URLSearchParams(window.location.search).get(
     "auth_error",
   );
+  const testLoginEnabled =
+    import.meta.env.DEV || __APP_ENVIRONMENT__ === "preview";
+  const needsSecret = !import.meta.env.DEV;
+  const [testEmail, setTestEmail] = useState("");
+  const [testSecret, setTestSecret] = useState(() =>
+    needsSecret ? localStorage.getItem("previewLoginSecret") ?? "" : "",
+  );
 
-  const devLogin = async () => {
+  const testLogin = async () => {
+    if (needsSecret) localStorage.setItem("previewLoginSecret", testSecret);
     await api("/api/auth/dev-login", {
       method: "POST",
-      body: JSON.stringify({}),
+      body: JSON.stringify(
+        needsSecret
+          ? { email: testEmail, secret: testSecret }
+          : { email: testEmail },
+      ),
     });
     await qc.invalidateQueries({ queryKey: ["me"] });
   };
@@ -72,16 +85,31 @@ export function Login() {
         >
           {t.signInWithGoogle}
         </a>
-        {import.meta.env.DEV && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={devLogin}
-            className="animate-pop"
+        {testLoginEnabled && (
+          <div
+            className="animate-pop flex w-full flex-col gap-2"
             style={{ animationDelay: "260ms" }}
           >
-            {t.signInDev}
-          </Button>
+            <input
+              type="email"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              placeholder={t.login.testEmailPlaceholder}
+              className="w-full rounded-full border border-cream-200 bg-white px-5 py-2.5 text-sm text-ink-soft outline-none focus:border-clay-400"
+            />
+            {needsSecret && (
+              <input
+                type="password"
+                value={testSecret}
+                onChange={(e) => setTestSecret(e.target.value)}
+                placeholder={t.login.testSecretPlaceholder}
+                className="w-full rounded-full border border-cream-200 bg-white px-5 py-2.5 text-sm text-ink-soft outline-none focus:border-clay-400"
+              />
+            )}
+            <Button variant="ghost" size="sm" onClick={testLogin}>
+              {t.login.testSubmit}
+            </Button>
+          </div>
         )}
       </div>
     </main>
