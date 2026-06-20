@@ -113,8 +113,19 @@ Same flow — branch, PR, green CI, merge. If enforcement is later enabled and a
 emergency requires bypassing it, temporarily relax the ruleset in repo settings
 rather than normalizing direct pushes to `main`.
 
+## Architecture Decision Records (ADR)
+
+Significant technical decisions are logged in `docs/adr.html` — a single
+self-contained HTML file you can open in a browser to review past decisions and
+the reasoning behind them (context → decision → consequences, with status and
+supersession). When a PR makes a notable architectural choice, append an entry
+to the `ADRS` array in that file **in the same PR**; mark a replaced decision
+`superseded` rather than deleting it. See the "Architecture Decision Records"
+section of `CLAUDE.md` for the entry schema.
+
 ## Related docs
 
+- `docs/adr.html` — architecture decision records (open in a browser).
 - `docs/visibility-strategy.md` — how the app is kept private and how to go public.
 - `README.md` — stack, local dev, and production deployment details.
 - `docs/superpowers/specs/2026-06-13-preview-environment-design.md` — preview env design.
