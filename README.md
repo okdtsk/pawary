@@ -169,6 +169,31 @@ you through it). To exercise the service worker locally, serve the built
 app through the worker: `npm run build -w app && npm run dev -w worker`,
 then open http://localhost:8787 (the Vite dev server does not register it).
 
+## Quick Add shortcuts
+
+Pawary's Quick Add can be opened directly via URL:
+
+- `https://pawary.okdtsk.dev/?action=quickadd` — opens the Quick Add grid.
+- `https://pawary.okdtsk.dev/?action=quickadd&category=food` — opens it filtered
+  to one category (`food`, `water`, `toilet`, `weight`, `exercise`, `symptom`,
+  `medication`, `vet_visit`, `grooming`, `vaccination`, `note`).
+
+The action runs against the currently-selected pet.
+
+### Android
+
+Install the PWA, then long-press the home-screen icon — a **Quick Add** shortcut
+appears (provided by the web app manifest).
+
+### iOS
+
+iOS does not support PWA manifest shortcuts. Instead, use the **Shortcuts** app:
+
+1. Create a new Shortcut with the **Open URLs** action.
+2. Set the URL to `https://pawary.okdtsk.dev/?action=quickadd`.
+3. Add the Shortcut to the Home Screen, the Action Button, the Lock Screen, or a
+   Shortcuts widget.
+
 ## Docs
 
 - Spec: `docs/superpowers/specs/2026-06-11-pawary-design.md`
