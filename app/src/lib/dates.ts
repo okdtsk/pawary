@@ -13,7 +13,7 @@
 
 export type DayKey = string;
 export type MonthKey = string;
-export type CalendarView = "month" | "week" | "3day" | "day";
+export type CalendarView = "month" | "week" | "3day" | "day" | "log";
 
 const MIN_MS = 60_000;
 

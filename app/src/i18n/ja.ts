@@ -41,6 +41,7 @@ export const ja: Messages = {
     home: "ホーム",
     calendar: "カレンダー",
     log: "記録",
+    advisor: "アドバイザー",
     health: "健康",
     settings: "設定",
     addActivity: "記録を追加",
@@ -258,7 +259,7 @@ export const ja: Messages = {
     quietHint: "家族の誰かが記録すると、ここに今日のようすが集まります。",
   },
   calendar: {
-    views: { month: "月", week: "週", "3day": "3日", day: "日" },
+    views: { month: "月", week: "週", "3day": "3日", day: "日", log: "記録" },
     previous: "前へ",
     next: "次へ",
     dayEmpty: "この日の記録はありません",

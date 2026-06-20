@@ -227,3 +227,14 @@ export function ShareIcon(props: IconProps) {
     </Base>
   );
 }
+
+/** AI Advisor: a large sparkle with two small companions. */
+export function SparklesIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M12 3.5c.6 2.7 1.8 3.9 4.5 4.5-2.7.6-3.9 1.8-4.5 4.5-.6-2.7-1.8-3.9-4.5-4.5 2.7-.6 3.9-1.8 4.5-4.5Z" />
+      <path d="M18 13.5c.3 1.4.9 2 2.3 2.3-1.4.3-2 .9-2.3 2.3-.3-1.4-.9-2-2.3-2.3 1.4-.3 2-.9 2.3-2.3Z" />
+      <path d="M6.5 15c.3 1.2.8 1.7 2 2-1.2.3-1.7.8-2 2-.3-1.2-.8-1.7-2-2 1.2-.3 1.7-.8 2-2Z" />
+    </Base>
+  );
+}
