@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pawary — Architecture Decision Records</title>
+<style>
+  :root {
+    --bg: #faf6f0;
+    --card: #ffffff;
+    --ink: #2e2a26;
+    --muted: #7a716a;
+    --line: #e8ded3;
+    --clay: #c97b5a;
+    --clay-soft: #f4e3da;
+    --accepted: #3f8f6e;
+    --accepted-bg: #e3f1ea;
+    --superseded: #9a8f86;
+    --superseded-bg: #efeae4;
+    --proposed: #b8893a;
+    --proposed-bg: #f6ecd9;
+    --deprecated: #b5524a;
+    --deprecated-bg: #f5e0de;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  header.page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 40px 24px 8px;
+  }
+  header.page h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -0.01em; }
+  header.page p { margin: 0; color: var(--muted); }
+  .toolbar {
+    max-width: 880px;
+    margin: 20px auto 0;
+    padding: 0 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .toolbar input[type="search"] {
+    flex: 1 1 220px;
+    min-width: 180px;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    font: inherit;
+    color: var(--ink);
+  }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; }
+  .filter {
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--muted);
+    padding: 7px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .filter[aria-pressed="true"] {
+    background: var(--clay);
+    border-color: var(--clay);
+    color: #fff;
+  }
+  main { max-width: 880px; margin: 8px auto 80px; padding: 0 24px; }
+  .count { color: var(--muted); font-size: 13px; margin: 18px 2px 10px; }
+  .adr {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    margin: 0 0 16px;
+    scroll-margin-top: 16px;
+  }
+  .adr-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+  .adr-id {
+    font-variant-numeric: tabular-nums;
+    color: var(--clay);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .adr-id:hover { text-decoration: underline; }
+  .adr h2 { font-size: 19px; margin: 0; flex: 1 1 auto; letter-spacing: -0.01em; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 14px; }
+  .badge {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .badge.accepted { background: var(--accepted-bg); color: var(--accepted); }
+  .badge.superseded { background: var(--superseded-bg); color: var(--superseded); }
+  .badge.proposed { background: var(--proposed-bg); color: var(--proposed); }
+  .badge.deprecated { background: var(--deprecated-bg); color: var(--deprecated); }
+  .date { color: var(--muted); font-size: 13px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+  .tag {
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--clay-soft);
+    color: #9a5638;
+    padding: 2px 9px;
+    border-radius: 999px;
+  }
+  .field { margin: 10px 0; }
+  .field h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 2px;
+  }
+  .field p { margin: 0; }
+  .links { font-size: 13px; color: var(--muted); margin-top: 12px; }
+  .links a { color: var(--clay); }
+  .super-note {
+    font-size: 13px;
+    background: var(--superseded-bg);
+    color: var(--superseded);
+    padding: 8px 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+  .super-note a { color: inherit; font-weight: 700; }
+  footer {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  footer code { background: var(--superseded-bg); padding: 1px 6px; border-radius: 6px; }
+</style>
+</head>
+<body>
+  <header class="page">
+    <h1>Pawary — Architecture Decision Records</h1>
+    <p>A running log of significant technical decisions, so humans can review <em>why</em> the system is the way it is. Newest first.</p>
+  </header>
+
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="Search decisions…" aria-label="Search decisions" />
+    <div class="filters" id="status-filters">
+      <button class="filter" data-status="all" aria-pressed="true">All</button>
+      <button class="filter" data-status="accepted" aria-pressed="false">Accepted</button>
+      <button class="filter" data-status="superseded" aria-pressed="false">Superseded</button>
+      <button class="filter" data-status="proposed" aria-pressed="false">Proposed</button>
+      <button class="filter" data-status="deprecated" aria-pressed="false">Deprecated</button>
+    </div>
+  </div>
+
+  <main>
+    <div class="count" id="count"></div>
+    <div id="list"></div>
+  </main>
+
+  <footer>
+    <p><strong>How to add a decision:</strong> append one object to the <code>ADRS</code> array below
+    (in <code>docs/adr.html</code>) when a PR makes a notable architectural choice. Keep the highest
+    <code>id</code> + 1, set <code>status</code> to <code>accepted</code>/<code>proposed</code>, and fill
+    <code>context</code> / <code>decision</code> / <code>consequences</code>. When a later decision
+    replaces an earlier one, set the old entry's <code>status</code> to <code>superseded</code> and its
+    <code>supersededBy</code> to the new id. See <code>CLAUDE.md</code> and
+    <code>docs/development-workflow.md</code>.</p>
+  </footer>
+
+<script>
+/* ===========================================================================
+ * Architecture Decision Records (single source of truth — edit this array).
+ * Schema per entry:
+ *   id           number  — stable, monotonic. Next id = current max + 1.
+ *   title        string
+ *   date         "YYYY-MM-DD"  — when the decision was made/merged.
+ *   status       "accepted" | "proposed" | "superseded" | "deprecated"
+ *   tags         string[]      — e.g. "auth", "infra", "data", "frontend".
+ *   context      string  — the forces/problem that prompted the decision.
+ *   decision     string  — what was chosen.
+ *   consequences string  — trade-offs, follow-ups, what it locks in.
+ *   pr           number? — GitHub PR number, if any (links to the repo).
+ *   supersededBy number? — id of the decision that replaces this one.
+ * Order in the array does not matter; the page sorts by date then id, newest first.
+ * ======================================================================== */
+const REPO = "https://github.com/okdtsk/pawary";
+
+const ADRS = [
+  {
+    id: 1, date: "2026-06-11", status: "accepted", tags: ["infra", "tooling"],
+    title: "npm workspaces monorepo (shared / worker / app)",
+    context: "Web client, the API, and the types/validation shared between them need to evolve together without version-skew or a publish step.",
+    decision: "Single repo with npm workspaces: a `shared` package (categories, locales, Zod schemas, API types) consumed by both the Cloudflare Worker backend and the React app.",
+    consequences: "One install, one typecheck graph, atomic cross-cutting changes. Tooling must resolve `@pawary/shared` from source; worktrees need the workspace symlink to avoid resolving a stale checkout."
+  },
+  {
+    id: 2, date: "2026-06-11", status: "accepted", tags: ["infra", "data"],
+    title: "Cloudflare Workers + Hono + D1 (Drizzle) + R2 stack",
+    context: "A solo/family project needs cheap, globally-fast hosting with managed SQL and object storage, deployable from CI without servers to run.",
+    decision: "Hono on Cloudflare Workers for the API, D1 (SQLite) with Drizzle migrations for data, R2 for photos. Deploy via Wrangler; the Worker also serves the SPA assets.",
+    consequences: "No always-on server cost and edge latency, but constrained to the Workers runtime (no Node built-ins, Web-standard APIs only) and D1's SQLite feature set. Migrations apply automatically on deploy to production."
+  },
+  {
+    id: 3, date: "2026-06-11", status: "accepted", tags: ["auth", "security"],
+    title: "Google OAuth (PKCE) with server-side sliding sessions",
+    context: "Users sign in with Google; the app must hold a session securely on a modern mobile/web client without exposing tokens to JS.",
+    decision: "Google OAuth with PKCE. The server issues an opaque session backed by D1, set as an HttpOnly `__Host-session` cookie with a sliding-expiry that re-issues on refresh up to a 90-day cap.",
+    consequences: "No tokens in JS (XSS-resistant), revocable sessions, but session state lives in D1. Localhost-only dev-login exists for development and is hard-404'd in production."
+  },
+  {
+    id: 4, date: "2026-06-11", status: "accepted", tags: ["security"],
+    title: "Defense-in-depth request layer: CSRF, security headers, JSON error envelope",
+    context: "A cookie-authenticated API needs CSRF protection, consistent error handling, and browser hardening across both API and static assets.",
+    decision: "CSRF middleware on state-changing routes, a uniform JSON error envelope with json 404/500, and security headers applied to API responses and to SPA assets (via `_headers`). Search-engine indexing is blocked while the app is private.",
+    consequences: "Predictable client error handling and a hardened surface. Header rules are duplicated across the Worker and `_headers` and must stay in sync."
+  },
+  {
+    id: 5, date: "2026-06-11", status: "superseded", supersededBy: 14, tags: ["security", "infra"],
+    title: "Fixed-window in-DB rate limiter",
+    context: "Auth and write endpoints need abuse protection on a platform without a built-in limiter at the time.",
+    decision: "A fixed-window rate limiter counting in D1, applied to auth routes first.",
+    consequences: "Simple and portable, but adds DB writes on the hot path and the window is coarse. Later replaced by the platform-native Workers rate-limit binding."
+  },
+  {
+    id: 6, date: "2026-06-11", status: "accepted", tags: ["security", "data"],
+    title: "Audit log for owner-sensitive actions",
+    context: "Shared pets with multiple roles mean changes need accountability; owners must be able to see who did what.",
+    decision: "An audit-log domain helper records diffs for sensitive mutations (activity edits/deletes, pet deletion, account deletion cascade), surfaced via an owner-only audit endpoint with whitelisted summaries and an in-app history screen.",
+    consequences: "Traceability for co-edited pets. Audit rows grow with activity; summaries are whitelisted to avoid leaking sensitive fields."
+  },
+  {
+    id: 7, date: "2026-06-11", status: "accepted", tags: ["security", "data"],
+    title: "Pure-JS image sniffing & metadata stripping before R2",
+    context: "User photo uploads must be validated and stripped of EXIF/metadata, but the Workers runtime has no native image libraries.",
+    decision: "Pure-JS image sniffing (magic-byte type detection), metadata stripping, and dimension extraction; cleaned bytes are stored in R2 with avatar handling and cleanup on pet deletion.",
+    consequences: "No native dependency and privacy-preserving uploads, at the cost of hand-maintained format parsers (e.g. the WebP VP8X container layout had to be corrected)."
+  },
+  {
+    id: 8, date: "2026-06-11", status: "accepted", tags: ["data", "frontend"],
+    title: "Household-time date model for all bucketing",
+    context: "Activities are logged across timezones but must group into the household's local days for calendars, summaries, and insights.",
+    decision: "A shared household-time date utility (with unit tests) anchors day/month bucketing to the household timezone; insights and monthly summaries compute in household time.",
+    consequences: "Consistent day boundaries regardless of the device clock. All date math must go through these helpers; tests anchor seeds to household noon to avoid midnight flake."
+  },
+  {
+    id: 9, date: "2026-06-12", status: "accepted", tags: ["frontend", "design"],
+    title: "Config-driven activity categories with a warm design system",
+    context: "Activity types (Food, Toilet, Water, Weight, Symptom, Medicines, Veterinarian, …) each have their own fields and need consistent add/edit/quick-add UX, with en/ja support.",
+    decision: "A shared category config drives per-category validation and the config-driven add/edit forms; a warm design-system token set, UI primitives (sheet/toast), and category icons render them. i18n catalog covers en/ja.",
+    consequences: "New categories are largely declarative. UI and server validation share the category schema, keeping them aligned."
+  },
+  {
+    id: 10, date: "2026-06-12", status: "accepted", tags: ["frontend", "infra"],
+    title: "PWA via custom service worker (InjectManifest)",
+    context: "The app should be installable and resilient offline, with control over caching and update prompts beyond a generated SW.",
+    decision: "vite-plugin-pwa in InjectManifest mode with a custom service worker: offline caching strategies, offline write-guard and indicators, an update prompt, iOS install hint, and pull-to-refresh.",
+    consequences: "Full control over caching/offline behavior at the cost of owning SW logic. Offline writes are guarded rather than queued."
+  },
+  {
+    id: 11, date: "2026-06-11", status: "accepted", tags: ["notifications", "security"],
+    title: "Self-hosted Web Push (VAPID + AES128GCM) with a reminder cron",
+    context: "Care reminders and overdue digests should reach users without a third-party push vendor.",
+    decision: "A pure-JS Web Push implementation (VAPID signing, aes128gcm payload encryption), push subscription endpoints, and a cron that sends due reminders and overdue digests.",
+    consequences: "No vendor dependency and full control, but the crypto and subscription lifecycle are hand-maintained. VAPID keys are managed as Worker secrets."
+  },
+  {
+    id: 12, date: "2026-06-12", status: "accepted", tags: ["ai", "security"],
+    title: "AI Advisor: BYO key, encrypted at rest, streaming SSE adapters",
+    context: "Users can ask about their pet using their own LLM account (OpenAI / Gemini / Anthropic) without the app paying for or pooling inference.",
+    decision: "Bring-your-own API key, encrypted at rest with AES-GCM (per-record KEK). Streaming provider adapters normalize Anthropic/OpenAI/Gemini into a single SSE shape; context is a 30-day pet digest. Upstream streams are cancelled when the client disconnects.",
+    consequences: "No shared inference cost and user-controlled data flow. Each provider's streaming/error quirks must be normalized; keys never leave the server in plaintext and are included (encrypted) in exports with a documented KEK."
+  },
+  {
+    id: 13, date: "2026-06-12", status: "accepted", tags: ["security", "data"],
+    title: "Role-based careteam sharing (owner / editor / viewer)",
+    context: "Multiple accounts co-manage pets at different permission levels; add/edit surfaces must respect role.",
+    decision: "Pet-access middleware resolves a role per request; viewer-role members have add/edit surfaces hidden client-side and rejected server-side. Account deletion cascades sole-owner pets with an audit trail.",
+    consequences: "Single source of truth for authorization on the server, with the client mirroring it for UX. Sole-owner deletion semantics are explicitly audited."
+  },
+  {
+    id: 14, date: "2026-06-11", status: "accepted", tags: ["security", "infra"],
+    title: "Adopt the Workers native rate-limit binding",
+    context: "The in-DB fixed-window limiter (ADR-5) added hot-path writes and was coarse once a platform limiter became available.",
+    decision: "Back rate limiting with the Cloudflare Workers rate-limit binding; derive test rate limits from the wrangler config so they stay consistent.",
+    consequences: "Limiting moves off D1 to the platform. Limits are configured in wrangler and mirrored in tests; supersedes ADR-5."
+  },
+  {
+    id: 15, date: "2026-06-13", status: "accepted", tags: ["workflow", "process"],
+    title: "PR-based workflow — never push directly to main",
+    context: "`main` auto-deploys to production, so every change needs review history and a CI gate before it ships.",
+    decision: "All changes ship via GitHub PR; CI runs typecheck + test on every PR; merge only after the `test` check is green (self-merge allowed). Enforcement is by convention until branch protection (GitHub Pro / public repo) is enabled.",
+    consequences: "`main` stays always-deployable. The rule is currently social, not technically enforced; the ruleset to enforce it is documented for later.",
+    pr: 10
+  },
+  {
+    id: 16, date: "2026-06-13", status: "superseded", supersededBy: 18, tags: ["infra", "workflow"],
+    title: "Single shared preview Worker for QA",
+    context: "PRs need a production-faithful environment to QA before merging, isolated from production data.",
+    decision: "One `pawary-preview` Worker with its own D1 and R2, deployed from a branch via an Actions workflow.",
+    consequences: "Faithful QA without touching prod, but a single URL meant labeling one PR overwrote another's preview. Replaced by per-PR preview URLs.",
+    pr: 6
+  },
+  {
+    id: 17, date: "2026-06-15", status: "accepted", tags: ["infra", "workflow"],
+    title: "Per-PR preview URLs via Workers version preview aliases",
+    context: "A single preview URL (ADR-16) collided across concurrent PRs; each PR should get its own isolated URL.",
+    decision: "The `preview` label uploads the PR head as a Worker *version* served at `https://<branch>-pawary-preview.okdtsk.workers.dev` (preview alias), posted as a sticky PR comment. Requires `previews_enabled` and that the Worker declares no Durable Object.",
+    consequences: "Independent URLs per PR at the code layer, though all previews still share one `pawary-preview` D1/R2 — schema-changing PRs must coordinate. `previews_enabled` is a one-time out-of-band setup.",
+    pr: 19
+  },
+  {
+    id: 18, date: "2026-06-18", status: "accepted", tags: ["notifications", "infra"],
+    title: "Stateless per-log careteam notifications (remove the Durable Object)",
+    context: "Notifying careteam members when someone adds a log was implemented with a Durable Object, which also blocked Cloudflare from generating per-PR preview URLs (ADR-17).",
+    decision: "Replace the Durable Object with stateless per-log careteam notifications computed at request time.",
+    consequences: "Simpler operational model and unblocks preview URLs; no DO coordination state to manage. Supersedes the DO-based notification path.",
+    pr: 18
+  },
+  {
+    id: 19, date: "2026-06-19", status: "accepted", tags: ["frontend", "design"],
+    title: "Calendar-style Log view, AI Advisor tab, pinned Quick Add",
+    context: "The log needed a denser at-a-glance layout and the advisor/quick-add needed first-class placement in the shell.",
+    decision: "Add a calendar-view rendering of the Log, promote the AI Advisor to its own tab, and pin Quick Add for fast entry. Timeline views support 3-day infinite scroll, a Today button, weekend coloring, and a configurable start hour & timezone.",
+    consequences: "Faster logging and review; more surface area in the shell to keep consistent across views.",
+    pr: 21
+  }
+];
+
+/* ---- render ------------------------------------------------------------- */
+const list = document.getElementById("list");
+const countEl = document.getElementById("count");
+const search = document.getElementById("search");
+let activeStatus = "all";
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+function byId(id) { return ADRS.find(a => a.id === id); }
+
+function cardHTML(a) {
+  const tags = (a.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join("");
+  let superNote = "";
+  if (a.status === "superseded" && a.supersededBy) {
+    const s = byId(a.supersededBy);
+    superNote = `<div class="super-note">Superseded by <a href="#adr-${a.supersededBy}">ADR-${a.supersededBy}${s ? " — " + esc(s.title) : ""}</a></div>`;
+  }
+  const pr = a.pr ? `<div class="links">PR <a href="${REPO}/pull/${a.pr}" target="_blank" rel="noopener">#${a.pr}</a></div>` : "";
+  return `<article class="adr" id="adr-${a.id}" data-status="${a.status}">
+    <div class="adr-head">
+      <a class="adr-id" href="#adr-${a.id}">ADR-${String(a.id).padStart(2, "0")}</a>
+      <h2>${esc(a.title)}</h2>
+    </div>
+    <div class="meta">
+      <span class="badge ${a.status}">${esc(a.status)}</span>
+      <span class="date">${esc(a.date)}</span>
+      <span class="tags">${tags}</span>
+    </div>
+    ${superNote}
+    <div class="field"><h3>Context</h3><p>${esc(a.context)}</p></div>
+    <div class="field"><h3>Decision</h3><p>${esc(a.decision)}</p></div>
+    <div class="field"><h3>Consequences</h3><p>${esc(a.consequences)}</p></div>
+    ${pr}
+  </article>`;
+}
+
+function render() {
+  const q = search.value.trim().toLowerCase();
+  const rows = ADRS
+    .filter(a => activeStatus === "all" || a.status === activeStatus)
+    .filter(a => !q || JSON.stringify(a).toLowerCase().includes(q))
+    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id));
+  list.innerHTML = rows.map(cardHTML).join("") || `<p class="count">No decisions match.</p>`;
+  countEl.textContent = `${rows.length} of ${ADRS.length} decision${ADRS.length === 1 ? "" : "s"}`;
+}
+
+document.getElementById("status-filters").addEventListener("click", e => {
+  const btn = e.target.closest(".filter");
+  if (!btn) return;
+  activeStatus = btn.dataset.status;
+  document.querySelectorAll("#status-filters .filter").forEach(b =>
+    b.setAttribute("aria-pressed", String(b === btn)));
+  render();
+});
+search.addEventListener("input", render);
+render();
+if (location.hash) { const el = document.querySelector(location.hash); if (el) el.scrollIntoView(); }
+</script>
+</body>
+</html>

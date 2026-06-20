@@ -59,3 +59,21 @@ is currently by convention.) Full process in `docs/development-workflow.md`.
   comment (manual fallback: Actions → Preview → Run workflow). All previews
   share one `pawary-preview` D1/R2.
 
+## Architecture Decision Records (ADR)
+
+Record every significant technical decision in `docs/adr.html` — a single,
+self-contained HTML file humans can open in a browser to review past decisions
+and the reasoning behind them.
+
+- **When:** any PR that makes a notable architectural choice (stack, auth,
+  data model, security posture, infra/workflow, a new subsystem, or replacing
+  an existing approach). Skip purely cosmetic or trivial changes.
+- **How:** append one object to the `ADRS` array near the bottom of
+  `docs/adr.html`. Use `id = current max + 1`; fill `title`, `date`
+  (`YYYY-MM-DD`), `status` (`accepted`/`proposed`), `tags`, and the
+  `context` / `decision` / `consequences` fields. Add `pr` when there is a PR.
+- **Superseding:** when a new decision replaces an old one, set the old entry's
+  `status` to `superseded` and its `supersededBy` to the new `id` — never delete
+  history.
+- Update the ADR in the **same PR** as the change it documents.
+
