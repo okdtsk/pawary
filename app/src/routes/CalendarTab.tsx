@@ -31,7 +31,7 @@ import {
 import { useSwipe } from "../lib/useSwipe";
 import { useRequiredPet } from "../state/pets";
 
-const VIEWS: CalendarView[] = ["month", "week", "3day", "day", "log"];
+const VIEWS: CalendarView[] = ["log", "month", "week", "3day", "day"];
 
 export function CalendarTab() {
   const t = useT();
@@ -47,7 +47,7 @@ export function CalendarTab() {
   const viewParam = searchParams.get("view");
   const view: CalendarView = VIEWS.includes(viewParam as CalendarView)
     ? (viewParam as CalendarView)
-    : "month";
+    : "log";
   const dateParam = searchParams.get("date");
   const date: DayKey = /^\d{4}-\d{2}-\d{2}$/.test(dateParam ?? "")
     ? (dateParam as DayKey)
