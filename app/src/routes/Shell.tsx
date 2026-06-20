@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import { useOnline } from "../lib/useOnline";
@@ -18,6 +18,8 @@ import {
   PawIcon,
   PlusIcon,
 } from "../components/icons";
+import { parseQuickAction } from "../lib/quickAction";
+import type { Category } from "@pawary/shared";
 import { useT } from "../i18n";
 import { cn } from "../lib/cn";
 import { usePets } from "../state/pets";
@@ -88,6 +90,21 @@ export function Shell() {
   const online = useOnline();
   const [addOpen, setAddOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
+  const [quickCategory, setQuickCategory] = useState<Category | undefined>(
+    undefined,
+  );
+
+  // On launch, honor a quick-add deep link (?action=quickadd[&category=…]) from
+  // Android manifest shortcuts / iOS Apple Shortcuts / home-screen bookmarks,
+  // then strip the params so reload/back is clean and does not re-trigger.
+  useEffect(() => {
+    const { open, category } = parseQuickAction(window.location.search);
+    if (!open) return;
+    setQuickCategory(category);
+    setQuickOpen(true);
+    const url = window.location.pathname + window.location.hash;
+    window.history.replaceState(null, "", url || "/");
+  }, []);
 
   const pressTimer = useRef<number | null>(null);
   const longPressed = useRef(false);
@@ -267,12 +284,19 @@ export function Shell() {
       {canEdit && (
         <Sheet
           open={quickOpen}
-          onClose={() => setQuickOpen(false)}
+          onClose={() => {
+            setQuickOpen(false);
+            setQuickCategory(undefined);
+          }}
           title={t.quickAdd.title}
         >
           <QuickAddGrid
             petId={selectedPet.id}
-            onLogged={() => setQuickOpen(false)}
+            category={quickCategory}
+            onLogged={() => {
+              setQuickOpen(false);
+              setQuickCategory(undefined);
+            }}
           />
         </Sheet>
       )}
