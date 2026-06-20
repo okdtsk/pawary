@@ -6,7 +6,6 @@ import { PetAvatar } from "../components/Avatar";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { EmptyState } from "../components/EmptyState";
-import { ChevronRightIcon } from "../components/icons";
 import { Spinner } from "../components/Spinner";
 import { AnomalyBanners } from "../features/health/AnomalyBanners";
 import { InstallHint } from "../features/pwa/InstallHint";
@@ -60,17 +59,6 @@ export function Home() {
       {/* care items: overdue / due today, complete with undo */}
       <CareCard petId={pet.id} role={pet.role} />
 
-      {/* AI Advisor entry card */}
-      <Link to="/advisor" className="block animate-pop" style={{ animationDelay: "80ms" }}>
-        <Card className="flex items-center gap-3 p-4 hover:shadow-md transition-shadow">
-          <div className="min-w-0 flex-1">
-            <p className="font-display text-base text-ink">{t.advisor.homeCard}</p>
-            <p className="truncate text-sm text-ink-faint">{t.advisor.homeCardHint}</p>
-          </div>
-          <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
-        </Card>
-      </Link>
-
       {/* today so far */}
       <section className="animate-pop" style={{ animationDelay: "120ms" }}>
         <h2 className="mb-2 font-display text-lg text-ink">
@@ -103,9 +91,15 @@ export function Home() {
         </Card>
       </section>
 
-      {/* quick add (editors only — viewers cannot log) */}
+      {/* quick add (editors only — viewers cannot log).
+          Pinned to the bottom of the viewport so it stays reachable no matter
+          how long the "today so far" list grows; the grid itself scrolls when
+          it exceeds the capped height. */}
       {canEdit && (
-        <section className="animate-pop" style={{ animationDelay: "180ms" }}>
+        <section
+          className="animate-pop sticky bottom-[calc(env(safe-area-inset-bottom)+3.75rem)] z-20 -mx-4 mt-1 border-t border-cream-200 bg-cream-100/95 px-4 pb-3 pt-3 backdrop-blur md:bottom-4 md:mx-0 md:rounded-card md:border md:shadow-card"
+          style={{ animationDelay: "180ms" }}
+        >
           <div className="mb-2 flex items-center justify-between">
             <h2 className="font-display text-lg text-ink">{t.quickAdd.title}</h2>
             <Link
@@ -115,7 +109,9 @@ export function Home() {
               {t.quickAdd.manage}
             </Link>
           </div>
-          <QuickAddGrid petId={pet.id} />
+          <div className="max-h-[40vh] overflow-y-auto">
+            <QuickAddGrid petId={pet.id} />
+          </div>
         </section>
       )}
     </div>

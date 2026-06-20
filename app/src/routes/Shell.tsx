@@ -14,9 +14,9 @@ import {
   GearIcon,
   HeartIcon,
   HomeIcon,
-  ListIcon,
   PawIcon,
   PlusIcon,
+  SparklesIcon,
 } from "../components/icons";
 import { useT } from "../i18n";
 import { cn } from "../lib/cn";
@@ -125,8 +125,8 @@ export function Shell() {
           <SideLink to="/calendar" label={t.nav.calendar}>
             <CalendarIcon className="h-5 w-5" />
           </SideLink>
-          <SideLink to="/log" label={t.nav.log}>
-            <ListIcon className="h-5 w-5" />
+          <SideLink to="/advisor" label={t.nav.advisor}>
+            <SparklesIcon className="h-5 w-5" />
           </SideLink>
           <SideLink to="/health" label={t.nav.health}>
             <HeartIcon className="h-5 w-5" />
@@ -255,8 +255,8 @@ export function Shell() {
               </button>
             )}
           </div>
-          <TabLink to="/log" label={t.nav.log}>
-            <ListIcon className="h-6 w-6" />
+          <TabLink to="/advisor" label={t.nav.advisor}>
+            <SparklesIcon className="h-6 w-6" />
           </TabLink>
           <TabLink to="/health" label={t.nav.health}>
             <HeartIcon className="h-6 w-6" />

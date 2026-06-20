@@ -41,6 +41,7 @@ export const en: Messages = {
     home: "Home",
     calendar: "Calendar",
     log: "Log",
+    advisor: "Advisor",
     health: "Health",
     settings: "Settings",
     addActivity: "Add activity",
@@ -261,7 +262,13 @@ export const en: Messages = {
     quietHint: "Anything your family logs shows up here as the day unfolds.",
   },
   calendar: {
-    views: { month: "Month", week: "Week", "3day": "3 days", day: "Day" },
+    views: {
+      month: "Month",
+      week: "Week",
+      "3day": "3 days",
+      day: "Day",
+      log: "Log",
+    },
     previous: "Previous",
     next: "Next",
     dayEmpty: "Nothing logged this day",

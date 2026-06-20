@@ -40,6 +40,7 @@ export interface Messages {
     home: string;
     calendar: string;
     log: string;
+    advisor: string;
     health: string;
     settings: string;
     addActivity: string;
@@ -245,7 +246,7 @@ export interface Messages {
     quietHint: string;
   };
   calendar: {
-    views: Record<"month" | "week" | "3day" | "day", string>;
+    views: Record<"month" | "week" | "3day" | "day" | "log", string>;
     previous: string;
     next: string;
     dayEmpty: string;

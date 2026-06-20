@@ -11,6 +11,7 @@ import {
   ThreeDayTimeline,
   type ThreeDayControls,
 } from "../features/calendar/ThreeDayTimeline";
+import { LogView } from "../features/log/LogView";
 import { useLocaleTag, useT } from "../i18n";
 import { householdTzOffsetMin, useCalendarPrefs } from "../lib/calendarPrefs";
 import { cn } from "../lib/cn";
@@ -30,7 +31,7 @@ import {
 import { useSwipe } from "../lib/useSwipe";
 import { useRequiredPet } from "../state/pets";
 
-const VIEWS: CalendarView[] = ["month", "week", "3day", "day"];
+const VIEWS: CalendarView[] = ["month", "week", "3day", "day", "log"];
 
 export function CalendarTab() {
   const t = useT();
@@ -114,7 +115,7 @@ export function CalendarTab() {
             aria-pressed={view === v}
             onClick={() => setParams(v, date)}
             className={cn(
-              "flex-1 rounded-full py-1.5 text-sm font-semibold transition",
+              "flex-1 whitespace-nowrap rounded-full py-1.5 text-xs font-semibold transition sm:text-sm",
               view === v
                 ? "bg-paper text-clay-700 shadow-card"
                 : "text-ink-soft hover:text-ink",
@@ -125,21 +126,28 @@ export function CalendarTab() {
         ))}
       </div>
 
-      {/* range header */}
-      <div className="flex items-center justify-between gap-2">
-        <IconButton label={t.calendar.previous} onClick={() => shift(-1)}>
-          <ChevronLeftIcon className="h-5 w-5" />
-        </IconButton>
-        <span className="min-w-0 flex-1 truncate text-center font-display text-lg text-ink">
-          {title}
-        </span>
-        <Button variant="ghost" size="sm" className="shrink-0" onClick={goToday}>
-          {t.common.today}
-        </Button>
-        <IconButton label={t.calendar.next} onClick={() => shift(1)}>
-          <ChevronRightIcon className="h-5 w-5" />
-        </IconButton>
-      </div>
+      {/* range header (not applicable to the log view) */}
+      {view !== "log" && (
+        <div className="flex items-center justify-between gap-2">
+          <IconButton label={t.calendar.previous} onClick={() => shift(-1)}>
+            <ChevronLeftIcon className="h-5 w-5" />
+          </IconButton>
+          <span className="min-w-0 flex-1 truncate text-center font-display text-lg text-ink">
+            {title}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="shrink-0"
+            onClick={goToday}
+          >
+            {t.common.today}
+          </Button>
+          <IconButton label={t.calendar.next} onClick={() => shift(1)}>
+            <ChevronRightIcon className="h-5 w-5" />
+          </IconButton>
+        </div>
+      )}
 
       {view === "month" ? (
         <div {...swipe}>
@@ -162,6 +170,8 @@ export function CalendarTab() {
           controlsRef={threeDayControls}
           onVisibleChange={setThreeDayLeft}
         />
+      ) : view === "log" ? (
+        <LogView petId={pet.id} />
       ) : (
         <Timeline
           petId={pet.id}
