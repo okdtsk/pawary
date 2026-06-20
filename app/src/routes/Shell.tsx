@@ -7,7 +7,6 @@ import { PullToRefresh } from "../features/pwa/PullToRefresh";
 import { Sheet } from "../components/Sheet";
 import { QuickAddGrid } from "../features/quickadd/QuickAddGrid";
 import { PetAvatar } from "../components/Avatar";
-import { Button } from "../components/Button";
 import { IconButton } from "../components/IconButton";
 import {
   CalendarIcon,
@@ -175,16 +174,6 @@ export function Shell() {
                 );
               })}
             </div>
-            {canEdit && (
-              <Button
-                size="sm"
-                className="hidden md:inline-flex"
-                onClick={() => setAddOpen(true)}
-              >
-                <PlusIcon className="h-4 w-4" />
-                {t.nav.addActivity}
-              </Button>
-            )}
             <IconButton
               label={t.nav.settings}
               className="md:hidden"
