@@ -51,6 +51,15 @@ export default defineConfig({
             purpose: "maskable",
           },
         ],
+        shortcuts: [
+          {
+            name: "Quick Add",
+            short_name: "Quick Add",
+            description: "Quickly log a pet activity",
+            url: "/?action=quickadd",
+            icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+          },
+        ],
       },
       // Caching/update behavior lives in src/sw.ts (custom SW, injectManifest).
       injectManifest: {
