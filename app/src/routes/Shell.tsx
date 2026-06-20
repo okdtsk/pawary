@@ -97,14 +97,18 @@ export function Shell() {
   // On launch, honor a quick-add deep link (?action=quickadd[&category=…]) from
   // Android manifest shortcuts / iOS Apple Shortcuts / home-screen bookmarks,
   // then strip the params so reload/back is clean and does not re-trigger.
+  // Gated on a selected pet: a no-pet launch (onboarding) is a no-op, and the
+  // params are only consumed once the pet exists — so nothing replays after
+  // onboarding. Stripping the params on first run prevents re-trigger on pet switch.
   useEffect(() => {
+    if (!selectedPet) return;
     const { open, category } = parseQuickAction(window.location.search);
     if (!open) return;
     setQuickCategory(category);
     setQuickOpen(true);
     const url = window.location.pathname + window.location.hash;
     window.history.replaceState(null, "", url || "/");
-  }, []);
+  }, [selectedPet]);
 
   const pressTimer = useRef<number | null>(null);
   const longPressed = useRef(false);
