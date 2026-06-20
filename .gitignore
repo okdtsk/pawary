@@ -5,3 +5,7 @@ dist/
 *.local
 *.log
 .DS_Store
+
+# Claude Code
+.claude/worktrees/
+.claude/settings.local.json
