@@ -70,15 +70,20 @@ A single convention, read on app load:
 
 ## Component changes
 
+### `app/src/lib/quickAction.ts` (new)
+
+- Export a pure `parseQuickAction(search: string): { open: boolean; category?: Category }`.
+- Returns `{ open: true }` when `action=quickadd`, including `category` only when
+  it is one of `CATEGORIES` (imported from `@pawary/shared`); otherwise the
+  category is dropped. Returns `{ open: false }` for any other/absent action.
+- This is the unit-tested seam for the URL contract.
+
 ### `app/src/routes/Shell.tsx`
 
-- Add a mount-time `useEffect` that reads `action`/`category` from
-  `window.location.search`, opens the Quick Add sheet when `action=quickadd`,
-  stores the validated category in state, and clears the params via
-  `history.replaceState`.
+- Add a mount-time `useEffect` that calls `parseQuickAction(window.location.search)`,
+  opens the Quick Add sheet when `open` is true, stores the optional category in
+  state, and clears the params via `history.replaceState`.
 - Pass the optional `category` into the existing `<QuickAddGrid />`.
-- Category validation: accept only values included in `CATEGORIES`
-  (imported from `@pawary/shared`); otherwise treat as absent.
 
 ### `app/src/features/quickadd/QuickAddGrid.tsx`
 
@@ -124,15 +129,24 @@ localized.
 
 ## Testing
 
-- **Unit (vitest, `app/test/`)** for `Shell`:
-  - `?action=quickadd` opens the Quick Add sheet.
-  - `?action=quickadd&category=food` opens the sheet with the grid filtered.
-  - An unknown `category` value opens the sheet showing all presets.
-  - Params are cleared from the URL after the sheet opens.
-- **Unit** for `QuickAddGrid`: the `category` prop filters items; an empty
-  filtered result renders the empty state.
-- **Manual**: install the PWA on Android (long-press icon → Quick Add); build an
-  Apple Shortcut on iOS that opens the URL.
+The app's vitest suite runs in a **node** environment and tests **pure
+functions** (e.g. `pendingInviteFromPath`); there is no React render-test
+infrastructure (no jsdom/testing-library). To match this convention, the risky
+logic — parsing and validating the URL contract — is extracted into a pure
+function and unit-tested there. The thin `Shell`/`QuickAddGrid` wiring is
+manually verified, consistent with how the `pendingInviteFromPath` wiring in
+`App.tsx` is left untested.
+
+- **Unit (vitest, `app/test/`, node env)** for the extracted parser
+  `parseQuickAction(search)` in `app/src/lib/quickAction.ts`:
+  - `?action=quickadd` → `{ open: true }`.
+  - `?action=quickadd&category=food` → `{ open: true, category: "food" }`.
+  - An unknown `category` value → `{ open: true }` (category dropped).
+  - No/empty/other `action` → `{ open: false }`.
+- **Manual**: trigger `/?action=quickadd` and `&category=food` in the running
+  app (sheet opens, filtered correctly, URL settles to `/`); install the PWA on
+  Android (long-press icon → Quick Add); build an Apple Shortcut on iOS that
+  opens the URL.
 
 ## Rationale for key choices
 
