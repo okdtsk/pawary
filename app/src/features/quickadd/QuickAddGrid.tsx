@@ -1,4 +1,4 @@
-import type { PresetResponse } from "@pawary/shared";
+import type { Category, PresetResponse } from "@pawary/shared";
 import { Link } from "react-router";
 import { useCreateActivity, useDeleteActivity } from "../../api/activities";
 import { usePresets } from "../../api/presets";
@@ -13,9 +13,12 @@ import { friendlyError } from "../../lib/errors";
 
 export function QuickAddGrid({
   petId,
+  category,
   onLogged,
 }: {
   petId: string;
+  /** When set, only presets in this category are shown. */
+  category?: Category;
   /** e.g. close the surrounding sheet */
   onLogged?: () => void;
 }) {
@@ -32,7 +35,8 @@ export function QuickAddGrid({
       </div>
     );
   }
-  const items = presets.data ?? [];
+  const all = presets.data ?? [];
+  const items = category ? all.filter((p) => p.category === category) : all;
   if (items.length === 0) {
     return (
       <EmptyState

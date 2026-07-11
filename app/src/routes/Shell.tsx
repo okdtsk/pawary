@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import { useOnline } from "../lib/useOnline";
@@ -17,6 +17,8 @@ import {
   PlusIcon,
   SparklesIcon,
 } from "../components/icons";
+import { parseQuickAction } from "../lib/quickAction";
+import type { Category } from "@pawary/shared";
 import { useT } from "../i18n";
 import { cn } from "../lib/cn";
 import { usePets } from "../state/pets";
@@ -87,6 +89,25 @@ export function Shell() {
   const online = useOnline();
   const [addOpen, setAddOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
+  const [quickCategory, setQuickCategory] = useState<Category | undefined>(
+    undefined,
+  );
+
+  // On launch, honor a quick-add deep link (?action=quickadd[&category=…]) from
+  // Android manifest shortcuts / iOS Apple Shortcuts / home-screen bookmarks,
+  // then strip the params so reload/back is clean and does not re-trigger.
+  // Gated on a selected pet: a no-pet launch (onboarding) is a no-op, and the
+  // params are only consumed once the pet exists — so nothing replays after
+  // onboarding. Stripping the params on first run prevents re-trigger on pet switch.
+  useEffect(() => {
+    if (!selectedPet) return;
+    const { open, category } = parseQuickAction(window.location.search);
+    if (!open) return;
+    setQuickCategory(category);
+    setQuickOpen(true);
+    const url = window.location.pathname + window.location.hash;
+    window.history.replaceState(null, "", url || "/");
+  }, [selectedPet]);
 
   const pressTimer = useRef<number | null>(null);
   const longPressed = useRef(false);
@@ -256,12 +277,19 @@ export function Shell() {
       {canEdit && (
         <Sheet
           open={quickOpen}
-          onClose={() => setQuickOpen(false)}
+          onClose={() => {
+            setQuickOpen(false);
+            setQuickCategory(undefined);
+          }}
           title={t.quickAdd.title}
         >
           <QuickAddGrid
             petId={selectedPet.id}
-            onLogged={() => setQuickOpen(false)}
+            category={quickCategory}
+            onLogged={() => {
+              setQuickOpen(false);
+              setQuickCategory(undefined);
+            }}
           />
         </Sheet>
       )}
