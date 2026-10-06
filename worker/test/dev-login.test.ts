@@ -53,7 +53,7 @@ it("preview test-login works with the correct secret", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: "qa@example.com", secret: "s3cret" }),
     }),
-    { ...env, ENVIRONMENT: "preview" as const, PREVIEW_LOGIN_SECRET: "s3cret" },
+    { ...env, ENVIRONMENT: "preview" as const, PREVIEW_LOGIN_SECRET: "s3cret", ALLOWED_EMAILS: "qa@example.com" },
     ctx,
   );
   await waitOnExecutionContext(ctx);

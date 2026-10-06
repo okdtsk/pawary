@@ -26,7 +26,7 @@ async function seedUserWithProductionSession(): Promise<{
 it("production logout: clearSessionCookie uses __Host- prefix without throwing", async () => {
   const { token, csrfToken } = await seedUserWithProductionSession();
 
-  const prodEnv = { ...env, ENVIRONMENT: "production" as const };
+  const prodEnv = { ...env, ENVIRONMENT: "production" as const, ALLOWED_EMAILS: "prod@example.com" };
   const req = new Request("https://app.example.com/api/auth/logout", {
     method: "POST",
     headers: {

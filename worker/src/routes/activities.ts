@@ -114,7 +114,7 @@ activityRoutes.post(
       notifyCareteamNewLog(c.env, petId, {
         createdBy: activity.createdBy,
         category: activity.category,
-      }).catch((e) => console.error("careteam notify failed", e)),
+      }).catch(() => console.error({ event: 'careteam_notify_failed' })),
     );
     return c.json({ data: activityToResponse(activity, []) }, 201);
   },
