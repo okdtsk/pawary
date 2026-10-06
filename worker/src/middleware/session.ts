@@ -6,6 +6,7 @@ import { getValidSession } from "../domain/sessions";
 import type { AppEnv } from "../env";
 import { getSessionToken, setSessionCookie } from "../lib/cookies";
 import { err } from "../lib/respond";
+import { isAllowedEmail } from '../lib/private-access';
 
 export const requireSession = createMiddleware<AppEnv>(async (c, next) => {
   const token = getSessionToken(c);
@@ -23,6 +24,11 @@ export const requireSession = createMiddleware<AppEnv>(async (c, next) => {
     .where(eq(users.id, session.userId))
     .get();
   if (!user) return err(c, 401, "unauthorized", "Sign in required");
+
+  c.set('user', user);
+  if (!isAllowedEmail(c.env, user.email)) {
+    return err(c, 403, 'forbidden', 'Account is not permitted');
+  }
 
   c.set("session", session);
   c.set("user", user);

@@ -11,14 +11,17 @@ it(
   "11th hit on /api/auth/google within a minute is 429",
   { timeout: 15_000 },
   async () => {
+    const headers = { "CF-Connecting-IP": `auth-test-${crypto.randomUUID()}` };
     for (let i = 0; i < 10; i++) {
       const res = await SELF.fetch("https://app.local/api/auth/google", {
         redirect: "manual",
+        headers,
       });
       expect(res.status).toBe(302);
     }
     const blocked = await SELF.fetch("https://app.local/api/auth/google", {
       redirect: "manual",
+      headers,
     });
     expect(blocked.status).toBe(429);
     const body = (await blocked.json()) as { error: { code: string } };
@@ -27,16 +30,17 @@ it(
 );
 
 it("dev-login is rate limited per IP too", { timeout: 15_000 }, async () => {
+  const headers = { "Content-Type": "application/json", "CF-Connecting-IP": `dev-login-test-${crypto.randomUUID()}` };
   for (let i = 0; i < 10; i++) {
     await SELF.fetch("http://localhost/api/auth/dev-login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({}),
     });
   }
   const blocked = await SELF.fetch("http://localhost/api/auth/dev-login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({}),
   });
   expect(blocked.status).toBe(429);

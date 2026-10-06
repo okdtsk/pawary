@@ -1,6 +1,7 @@
 import type { Role } from "@pawary/shared";
 import type { Pet, Session, User } from "./db/schema";
 export type Env = {
+  ALLOWED_EMAILS?: string;
   DB: D1Database;
   PHOTOS: R2Bucket;
   // Workers rate-limiting bindings (wrangler.jsonc `ratelimits`); the suffix

@@ -21,6 +21,7 @@ import { rateLimit } from "../lib/rate-limit";
 import { err } from "../lib/respond";
 import { requireCsrf } from "../middleware/csrf";
 import { requireSession } from "../middleware/session";
+import { isAllowedEmail } from '../lib/private-access';
 
 export const authRoutes = new Hono<AppEnv>();
 
@@ -89,8 +90,13 @@ authRoutes.get("/google/callback", rateLimit("auth-callback", 10, 60_000), async
   });
   const claims = await verifyGoogleIdToken(idToken, c.env.GOOGLE_CLIENT_ID);
 
+  if (!isAllowedEmail(c.env, claims.email)) {
+    return err(c, 403, 'forbidden', 'Account is not permitted');
+  }
+
   const db = drizzle(c.env.DB);
   const user = await upsertUserFromGoogle(db, claims);
+  c.set('user', user);
   const { token } = await createSession(db, user.id);
   setSessionCookie(c, token);
   return c.redirect("/");
@@ -128,6 +134,9 @@ authRoutes.post("/dev-login", rateLimit("auth-dev-login", 10, 60_000), async (c)
     return err(c, 404, "not_found", "Not found");
   }
   const email = body.email ?? "dev@example.com";
+  if (!isAllowedEmail(c.env, email)) {
+    return err(c, 403, 'forbidden', 'Account is not permitted');
+  }
   const name = body.name ?? "Dev User";
 
   const db = drizzle(c.env.DB);

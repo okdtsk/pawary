@@ -24,7 +24,7 @@
     { "tag": "v1", "new_sqlite_classes": ["CareteamNotifier"] },
     { "tag": "v2", "deleted_classes": ["CareteamNotifier"] }
   ],
-  "observability": { "enabled": true },
+  "observability": { "enabled": true, "head_sampling_rate": 1, "redact_query_string": true, "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": true, "persist": true } },
   "assets": {
     "directory": "../app/dist",
     "not_found_handling": "single-page-application",
@@ -55,7 +55,7 @@
         { "name": "RL_10", "namespace_id": "1010", "simple": { "limit": 10, "period": 60 } },
         { "name": "RL_30", "namespace_id": "1030", "simple": { "limit": 30, "period": 60 } }
       ],
-      "observability": { "enabled": true },
+      "observability": { "enabled": true, "head_sampling_rate": 1, "redact_query_string": true, "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": true, "persist": true } },
       "assets": {
         "directory": "../app/dist",
         "not_found_handling": "single-page-application",
@@ -64,8 +64,8 @@
     },
     "preview": {
       "name": "pawary-preview",
-      "workers_dev": true,
-      "preview_urls": true,
+      "workers_dev": false,
+      "preview_urls": false,
       "vars": { "ENVIRONMENT": "preview" },
       "triggers": { "crons": ["*/15 * * * *"] },
       "migrations": [
@@ -86,7 +86,7 @@
         { "name": "RL_10", "namespace_id": "1010", "simple": { "limit": 10, "period": 60 } },
         { "name": "RL_30", "namespace_id": "1030", "simple": { "limit": 30, "period": 60 } }
       ],
-      "observability": { "enabled": true },
+      "observability": { "enabled": true, "head_sampling_rate": 1, "redact_query_string": true, "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": true, "persist": true } },
       "assets": {
         "directory": "../app/dist",
         "not_found_handling": "single-page-application",
